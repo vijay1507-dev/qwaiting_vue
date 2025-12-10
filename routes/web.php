@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeadController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -14,21 +15,8 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('leads', function () {
-    return Inertia::render('Leads/Index');
-})->middleware(['auth', 'verified'])->name('leads.index');
-
-Route::get('leads/create', function () {
-    return Inertia::render('Leads/Create');
-})->middleware(['auth', 'verified'])->name('leads.create');
-
-Route::get('leads/{id}', function ($id) {
-    return Inertia::render('Leads/Show', ['id' => $id]);
-})->middleware(['auth', 'verified'])->name('leads.show');
-
-Route::get('leads/{id}/edit', function ($id) {
-    return Inertia::render('Leads/Create', ['id' => $id]);
-})->middleware(['auth', 'verified'])->name('leads.edit');
+Route::resource('leads', LeadController::class)->middleware(['auth', 'verified']);
+Route::put('leads/{lead}/stage', [LeadController::class, 'updateStage'])->middleware(['auth', 'verified'])->name('leads.updateStage');
 
 Route::get('quotes', function () {
     return Inertia::render('Quotes/Index');

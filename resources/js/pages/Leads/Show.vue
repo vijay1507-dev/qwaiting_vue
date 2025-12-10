@@ -35,34 +35,12 @@ import {
 } from 'lucide-vue-next';
 
 interface Props {
-    id: string;
+    lead: any;
 }
 
 const props = defineProps<Props>();
 
-// Dummy lead data matching the design
-const lead = ref({
-    id: props.id,
-    title: 'Enquiry: ProjectPulse Enterprise Solution',
-    stage: 'new-lead',
-    daysOld: 431,
-    daysInCurrentStage: 5, // Days in current stage
-    type: 'Enquiry',
-    value: 10000,
-    source: 'Phone',
-    leadType: 'New Business',
-    salesOwner: 'Example',
-    expectedCloseDate: '2024-10-02',
-    priority: 'Hot' as 'Hot' | 'Warm' | 'Cold' | null,
-    person: {
-        name: 'Billy James',
-        title: 'Sales Representatives',
-        company: 'SentinelSecure',
-        email: 'Billy@example.com',
-        phone: '4545454545',
-        initials: 'BJ',
-    },
-});
+const lead = ref(props.lead);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -74,7 +52,7 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: leadsIndex().url,
     },
     {
-        title: `#${props.id}`,
+        title: `#${props.lead.id}`,
         href: '#',
     },
 ];
@@ -220,7 +198,7 @@ const showCCBCC = ref(false);
 const openComposeMail = () => {
     showComposeMail.value = true;
     // Pre-fill with lead's email
-    mailForm.value.to = lead.value.person.email;
+    mailForm.value.to = lead.value.contact_person.email;
 };
 
 const closeComposeMail = () => {
@@ -941,7 +919,7 @@ const getPriorityColor = (priority: string | null) => {
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                 <span class="text-xs lg:text-sm text-muted-foreground">Lead Value</span>
                                 <span class="text-xs lg:text-sm font-medium text-foreground break-all">
-                                    {{ lead.value.toFixed(4) }}
+                                    {{ lead.value }}
                                 </span>
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
@@ -950,15 +928,15 @@ const getPriorityColor = (priority: string | null) => {
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                 <span class="text-xs lg:text-sm text-muted-foreground">Type</span>
-                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.leadType }}</span>
+                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.type }}</span>
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                 <span class="text-xs lg:text-sm text-muted-foreground">Sales Owner</span>
-                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.salesOwner }}</span>
+                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.user.name }}</span>
                             </div>
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                 <span class="text-xs lg:text-sm text-muted-foreground">Expected Close Date</span>
-                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.expectedCloseDate }}</span>
+                                <span class="text-xs lg:text-sm font-medium text-foreground break-words">{{ lead.expected_close_date }}</span>
                             </div>
                         </div>
                     </div>
@@ -987,29 +965,19 @@ const getPriorityColor = (priority: string | null) => {
                         <div v-if="aboutPersonsExpanded" class="p-2.5 lg:p-3">
                             <div class="flex items-start gap-2.5 lg:gap-3">
                                 <div class="size-8 lg:size-9 rounded-full bg-green-400 text-white flex items-center justify-center text-xs font-semibold shrink-0">
-                                    {{ lead.person.initials }}
+                                    {{ lead.contact_person.name.charAt(0) }}
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-xs lg:text-sm font-medium text-foreground break-words">
-                                        {{ lead.person.name }}
-                                    </p>
-                                    <p class="text-[11px] lg:text-xs text-muted-foreground mt-0.5 break-words">
-                                        {{ lead.person.title }} at {{ lead.person.company }}
+                                        {{ lead.contact_person.name }}
                                     </p>
                                     <div class="mt-2 lg:mt-2.5 space-y-1">
                                         <a
-                                            :href="`mailto:${lead.person.email}`"
+                                            :href="`mailto:${lead.contact_person.email}`"
                                             class="flex items-center gap-1.5 text-xs lg:text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
                                         >
                                             <AtSign class="size-3 shrink-0" />
-                                            <span class="break-all">{{ lead.person.email }}</span> <span class="text-muted-foreground">(work)</span>
-                                        </a>
-                                        <a
-                                            :href="`tel:${lead.person.phone}`"
-                                            class="flex items-center gap-1.5 text-xs lg:text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
-                                        >
-                                            <Phone class="size-3 shrink-0" />
-                                            <span class="break-all">{{ lead.person.phone }}</span> <span class="text-muted-foreground">(work)</span>
+                                            <span class="break-all">{{ lead.contact_person.email }}</span> <span class="text-muted-foreground">(work)</span>
                                         </a>
                                     </div>
                                 </div>

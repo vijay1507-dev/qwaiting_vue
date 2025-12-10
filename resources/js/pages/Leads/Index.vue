@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { index as leadsIndex } from '@/routes/leads';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import KanbanBoard, { type Lead } from '@/components/leads/KanbanBoard.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Filter, X, ChevronDown } from 'lucide-vue-next';
+
+const props = defineProps<{
+    leads: Lead[];
+}>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,99 +19,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Leads',
-        href: leadsIndex().url,
+        href: '/leads',
     },
 ];
 
-// Generate dummy leads data for all stages
-const generateDummyLeads = (): Lead[] => {
-    const names = [
-        'Billy James', 'Lucy Mark', 'Eddy Collins', 'Oliver Queen',
-        'Sasha Calle', 'Shelly Josh', 'Wilson Fisk', 'Carol Denvers',
-        'John Smith', 'Sarah Johnson', 'Mike Davis', 'Emma Wilson',
-        'David Brown', 'Lisa Anderson', 'Chris Taylor', 'Amy Martinez',
-    ];
-    
-    const companies = [
-        'SentinelSecure', 'ShieldGuard Security', 'VigilantWatch', 'IronClad Defense',
-        'CyberFortress Solutions', 'SecureNet Pro', 'DataGuard Inc', 'CloudShield Ltd',
-        'TechSecure Corp', 'NetworkGuard', 'Firewall Solutions', 'SecurityPlus',
-    ];
-    
-    const enquiries = [
-        'ProjectPulse Enterprise Solution', 'Milestone360 for Goal Tracking',
-        'TaskMaster Pro Implementation', 'CyberGuard Pro',
-        'SecureFlow Business', 'DataShield Enterprise',
-        'TeamTrack for Agile Development', 'SecureShield 360',
-        'CloudConnect Integration', 'NetworkGuard Firewall',
-        'EndpointProtect Suite', 'ThreatDetect AI Platform',
-    ];
-    
-    const tagOptions = [
-        ['Phone', 'New Business', 'Enquiry'],
-        ['Direct', 'Small Market Business', 'Requirement', 'VIP Client'],
-        ['Email', 'New Business', 'Urgent Sale', 'Super Priority', 'Requirement'],
-        ['Phone', 'Technology Services', 'Requirement', 'Super Priority'],
-        ['Web Form', 'Existing Business', 'Immediate Action'],
-        ['Referral', 'Large Market Business'],
-        ['Email', 'Existing Business'],
-        ['Phone', 'Existing Business'],
-    ];
-    
-    const values = [5000, 10000, 25000, 35000, 45000, 50000, 64000, 75000, 85000, 95000, 100000, 120000, 150000];
-    
-    const leads: Lead[] = [];
-    let leadIndex = 0;
-    
-    // Helper to create a lead
-    const createLead = (stage: string, count: number) => {
-        for (let i = 0; i < count; i++) {
-            const name = names[leadIndex % names.length];
-            const company = companies[leadIndex % companies.length];
-            const value = values[leadIndex % values.length];
-            const tags = [...tagOptions[leadIndex % tagOptions.length]];
-            tags.unshift('Example');
-            tags.unshift(
-                new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 2,
-                }).format(value)
-            );
-            tags.push('Enquiry');
-            
-            leads.push({
-                id: `${stage}-${i + 1}`,
-                name,
-                company,
-                value,
-                enquiry: `Enquiry: ${enquiries[leadIndex % enquiries.length]}`,
-                tags,
-                hasWarning: stage !== 'won' && stage !== 'lost' && stage !== 'on-hold',
-                stage,
-            });
-            leadIndex++;
-        }
-    };
-    
-    // Create leads for each stage
-    createLead('new-lead', 8);        // New Lead
-    createLead('contacted', 6);      // Contacted
-    createLead('qualified', 5);      // Qualified
-    createLead('demo-completed', 7); // Demo Completed (merged)
-    createLead('proposal-sent', 4);  // Proposal Sent
-    createLead('negotiation', 3);    // Negotiation
-    createLead('won', 5);            // Won
-    createLead('lost', 3);           // Lost
-    createLead('follow-up-required', 7); // Follow up required (merged follow-up and required)
-    createLead('on-hold', 2);        // On-hold
-    
-    return leads;
-};
-
-const dummyLeads: Lead[] = generateDummyLeads();
-
-const allLeads = ref<Lead[]>(dummyLeads);
+const allLeads = ref<Lead[]>(props.leads);
 
 const stages = computed(() => {
     const stageMap = {
@@ -381,6 +296,10 @@ const handleLeadMoved = (leadId: string, fromStage: string, toStage: string) => 
     const lead = allLeads.value.find((l) => l.id === leadId);
     if (lead) {
         lead.stage = toStage;
+        router.put(`/leads/${leadId}/stage`, { stage: toStage }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     }
 };
 </script>

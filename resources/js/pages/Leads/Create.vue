@@ -548,9 +548,12 @@ const validateForm = (): boolean => {
 
 const submit = () => {
     if (validateForm()) {
-        // TODO: Implement form submission
-        console.log('Form submitted:', { form: form.value, contactPerson: contactPerson.value, products: products.value });
-        router.visit(leadsIndex().url);
+        router.post('/leads', {
+            ...form.value,
+            contact_person_name: contactPerson.value.name,
+            contact_person_email: contactPerson.value.emails[0].email,
+            stage: 'new-lead',
+        });
     }
 };
 </script>
