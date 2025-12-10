@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { dashboard, login } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
+import logo from '@/assets/images/download.png';
 </script>
 
 <template>
@@ -19,19 +20,19 @@ import { Head, Link } from '@inertiajs/vue3';
                 >
                     Dashboard
                 </Link>
-                <Link
+                    <Link
                     v-else
-                    :href="login()"
+                        :href="login()"
                     class="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal hover:border-border"
-                >
-                    Log in
-                </Link>
+                    >
+                        Log in
+                    </Link>
             </nav>
         </header>
         
         <div class="flex flex-col items-center gap-6">
             <img 
-                src="/assets/images/download.png" 
+                :src="logo" 
                 alt="Qwaiting CRM Logo" 
                 class="size-24 object-contain" 
             />

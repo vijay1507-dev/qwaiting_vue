@@ -13,9 +13,10 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
+import { index as quotesIndex } from '@/routes/quotes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, Users } from 'lucide-vue-next';
+import { LayoutGrid, Users, Receipt } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -28,6 +29,11 @@ const mainNavItems: NavItem[] = [
         title: 'Leads',
         href: leadsIndex(),
         icon: Users,
+    },
+    {
+        title: 'Quotes',
+        href: quotesIndex(),
+        icon: Receipt,
     },
 ];
 

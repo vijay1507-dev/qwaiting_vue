@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { AlertTriangle, User } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
+import { show } from '@/routes/leads';
 
 interface Lead {
     id: string;
@@ -11,9 +13,13 @@ interface Lead {
     enquiry?: string;
 }
 
-defineProps<{
+const props = defineProps<{
     lead: Lead;
 }>();
+
+const handleClick = () => {
+    router.visit(show(props.lead.id).url);
+};
 
 const getInitials = (name: string): string => {
     return name
@@ -61,6 +67,7 @@ const shouldShowUserIcon = (tag: string): boolean => {
 
 <template>
     <div
+        @click="handleClick"
         class="group relative cursor-pointer rounded-md border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md"
     >
         <!-- Header -->

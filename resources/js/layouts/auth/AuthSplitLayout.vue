@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { home } from '@/routes';
 import { Link, usePage } from '@inertiajs/vue3';
+import logo from '@/assets/images/download.png';
 
 const page = usePage();
 const name = page.props.name;
@@ -24,7 +25,7 @@ defineProps<{
                 :href="home()"
                 class="relative z-20 flex items-center text-lg font-medium"
             >
-                <img src="/assets/images/download.png" alt="Qwaiting CRM Logo" class="mr-2 size-8 object-contain" />
+                <img :src="logo" alt="Qwaiting CRM Logo" class="mr-2 size-8 object-contain" />
                 {{ name }}
             </Link>
             <div v-if="quote" class="relative z-20 mt-auto">

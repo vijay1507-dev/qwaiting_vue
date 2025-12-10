@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 import { VueDraggableNext } from 'vue-draggable-next';
 import LeadCard from './LeadCard.vue';
 import { Plus } from 'lucide-vue-next';
+import { Link } from '@inertiajs/vue3';
 
 export interface Lead {
     id: string;
@@ -63,8 +64,7 @@ const getProgressColor = (stageId: string): string => {
         'negotiation': 'bg-orange-500',
         'won': 'bg-emerald-500',
         'lost': 'bg-red-500',
-        'follow-up': 'bg-yellow-500',
-        'required': 'bg-amber-500',
+        'follow-up-required': 'bg-yellow-500',
         'on-hold': 'bg-gray-500',
     };
     return colors[stageId] || 'bg-primary';
@@ -101,7 +101,9 @@ const onDragChange = (stageId: string) => {
                                 {{ stage.title }}
                             </h3>
                             <span class="text-xs text-muted-foreground">({{ getStageStats(stage).count }})</span>
-                            <Plus class="size-3.5 text-muted-foreground cursor-pointer hover:text-foreground ml-auto" />
+                            <Link :href="`/leads/create?stage_id=${stage.id}`" class="ml-auto">
+                                <Plus class="size-3.5 text-muted-foreground cursor-pointer hover:text-foreground" />
+                            </Link>
                         </div>
                         <div class="flex items-center gap-2 mt-0.5">
                             <p class="text-xs text-foreground">

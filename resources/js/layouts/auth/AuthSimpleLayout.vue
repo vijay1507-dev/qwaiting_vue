@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { home } from '@/routes';
 import { Link } from '@inertiajs/vue3';
+import logo from '@/assets/images/download.png';
 
 defineProps<{
     title?: string;
@@ -22,7 +23,7 @@ defineProps<{
                         <div
                             class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
                         >
-                            <img src="/assets/images/download.png" alt="Qwaiting CRM Logo" class="size-9 object-contain" />
+                            <img :src="logo" alt="Qwaiting CRM Logo" class="size-9 object-contain" />
                         </div>
                         <span class="sr-only">{{ title }}</span>
                     </Link>
