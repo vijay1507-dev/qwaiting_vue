@@ -5,7 +5,7 @@ import logo from '@/assets/images/download.png';
 </script>
 
 <template>
-    <Head title="Welcome to Jules" />
+    <Head title="Welcome to Qwaiting" />
     <div
         class="flex min-h-screen flex-col items-center justify-center bg-background p-6 dark:bg-background"
     >
@@ -37,11 +37,8 @@ import logo from '@/assets/images/download.png';
                 class="size-24 object-contain" 
             />
             <h1 class="text-4xl font-bold text-foreground">
-                Welcome to Your CRM
+                Welcome to Qwaiting CRM
             </h1>
-            <p class="text-lg text-muted-foreground">
-                This is a Laravel and Vue-based CRM, ready for you to customize.
-            </p>
         </div>
     </div>
 </template>

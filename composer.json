@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "jules/crm",
+    "name": "qwaiting/crm",
     "type": "project",
     "description": "A personalized CRM application.",
     "keywords": [

@@ -1,6 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
-    "name": "jules-crm",
+    "name": "qwaiting-crm",
     "description": "A personalized CRM application.",
     "private": true,
     "type": "module",
