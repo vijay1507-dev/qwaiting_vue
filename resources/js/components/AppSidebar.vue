@@ -14,9 +14,12 @@ import {
 import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
 import { index as quotesIndex } from '@/routes/quotes';
+import { index as marketingIndex } from '@/routes/marketing';
+import { index as financeIndex } from '@/routes/finance';
+import { index as ecommerceIndex } from '@/routes/ecommerce';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, Users, Receipt } from 'lucide-vue-next';
+import { LayoutGrid, Users, Receipt, Mail, DollarSign, ShoppingBag } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -34,6 +37,21 @@ const mainNavItems: NavItem[] = [
         title: 'Quotes',
         href: quotesIndex(),
         icon: Receipt,
+    },
+    {
+        title: 'Marketing',
+        href: marketingIndex(),
+        icon: Mail,
+    },
+    {
+        title: 'Finance & Analytics',
+        href: financeIndex(),
+        icon: DollarSign,
+    },
+    {
+        title: 'E-Commerce',
+        href: ecommerceIndex(),
+        icon: ShoppingBag,
     },
 ];
 
