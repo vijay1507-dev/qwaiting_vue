@@ -567,7 +567,7 @@
                             </p>
                             <p>
                                 Let Qwaiting show you what digital transformation really looks like. Start your
-                                transformation today. Book a free <a href="/contact-us"
+                                transformation today. Book a free <a href="/contact"
                                     class="text-indigo-600 hover:text-indigo-500 font-medium underline decoration-2 underline-offset-2">14-day
                                     demo</a> and see the difference for yourself.
                             </p>

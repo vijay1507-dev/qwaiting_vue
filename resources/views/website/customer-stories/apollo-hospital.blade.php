@@ -573,7 +573,7 @@
                                 class="inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-300 transform hover:-translate-y-1">
                                 Start your 14-day free trial
                             </a>
-                            <a href="https://qwaiting.com/contact-us"
+                            <a href="https://qwaiting.com/contact"
                                 class="inline-flex items-center justify-center rounded-full bg-white border-2 border-indigo-600 text-indigo-600 px-8 py-3.5 text-sm font-semibold shadow-sm hover:bg-indigo-50 transition-all duration-300 transform hover:-translate-y-1">
                                 Book a Demo
                             </a>

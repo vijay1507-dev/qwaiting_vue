@@ -29,7 +29,7 @@
                                         d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                 </svg>
                             </a>
-                            <a href="/contact-us"
+                            <a href="/contact"
                                 class="px-8 py-4 bg-white border-2 border-primary text-primary rounded-xl font-semibold hover:bg-primary transition-all hover:-translate-y-1 shadow-md">
                                 Contact Us
                             </a>

@@ -5,14 +5,14 @@
 
 @section('content')
     <div class="min-h-screen bg-white" x-data="{ 
-                                    activeTab: window.location.hash.slice(1) || '{{ request()->is('products/face-recognition-system/use-cases') ? 'use-cases' : (request()->is('products/face-recognition-system/faq') ? 'faq' : 'overview') }}',
-                                    solutionsOpen: false 
-                                }" x-init="$watch('activeTab', value => window.location.hash = value)">
+                                        activeTab: window.location.hash.slice(1) || '{{ request()->is('products/face-recognition-system/use-cases') ? 'use-cases' : (request()->is('products/face-recognition-system/faq') ? 'faq' : 'overview') }}',
+                                        solutionsOpen: false 
+                                    }" x-init="$watch('activeTab', value => window.location.hash = value)">
 
         {{-- Hero Section - Exactly as live site --}}
         <section class="relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden">
             <img src="https://qwaiting.com/frontimg/recognition-banner.jpg" alt="Face Recognition System"
-                                class="w-full h-auto">
+                class="w-full h-auto">
 
         </section>
 
@@ -25,7 +25,7 @@
                     {{-- Overview --}}
                     <a href="/products/face-recognition-system"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                            {{ request()->is('products/face-recognition-system') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                                {{ request()->is('products/face-recognition-system') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         Overview
                     </a>
 
@@ -76,16 +76,16 @@
                     </div>
 
                     {{-- Use Cases --}}
-                    <a href="/products/recognition/use-cases"
+                    <a href="/products/face-recognition-system/use-cases"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                            {{ request()->is('products/recognition/use-cases') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                                {{ request()->is('products/face-recognition-system/use-cases') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         Use Cases
                     </a>
 
                     {{-- FAQ --}}
-                    <a href="/products/recognition/faq"
+                    <a href="/products/face-recognition-system/faq"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                            {{ request()->is('products/recognition/faq') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                                {{ request()->is('products/face-recognition-system/faq') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         FAQ
                     </a>
 

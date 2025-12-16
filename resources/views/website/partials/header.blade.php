@@ -237,7 +237,7 @@
                             <p class="text-sm text-text-medium">Manage citizen services smoothly in government offices and public institutions.
                             </p>
                         </a>
-                        <a href="/industries/retail"
+                        <a href="/industries/retail-queue-system"
                             class="flex flex-col gap-1 p-3 rounded-lg hover:bg-gray-50 transition-colors group/item">
                             <div class="flex items-center gap-2">
                                 <img src="https://qwaiting.com/images/retail-icon.png" alt="" class="w-8 h-8">
@@ -289,7 +289,7 @@
                             </div>
                             <p class="text-sm text-text-medium">Organize and manage customer queues efficiently to reduce wait times and improve service delivery.</p>
                         </a>
-                        <a href="/solutions/appointments"
+                        <a href="/solutions/appointment-scheduling-software"
                             class="group/card block p-3 rounded-xl hover:shadow-md transition-all">
                             <div class="flex items-center gap-3 mb-2">
                                 <img src="https://qwaiting.com/images/appointment-icon.png" alt="" class="w-8 h-8">
@@ -325,7 +325,7 @@
                             </div>
                             <p class="text-sm text-text-medium">Let customers wait from anywhere home, car, or cafe with mobile-based virtual queues.</p>
                         </a>
-                        <a href="/solutions/visitor-management"
+                        <a href="/solutions/visitor-management-system"
                             class="group/card block p-3 rounded-xl hover:shadow-md transition-all">
                             <div class="flex items-center gap-3 mb-2">
                                 <img src="https://qwaiting.com/images/visitor-system-icon.png" alt="" class="w-8 h-8">

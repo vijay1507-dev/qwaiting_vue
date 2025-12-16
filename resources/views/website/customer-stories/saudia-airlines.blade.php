@@ -574,7 +574,7 @@
                                 time to take off like Saudia Airlines did. Stop guessing. Start managing smarter.
                             </p>
                             <p>
-                                Ready to upgrade your customer flow? <a href="https://qwaiting.com/contact-us"
+                                Ready to upgrade your customer flow? <a href="https://qwaiting.com/contact"
                                     class="text-indigo-600 hover:text-indigo-500 underline">Book your free demo today</a>
                                 and transform your airport experience with Qwaiting.
                             </p>

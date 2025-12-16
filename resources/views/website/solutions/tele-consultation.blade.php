@@ -31,7 +31,7 @@
                         </p>
 
                         <div class="flex flex-wrap gap-4 justify-center">
-                            <a href="https://qwaiting.com/contact-us"
+                            <a href="https://qwaiting.com/contact"
                                 class="group relative inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-semibold overflow-hidden transition-all hover:shadow-2xl hover:shadow-primary/50 hover:-translate-y-1">
                                 <span class="relative z-10">Request Demo</span>
                                 <svg class="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform"
@@ -837,7 +837,7 @@
                     Experience Tele‑Consultation with Qwaiting
                 </h2>
                 <div class="flex flex-wrap justify-center gap-4 mt-8">
-                    <a href="https://qwaiting.com/contact-us"
+                    <a href="https://qwaiting.com/contact"
                         class="inline-flex items-center gap-3 px-10 py-5 bg-white text-primary rounded-2xl font-bold text-lg shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all">
                         <span>Book a Live Demo</span>
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -695,7 +695,7 @@
                         class="inline-flex items-center justify-center rounded-full bg-white text-indigo-600 px-8 py-3.5 text-sm font-semibold shadow-sm hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1">
                         Start Your Free Trial
                     </a>
-                    <a href="https://qwaiting.com/contact-us"
+                    <a href="https://qwaiting.com/contact"
                         class="inline-flex items-center justify-center rounded-full bg-transparent border-2 border-white text-white px-8 py-3.5 text-sm font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300 transform hover:-translate-y-1">
                         Contact Sales
                     </a>

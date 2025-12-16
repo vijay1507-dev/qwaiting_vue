@@ -47,7 +47,7 @@
                                     class="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
                                 </div>
                             </a>
-                            <a href="/contact-us"
+                            <a href="/contact"
                                 class="inline-flex items-center gap-2 px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-2xl font-semibold hover:border-primary hover:text-primary transition-all hover:-translate-y-1">
                                 Contact Us
                             </a>

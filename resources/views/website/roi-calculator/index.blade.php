@@ -26,7 +26,7 @@
                     Calculate My ROI <i class="fa fa-angle-right"></i>
                 </a>
 
-                <a href="https://qwaiting.com/contact-us"
+                <a href="https://qwaiting.com/contact"
                     class="w-full md:w-auto bg-primary text-white px-6 py-3 rounded-lg font-semibold shadow-sm hover:bg-primary hover:text-primary hover:bg-white hover:border hover:border-primary transition">
                     Book a Demo <i class="fa fa-angle-right"></i>
                 </a>

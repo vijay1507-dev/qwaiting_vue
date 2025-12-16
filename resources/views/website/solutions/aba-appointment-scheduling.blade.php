@@ -21,12 +21,29 @@
                 </h1>
 
                 <p class="text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
-                    Qwaiting offers a scheduling solution specifically designed for ABA therapy practices, simplifying
-                    appointment management, reducing administrative burdens, and improving the overall experience for
-                    therapists, clients, and caregivers.
+                    Run your caseload without chaos. Qwaiting centralizes scheduling, fills cancellations, and keeps parents informed in real time.
                 </p>
 
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                <!-- Feature Pills -->
+                <div class="flex flex-wrap items-center gap-3 justify-center">
+                    <span class="px-4 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700 font-medium">
+                        Automated reminders
+                    </span>
+                    <span class="px-4 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700 font-medium">
+                        Parent and therapist portals
+                    </span>
+                    <span class="px-4 py-1.5 rounded-full bg-gray-100 text-sm text-gray-700 font-medium">
+                        Multi-location
+                    </span>
+                </div>
+
+                <!-- Supporting Text -->
+                <p class="mt-3 text-sm text-gray-500 mb-3">
+                    Built for ABA workflows. HIPAA-ready.
+                </p>
+
+                
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
                     <a href="/signup"
                         class="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-semibold overflow-hidden transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 w-full sm:w-auto">
                         <span class="relative z-10">Start Your Free Trial</span>
@@ -45,6 +62,19 @@
                     </a>
                 </div>
 
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-100 border border-gray-200 text-sm text-gray-700 mb-6">
+                    <!-- Star Icon -->
+                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.975a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.975c.3.921-.755 1.688-1.54 1.118l-3.386-2.46a1 1 0 00-1.176 0l-3.386 2.46c-.784.57-1.838-.197-1.539-1.118l1.287-3.975a1 1 0 00-.364-1.118L2.045 9.402c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.975z"/>
+                    </svg>
+
+                    <!-- Text -->
+                    <span>
+                        <span class="font-semibold">Rated 4.8</span> by clinic admins · 
+                        <span class="font-medium">Avg. no-shows ↓ 29%</span>
+                    </span>
+                </div>
+
                 {{-- Hero Image --}}
                 <div class="relative mx-auto max-w-4xl">
                     <div class="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50 backdrop-blur-sm">
@@ -55,33 +85,85 @@
             </div>
         </section>
 
-        {{-- Trusted By Section --}}
-        <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100">
-            <div class="max-w-7xl mx-auto text-center">
-                <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-8">Trusted by the Leading
-                    Organizations</p>
+        <!-- Trusted By Section -->
+    <section class="py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-12 text-center">Trusted by Leading
+                Organizations Across Sectors</p>
 
-                <div
-                    class="flex flex-wrap justify-center gap-8 items-center opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                    <img src="https://qwaiting.com/frontimg/clients/daleel_alzowar.jpg" alt="Daleel Alzowar"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/tan-tock-seng-hospital.png" alt="Tan Tock Seng Hospital"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/healthway-medical.png" alt="Healthway Medical"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/farrer-park-hospital.png" alt="Farrer Park Hospital"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/MOH.png" alt="MOH"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/Raffles-Medical-Group.png" alt="Raffles Medical Group"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/shifa.png" alt="Shifa"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
-                    <img src="https://qwaiting.com/frontimg/clients/aster.png" alt="Aster"
-                        class="h-10 object-contain hover:scale-110 transition-transform">
+            <!-- Logo Slider Container -->
+            <div class="relative">
+
+                <!-- Slider Track -->
+                <div class="logo-slider-track flex items-center gap-16">
+                    <!-- First Set of Logos -->
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/apollo_hospitals.jpg') }}" alt="Apollo Hospitals"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/saudia-airlines.png') }}" alt="Saudia Airlines"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/nus-logo.png') }}" alt="NUS"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/farrerpark.png') }}" alt="Farrer Park"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/NTUC_FairPrice.png') }}" alt="NTUC FairPrice"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/PSB.png') }}" alt="PSB"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+
+                    <!-- Duplicate Set for Seamless Loop -->
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/apollo_hospitals.jpg') }}" alt="Apollo Hospitals"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/saudia-airlines.png') }}" alt="Saudia Airlines"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/nus-logo.png') }}" alt="NUS"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/farrerpark.png') }}" alt="Farrer Park"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/NTUC_FairPrice.png') }}" alt="NTUC FairPrice"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
+                    <div
+                        class="logo-slide group flex items-center justify-center p-6 rounded-xl hover:bg-white hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                        <img src="{{ asset('website/asset/images/PSB.png') }}" alt="PSB"
+                            class="h-16 w-auto object-contain  transition-all duration-300 opacity-60 group-hover:opacity-100">
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
+
+    </section>
 
         {{-- Feature 1: Take Control of Your Scheduling --}}
         <section class="py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">

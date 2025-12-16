@@ -194,7 +194,7 @@
             </div>
             
              <div class="mt-16 text-center">
-                <a href="https://qwaiting.com/contact-us" class="inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-700 transition-all duration-300">
+                <a href="https://qwaiting.com/contact" class="inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-700 transition-all duration-300">
                     Request a Demo
                 </a>
             </div>

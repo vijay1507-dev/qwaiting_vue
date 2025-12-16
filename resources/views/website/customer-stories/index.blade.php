@@ -47,7 +47,7 @@
                         </div>
                     </a>
 
-                    <a href="/contact"
+                    <a href="/solutions"
                         class="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-semibold overflow-hidden transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 w-full sm:w-auto">
                         <span class="relative z-10">Explore Solutions</span>
                         <div

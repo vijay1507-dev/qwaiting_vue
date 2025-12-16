@@ -40,7 +40,7 @@
                             class="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity">
                         </div>
                     </a>
-                    <a href="https://qwaiting.com/contact-us"
+                    <a href="https://qwaiting.com/contact"
                         class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-gray-200 text-gray-700 rounded-full font-semibold hover:border-primary hover:text-primary transition-all hover:shadow-lg hover:-translate-y-1 w-full sm:w-auto">
                         Contact Us
                     </a>

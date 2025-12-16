@@ -62,7 +62,7 @@
                     {{-- Overview --}}
                     <a href="/products/face-recognition-system"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                    {{ request()->is('products/face-recognition-system') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                        {{ request()->is('products/face-recognition-system') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         Overview
                     </a>
 
@@ -72,7 +72,7 @@
                         {{-- Solutions Button --}}
                         <button
                             class="px-5 py-2 text-sm font-medium rounded-full transition-all inline-flex items-center gap-2
-                                            {{ $isSolutionsActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                                {{ $isSolutionsActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
 
                             Solutions
 
@@ -114,16 +114,16 @@
                     </div>
 
                     {{-- Use Cases --}}
-                    <a href="/products/recognition/use-cases"
+                    <a href="/products/face-recognition-system/use-cases"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                    {{ request()->is('products/recognition/use-cases') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                        {{ request()->is('products/face-recognition-system/use-cases') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         Use Cases
                     </a>
 
                     {{-- FAQ --}}
-                    <a href="/products/recognition/faq"
+                    <a href="/products/face-recognition-system/faq"
                         class="px-5 py-2 text-sm font-medium rounded-full transition-all
-                                    {{ request()->is('products/recognition/faq') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                                        {{ request()->is('products/face-recognition-system/faq') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                         FAQ
                     </a>
 
