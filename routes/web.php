@@ -6,7 +6,6 @@ use Laravel\Fortify\Features;
 
 
 
-
 Route::get('/', function () {
     return view('website.index');
     // return Inertia::render('Welcome', [
@@ -460,3 +459,8 @@ Route::prefix('industries')->group(function () {
         return view('website.industries.barbershop');
     });
 });
+
+Route::get('/features', function () {
+    return view('website.features.index');
+});
+

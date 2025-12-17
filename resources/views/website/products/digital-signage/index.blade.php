@@ -74,7 +74,7 @@
 
         {{-- Modern Tabs Section --}}
         <section class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-7xl mx-auto" x-data="{ activeTab: 'tab1' }">
                 <div class="text-center mb-16">
                     <h2 class="text-5xl font-bold mb-4">
                         <span class="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Certified
@@ -86,27 +86,31 @@
 
                 {{-- Modern Tab Pills --}}
                 <div class="flex flex-wrap justify-center gap-3 mb-12">
-                    <button onclick="switchTab('tab1')" id="btn-tab1"
-                        class="tab-btn px-6 py-3 rounded-full font-medium transition-all">
+                    <button @click="activeTab = 'tab1'"
+                        :class="{ 'bg-primary text-white shadow-lg scale-105': activeTab === 'tab1', 'bg-white text-gray-600 hover:bg-gray-50 hover:text-primary': activeTab !== 'tab1' }"
+                        class="px-6 py-3 rounded-full font-medium transition-all border border-transparent hover:border-gray-200">
                         Displays for Waiting Rooms
                     </button>
-                    <button onclick="switchTab('tab2')" id="btn-tab2"
-                        class="tab-btn px-6 py-3 rounded-full font-medium transition-all">
+                    <button @click="activeTab = 'tab2'"
+                        :class="{ 'bg-primary text-white shadow-lg scale-105': activeTab === 'tab2', 'bg-white text-gray-600 hover:bg-gray-50 hover:text-primary': activeTab !== 'tab2' }"
+                        class="px-6 py-3 rounded-full font-medium transition-all border border-transparent hover:border-gray-200">
                         Displays at Counters
                     </button>
-                    <button onclick="switchTab('tab3')" id="btn-tab3"
-                        class="tab-btn px-6 py-3 rounded-full font-medium transition-all">
+                    <button @click="activeTab = 'tab3'"
+                        :class="{ 'bg-primary text-white shadow-lg scale-105': activeTab === 'tab3', 'bg-white text-gray-600 hover:bg-gray-50 hover:text-primary': activeTab !== 'tab3' }"
+                        class="px-6 py-3 rounded-full font-medium transition-all border border-transparent hover:border-gray-200">
                         Qwaiting Display App
                     </button>
-                    <button onclick="switchTab('tab4')" id="btn-tab4"
-                        class="tab-btn px-6 py-3 rounded-full font-medium transition-all">
+                    <button @click="activeTab = 'tab4'"
+                        :class="{ 'bg-primary text-white shadow-lg scale-105': activeTab === 'tab4', 'bg-white text-gray-600 hover:bg-gray-50 hover:text-primary': activeTab !== 'tab4' }"
+                        class="px-6 py-3 rounded-full font-medium transition-all border border-transparent hover:border-gray-200">
                         Voice Announcements
                     </button>
                 </div>
 
                 {{-- Tab Content Cards --}}
                 <div class="max-w-7xl mx-auto">
-                    <div id="tab1" class="tab-content">
+                    <div x-show="activeTab === 'tab1'" class="tab-content">
                         <div
                             class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl p-10 shadow-xl">
                             <h3 class="text-3xl font-bold text-gray-900 mb-12 text-center">Displays for Waiting Rooms</h3>
@@ -134,7 +138,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Digital signage can be mounted on walls, ceilings, or
+                                        <p class="text-gray-600 text-lg">Digital signage can be mounted on walls, ceilings,
+                                            or
                                             freestanding units for clear visibility.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -146,7 +151,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Available in 32–52 inch sizes, offering flexibility for
+                                        <p class="text-gray-600 text-lg">Available in 32–52 inch sizes, offering flexibility
+                                            for
                                             different spaces.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -158,7 +164,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Showcase content in multiple formats, including images,
+                                        <p class="text-gray-600 text-lg">Showcase content in multiple formats, including
+                                            images,
                                             videos, and text.</p>
                                     </div>
                                 </div>
@@ -166,7 +173,7 @@
                         </div>
                     </div>
 
-                    <div id="tab2" class="tab-content hidden">
+                    <div x-show="activeTab === 'tab2'" class="tab-content">
                         <div
                             class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl p-10 shadow-xl">
                             <h3 class="text-3xl font-bold text-gray-900 mb-12 text-center">Displays at Counters</h3>
@@ -182,7 +189,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Counter screens are placed at service points to display
+                                        <p class="text-gray-600 text-lg">Counter screens are placed at service points to
+                                            display
                                             ticket numbers or key information.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -194,7 +202,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Designed with a streamlined user interface for simple
+                                        <p class="text-gray-600 text-lg">Designed with a streamlined user interface for
+                                            simple
                                             operation at counters.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -214,7 +223,7 @@
                         </div>
                     </div>
 
-                    <div id="tab3" class="tab-content hidden">
+                    <div x-show="activeTab === 'tab3'" class="tab-content">
                         <div
                             class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl p-10 shadow-xl">
                             <h3 class="text-3xl font-bold text-gray-900 mb-12 text-center">Qwaiting Display Application</h3>
@@ -230,7 +239,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Helpful for managing and displaying content in waiting
+                                        <p class="text-gray-600 text-lg">Helpful for managing and displaying content in
+                                            waiting
                                             areas.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -253,7 +263,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Customizable screen layouts to showcase various types
+                                        <p class="text-gray-600 text-lg">Customizable screen layouts to showcase various
+                                            types
                                             of content.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -272,13 +283,13 @@
                         </div>
                     </div>
 
-                    <div id="tab4" class="tab-content hidden">
+                    <div x-show="activeTab === 'tab4'" class="tab-content">
                         <div
                             class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl p-10 shadow-xl">
                             <h3 class="text-3xl font-bold text-gray-900 mb-12 text-center">Voice Announcements</h3>
                             <div class="grid lg:grid-cols-2">
                                 <img src="https://qwaiting.com/frontimg/voice-announcements.png" alt="">
-                                <div class="grid gap-4">
+                                <div class="grid">
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
                                         <div
                                             class="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -300,7 +311,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Uses audio output to share important information with
+                                        <p class="text-gray-600 text-lg">Uses audio output to share important information
+                                            with
                                             the audience.</p>
                                     </div>
                                     <div class="flex items-start gap-4 p-4 bg-white rounded-xl">
@@ -324,7 +336,8 @@
                                                     d="M5 13l4 4L19 7"></path>
                                             </svg>
                                         </div>
-                                        <p class="text-gray-600 text-lg">Improves accessibility by reaching those not actively
+                                        <p class="text-gray-600 text-lg">Improves accessibility by reaching those not
+                                            actively
                                             viewing the displays.</p>
                                     </div>
                                 </div>
@@ -505,7 +518,8 @@
                     <div
                         class="relative p-8 bg-gradient-to-br from-indigo-50 to-white rounded-3xl border border-indigo-100">
                         <div class="absolute top-6 right-6 text-6xl font-bold text-indigo-100">06</div>
-                        <h3 class="text-2xl font-bold text-gray-900 mb-4 relative z-10">Tailored and Adaptable Solutions</h3>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4 relative z-10">Tailored and Adaptable Solutions
+                        </h3>
                         <p class="text-gray-600 leading-relaxed relative z-10">Designed to meet diverse business needs,
                             digital signage can be scaled easily and customized in terms of content, layout, and scheduling
                             for seamless operations.</p>
@@ -583,7 +597,7 @@
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-5xl font-bold mb-6">
                     <span class="text-white">What Qwaiting Can
-                        Do for You?     
+                        Do for You?
                 </h2>
                 <p class="text-xl text-white mb-8 leading-relaxed">
                     Request a demo and see how Qwaiting optimizes your customer flow, enhances efficiency, and transforms
@@ -604,56 +618,66 @@
         </section>
 
         {{-- Blog Section --}}
-    <section class="py-20 bg-white">
-        <div class="container px-4 mx-auto">
-            <div class="max-w-4xl mx-auto mb-16 text-center">
-                <h2 class="mb-6 text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
-                    Latest Posts From the Blog
-                </h2>
+        <section class="py-20 bg-white">
+            <div class="container px-4 mx-auto">
+                <div class="max-w-4xl mx-auto mb-16 text-center">
+                    <h2 class="mb-6 text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+                        Latest Posts From the Blog
+                    </h2>
+                </div>
+
+                <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {{-- Blog Post 1 --}}
+                    <a href="https://blog.qwaiting.com/"
+                        class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
+                        <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Bank-Queue-Management-Trends-and-Tools-A-Comprehensive-Insight.jpg"
+                            alt="Online Appointment Booking Software" class="w-full h-48 object-cover rounded-2xl mb-6">
+                        <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                            Bank Queue Management Trends and Tools_ A Comprehensive Insight
+                        </h3>
+                        <p class="text-gray-600">
+                            In the last decade, the nature of financial institutions such as banks has evolved. The banks
+                            are embracing technology to automate most of the procedures to provide a better customer
+                            experience. However, customers still have to go to the bank premises and wait in line for some
+                            crucial or urgent work...
+                        </p>
+                    </a>
+
+                    {{-- Blog Post 2 --}}
+                    <a href="https://blog.qwaiting.com/"
+                        class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
+                        <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Are-Waiting-Queue-Systems-the-Ultimate-Solution-for-Seamless-Service-100.jpg"
+                            alt="Are Waiting Queue Systems the Ultimate Solution for Seamless Service"
+                            class="w-full h-48 object-cover rounded-2xl mb-6">
+                        <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                            Are Waiting Queue Systems the Ultimate Solution for Seamless Service
+                        </h3>
+                        <p class="text-gray-600">
+                            Providing exceptional customer service significantly enhances the customer’s overall experience.
+                            Needless to say, no one likes to wait in a crowded waiting area or stand in a queue, whether
+                            it’s just for a few minutes. This task seems so tedious and time-wasting for customers, which
+                            ruins their overall experience...
+                        </p>
+                    </a>
+
+                    {{-- Blog Post 3 --}}
+                    <a href="https://blog.qwaiting.com/"
+                        class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
+                        <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Online-Appointment-Booking-Software-Take-your-Business-to-the-Next-Level.jpg"
+                            alt="Online Appointment Booking Software" class="w-full h-48 object-cover rounded-2xl mb-6">
+                        <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
+                            Online Appointment Booking Software: Take your Business to the Next Level
+                        </h3>
+                        <p class="text-gray-600">
+                            Businesses that rely on in-person appointment scheduling are lagging behind and facing various
+                            problems. However, they can stay ahead by integrating technological advancements that directly
+                            impact customer loyalty & staff efficiency. With an online appointment booking solutions, you
+                            can automate your...
+                        </p>
+                    </a>
+                </div>
             </div>
-
-            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {{-- Blog Post 1 --}}
-                <a href="https://blog.qwaiting.com/"
-                    class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
-                    <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Bank-Queue-Management-Trends-and-Tools-A-Comprehensive-Insight.jpg"
-                        alt="Online Appointment Booking Software" class="w-full h-48 object-cover rounded-2xl mb-6">
-                    <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                        Bank Queue Management Trends and Tools_ A Comprehensive Insight
-                    </h3>
-                    <p class="text-gray-600">
-                        In the last decade, the nature of financial institutions such as banks has evolved. The banks are embracing technology to automate most of the procedures to provide a better customer experience. However, customers still have to go to the bank premises and wait in line for some crucial or urgent work...
-                    </p>
-                </a>
-
-                {{-- Blog Post 2 --}}
-                <a href="https://blog.qwaiting.com/"
-                    class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
-                    <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Are-Waiting-Queue-Systems-the-Ultimate-Solution-for-Seamless-Service-100.jpg" alt="Are Waiting Queue Systems the Ultimate Solution for Seamless Service"
-                        class="w-full h-48 object-cover rounded-2xl mb-6">
-                    <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                        Are Waiting Queue Systems the Ultimate Solution for Seamless Service
-                    </h3>
-                    <p class="text-gray-600">
-                        Providing exceptional customer service significantly enhances the customer’s overall experience. Needless to say, no one likes to wait in a crowded waiting area or stand in a queue, whether it’s just for a few minutes. This task seems so tedious and time-wasting for customers, which ruins their overall experience...
-                    </p>
-                </a>
-
-                {{-- Blog Post 3 --}}
-                <a href="https://blog.qwaiting.com/"
-                    class="block p-6 transition-all duration-300 bg-gray-50 rounded-3xl hover:shadow-xl hover:-translate-y-1 group">
-                    <img src="https://blog.qwaiting.com/wp-content/uploads/2023/12/Online-Appointment-Booking-Software-Take-your-Business-to-the-Next-Level.jpg" alt="Online Appointment Booking Software"
-                        class="w-full h-48 object-cover rounded-2xl mb-6">
-                    <h3 class="mb-3 text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                        Online Appointment Booking Software: Take your Business to the Next Level
-                    </h3>
-                    <p class="text-gray-600">
-                       Businesses that rely on in-person appointment scheduling are lagging behind and facing various problems. However, they can stay ahead by integrating technological advancements that directly impact customer loyalty & staff efficiency. With an online appointment booking solutions, you can automate your...
-                    </p>
-                </a>
-            </div>
-        </div>
-    </section>
+        </section>
 
         {{-- FAQ Section --}}
         <section class="py-20 bg-gray-50">
@@ -833,14 +857,14 @@
                         <div class="grid md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-text-dark mb-2">Full Name *</label>
-                                <input type="text" 
+                                <input type="text"
                                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                     placeholder="John Doe" required>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-semibold text-text-dark mb-2">Company Name *</label>
-                                <input type="text" 
+                                <input type="text"
                                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                     placeholder="Acme Inc." required>
                             </div>
@@ -849,14 +873,14 @@
                         <div class="grid md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-text-dark mb-2">Email Address *</label>
-                                <input type="email" 
+                                <input type="email"
                                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                     placeholder="john@example.com" required>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-semibold text-text-dark mb-2">Phone Number *</label>
-                                <input type="tel" 
+                                <input type="tel"
                                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                     placeholder="+1 (555) 000-0000" required>
                             </div>
@@ -864,7 +888,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-text-dark mb-2">Industry</label>
-                            <select 
+                            <select
                                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
                                 <option value="">Select your industry</option>
                                 <option value="banking">Banking & Finance</option>
@@ -881,7 +905,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-text-dark mb-2">Message</label>
-                            <textarea  rows="4"
+                            <textarea rows="4"
                                 class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-none"
                                 placeholder="Tell us about your queue management needs..."></textarea>
                         </div>
