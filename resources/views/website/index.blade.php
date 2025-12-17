@@ -6,114 +6,223 @@
 @section('content')
     <!-- Hero Section -->
     <section
-        class="relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <!-- Decorative Elements -->
+        class="relative pt-28 pb-20 lg:pt-36 lg:pb-28 overflow-hidden bg-gradient-to-br from-orange-50/30 via-white to-purple-50/20">
+        <!-- Subtle Background Pattern -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-            <div class="absolute top-1/2 -left-40 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+            <div
+                class="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-orange-100/40 via-transparent to-transparent rounded-full blur-3xl">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-purple-100/30 via-transparent to-transparent rounded-full blur-3xl">
+            </div>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                <div class="max-w-2xl">
-                    <div
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/10 to-blue-500/10 text-primary text-sm font-bold mb-8 border border-primary/20 backdrop-blur-sm">
-                        <span class="flex h-2 w-2 relative">
-                            <span
-                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        #1 Queue Management System
-                    </div>
-                    <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1]">
-                        Integrated Queue and <span
-                            class="bg-gradient-to-r from-primary via-blue-600 to-purple-600 bg-clip-text text-transparent">Appointment
-                            Booking</span> System
+            <!-- Grid: Left 5 cols, Right 7 cols for larger image section -->
+            <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                <!-- Left Content - 5 columns -->
+                <div class="lg:col-span-5">
+                    <!-- Main Heading - 3 Rows -->
+                    <h1 class="text-4xl sm:text-5xl lg:text-[3.25rem] font-medium tracking-tight text-gray-900 mb-6 leading-[1.1]"
+                        style="font-family: 'Inter', system-ui, sans-serif;">
+                        <span class="block">Integrated Queue and Appointment Booking System</span>
                     </h1>
-                    <p class="text-xl lg:text-2xl text-gray-600 mb-10 leading-relaxed font-medium">
-                        Reduce wait times by <span class="text-primary font-bold">35%</span> and scale quickly. Qwaiting is
-                        the leading platform for queue management,
-                        appointment scheduling, and advanced analytics reports to maximize your ROI.
+
+                    <!-- Description - Original Content -->
+                    <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                        Reduce wait times by <span class="font-semibold text-gray-900">35%</span> and scale quickly.
+                        Qwaiting is the leading platform for queue management, appointment scheduling, and advanced
+                        analytics reports to maximize your ROI.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-nowrap items-center gap-3 mb-6">
                         <a href="/signup"
-                            class="group inline-flex justify-center items-center px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-primary to-blue-600 rounded-2xl hover:shadow-2xl hover:shadow-primary/50 transition-all duration-300 hover:-translate-y-1 transform">
-                            Start 14 Day Free Trial
-                            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            class="group inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-white rounded-full hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl whitespace-nowrap"
+                            style="background: linear-gradient(to right, #5c4ae4, #7c3aed);">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
+                            Start 14 Day Free Trial
                         </a>
                         <a href="/pricing"
-                            class="inline-flex justify-center items-center px-8 py-4 text-base font-bold text-gray-900 bg-white border-2 border-gray-300 rounded-2xl hover:border-primary hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform">
+                            class="group inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-full hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 whitespace-nowrap">
+                            <div
+                                class="w-4 h-4 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
+                                <svg class="w-2 h-2 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                                </svg>
+                            </div>
                             See Plans & Features
                         </a>
                     </div>
-                    <div class="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+
+                    <!-- Bottom Caption - Original Content -->
+                    <div class="flex flex-wrap items-center gap-6 text-sm text-gray-500">
                         <div class="flex items-center gap-2">
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
-                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </div>
-                            <span class="font-medium">No credit card required</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                                </path>
+                            </svg>
+                            <span>No credit card required</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
-                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </div>
-                            <span class="font-medium">Cancel anytime</span>
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                                </path>
+                            </svg>
+                            <span>Cancel anytime</span>
                         </div>
                     </div>
                 </div>
-                <div class="relative">
-                    <!-- Floating Badge -->
-                    <div
-                        class="absolute -top-6 -left-6 z-20 bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 animate-float">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                </svg>
+
+                <!-- Right Side - Image with Floating Elements - 7 columns (larger) -->
+                <div class="lg:col-span-7 relative">
+                    <!-- Main Image Container -->
+                    <div class="relative">
+                        <!-- Hero Image - Larger -->
+                        <div class="relative rounded-3xl overflow-hidden shadow-2xl shadow-gray-900/10">
+                            <img src="{{ asset('website/asset/images/dashboard-screen.png') }}" alt="Qwaiting Dashboard"
+                                class="w-full h-auto object-cover">
+                        </div>
+
+                        <!-- Floating Stats Card - Top Right -->
+                        <div
+                            class="absolute -top-4 -right-4 lg:-top-6 lg:-right-6 z-20 bg-white rounded-2xl shadow-xl p-4 border border-gray-100 animate-float">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                                    style="background: linear-gradient(to bottom right, #5c4ae4, #7c3aed);">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xl font-bold text-gray-900">35%</p>
+                                    <p class="text-xs text-gray-500 font-medium">Reduced Wait Time</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-2xl font-bold text-gray-900">35%</p>
-                                <p class="text-xs text-gray-600 font-medium">Reduced Wait Time</p>
+                        </div>
+
+                        <!-- Floating Stats Card - Bottom Left -->
+                        <div
+                            class="absolute -bottom-4 -left-4 lg:-bottom-6 lg:-left-6 z-20 bg-white rounded-2xl shadow-xl p-4 border border-gray-100 animate-float-delayed">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                                    style="background: linear-gradient(to bottom right, #5c4ae4, #7c3aed);">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xl font-bold text-gray-900">65K+</p>
+                                    <p class="text-xs text-gray-500 font-medium">Happy Businesses</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Hero Image -->
-                    <div
-                        class="relative rounded-3xl shadow-2xl overflow-hidden border border-gray-200 transform hover:scale-[1.02] transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent z-10"></div>
-                        <img src="{{ asset('website/asset/images/dashboard-screen.png') }}" alt="Qwaiting Dashboard"
-                            class="w-full h-full object-cover">
-                    </div>
-
-                    <!-- Floating Stats -->
-                    <div
-                        class="absolute -bottom-6 -right-6 z-20 bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 animate-float-delayed">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                    </path>
+                    <!-- Rating Badges - Below Image -->
+                    <div class="flex flex-wrap items-center justify-center gap-3 mt-8">
+                        <!-- Capterra Rating -->
+                        <div
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L4 6V12L12 22L20 12V6L12 2Z" fill="#FF9D28" />
+                                <path d="M12 2L4 6V12L12 12V2Z" fill="#68C5ED" />
+                                <path d="M12 12L4 12V12L12 22V12Z" fill="#044D80" />
+                            </svg>
+                            <div class="flex">
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                 </svg>
                             </div>
-                            <div>
-                                <p class="text-2xl font-bold text-gray-900">65K+</p>
-                                <p class="text-xs text-gray-600 font-medium">Happy Businesses</p>
+                            <span class="text-sm font-medium text-gray-600">4.8 stars on Capterra</span>
+                        </div>
+
+                        <!-- GetApp Rating -->
+                        <div
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                <path d="M4 8L12 4L20 8L12 12L4 8Z" fill="#3DC3E8" />
+                                <path d="M4 8V16L12 20V12L4 8Z" fill="#46B8A7" />
+                            </svg>
+                            <div class="flex">
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
                             </div>
+                            <span class="text-sm font-medium text-gray-600">4.8 stars on GetApp</span>
+                        </div>
+
+                        <!-- G2 Rating -->
+                        <div
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm">
+                            <div
+                                class="w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                <span class="text-[9px] font-bold text-white">G2</span>
+                            </div>
+                            <div class="flex">
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium text-gray-600">4.7 stars on G2</span>
                         </div>
                     </div>
                 </div>
@@ -129,7 +238,7 @@
                 }
 
                 50% {
-                    transform: translateY(-10px);
+                    transform: translateY(-8px);
                 }
             }
 
@@ -141,16 +250,16 @@
                 }
 
                 50% {
-                    transform: translateY(-15px);
+                    transform: translateY(-10px);
                 }
             }
 
             .animate-float {
-                animation: float 3s ease-in-out infinite;
+                animation: float 4s ease-in-out infinite;
             }
 
             .animate-float-delayed {
-                animation: float-delayed 3s ease-in-out infinite 1.5s;
+                animation: float-delayed 4s ease-in-out infinite 2s;
             }
         </style>
     </section>
@@ -349,7 +458,8 @@
     <section class="py-24 bg-bg-light">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-text-dark mb-4">Key Solutions that <span class="text-primary">derive results</span></h2>
+                <h2 class="text-4xl font-bold text-text-dark mb-4">Key Solutions that <span class="text-primary">derive
+                        results</span></h2>
             </div>
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Queue Management -->
@@ -378,8 +488,8 @@
                 <div
                     class="bg-white p-8 rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all">
                     <div class="flex justify-center mb-4">
-                        <img src="{{ asset('website/asset/images/appointment-booking-solution.svg') }}" alt="Appointment Booking"
-                            class="w-16 h-16 object-contain">
+                        <img src="{{ asset('website/asset/images/appointment-booking-solution.svg') }}"
+                            alt="Appointment Booking" class="w-16 h-16 object-contain">
                     </div>
                     <h3 class="text-xl font-bold text-text-dark mb-2">Appointment Booking</h3>
                     <p class="text-text-medium mb-4">Allow customers to book slots online 24/7.</p>
@@ -442,8 +552,8 @@
                 <div
                     class="bg-white p-8 rounded-2xl border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all">
                     <div class="flex justify-center mb-4">
-                        <img src="{{ asset('website/asset/images/visitor-management-system.svg') }}" alt="Visitor Management"
-                            class="w-16 h-16 object-contain">
+                        <img src="{{ asset('website/asset/images/visitor-management-system.svg') }}"
+                            alt="Visitor Management" class="w-16 h-16 object-contain">
                     </div>
                     <h3 class="text-xl font-bold text-text-dark mb-2">Visitor Management</h3>
                     <p class="text-text-medium mb-4">Secure and efficient visitor check-in process.</p>
@@ -527,7 +637,8 @@
             <div class="text-center mb-16">
                 <div class="inline-block mb-10">
                     <span
-                        class="text-sm font-bold text-primary uppercase tracking-wider bg-primary/10 px-4 py-2 rounded-full">Next-Level Integration for Best Performance</span>
+                        class="text-sm font-bold text-primary uppercase tracking-wider bg-primary/10 px-4 py-2 rounded-full">Next-Level
+                        Integration for Best Performance</span>
                 </div>
                 <h2 class="text-4xl font-bold text-text-dark mb-4">Integartions</h2>
                 <p class="text-lg text-text-medium">Integrate Qwaiting with your preferred tools. Explore a list of popular
@@ -554,45 +665,43 @@
                 <p class="text-lg text-text-medium">Tailored solutions for every sector.</p>
             </div>
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <a href="/industries/retail-queue-system"
-                        class="group relative overflow-hidden rounded-3xl aspect-square">
-                        <img src="{{ asset('website/asset/images/retail.webp') }}" alt="Retail"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 class="text-2xl font-bold text-white">Retail</h3>
-                        </div>
-                    </a>
+                <a href="/industries/retail-queue-system" class="group relative overflow-hidden rounded-3xl aspect-square">
+                    <img src="{{ asset('website/asset/images/retail.webp') }}" alt="Retail"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 class="text-2xl font-bold text-white">Retail</h3>
+                    </div>
+                </a>
 
-                    <a href="/industries/healthcare" class="group relative overflow-hidden rounded-3xl aspect-square">
-                        <img src="https://qwaiting.com/frontimg/healthcare_image.webp" alt="Healthcare"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 class="text-2xl font-bold text-white">Healthcare</h3>
-                        </div>
-                    </a>
+                <a href="/industries/healthcare" class="group relative overflow-hidden rounded-3xl aspect-square">
+                    <img src="https://qwaiting.com/frontimg/healthcare_image.webp" alt="Healthcare"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 class="text-2xl font-bold text-white">Healthcare</h3>
+                    </div>
+                </a>
 
-                    <a href="/industries/banking-queue-system"
-                        class="group relative overflow-hidden rounded-3xl aspect-square">
-                        <img src="https://qwaiting.com/frontimg/banking_image.webp" alt="Banking"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 class="text-2xl font-bold text-white">Banking</h3>
-                        </div>
-                    </a>
+                <a href="/industries/banking-queue-system" class="group relative overflow-hidden rounded-3xl aspect-square">
+                    <img src="https://qwaiting.com/frontimg/banking_image.webp" alt="Banking"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 class="text-2xl font-bold text-white">Banking</h3>
+                    </div>
+                </a>
 
-                    <a href="/industries/public-sector-queue-system"
-                        class="group relative overflow-hidden rounded-3xl aspect-square">
-                        <img src="https://qwaiting.com/frontimg/public_image.webp" alt="Public"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                        <div class="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 class="text-2xl font-bold text-white">Public</h3>
-                        </div>
-                    </a>
-                </div>
+                <a href="/industries/public-sector-queue-system"
+                    class="group relative overflow-hidden rounded-3xl aspect-square">
+                    <img src="https://qwaiting.com/frontimg/public_image.webp" alt="Public"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 class="text-2xl font-bold text-white">Public</h3>
+                    </div>
+                </a>
+            </div>
         </div>
     </section>
 
@@ -607,13 +716,17 @@
                 <div class="swiper-wrapper">
                     <!-- Testimonial 1 -->
                     <div class="swiper-slide h-auto">
-                        <div class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
                             <svg class="w-10 h-10 text-primary/20 mb-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M14.017 21L14.017 18C14.017 16.896 14.321 16.067 14.929 15.513C15.537 14.959 16.617 14.505 18.169 14.151L18.169 11.775C16.329 11.963 15.009 12.308 14.209 12.81C13.409 13.312 13.009 14.228 13.009 15.558V21H14.017ZM5 21L5 18C5 16.896 5.304 16.067 5.912 15.513C6.52 14.959 7.6 14.505 9.152 14.151L9.152 11.775C7.312 11.963 5.992 12.308 5.192 12.81C4.392 13.312 3.992 14.228 3.992 15.558V21H5Z">
                                 </path>
                             </svg>
-                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting is an exceptional tool for businesses aiming to enhance their operational efficiency. The reports are easy to understand, and the monitoring capabilities have allowed us to stay ahead of potential issues. It’s a must-have for any forward-thinking organization."</p>
+                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting is an exceptional tool for businesses
+                                aiming to enhance their operational efficiency. The reports are easy to understand, and the
+                                monitoring capabilities have allowed us to stay ahead of potential issues. It’s a must-have
+                                for any forward-thinking organization."</p>
                             <div class="flex items-center gap-4 mt-auto">
                                 <div
                                     class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -627,13 +740,17 @@
                     </div>
                     <!-- Testimonial 2 -->
                     <div class="swiper-slide h-auto">
-                        <div class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
                             <svg class="w-10 h-10 text-primary/20 mb-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M14.017 21L14.017 18C14.017 16.896 14.321 16.067 14.929 15.513C15.537 14.959 16.617 14.505 18.169 14.151L18.169 11.775C16.329 11.963 15.009 12.308 14.209 12.81C13.409 13.312 13.009 14.228 13.009 15.558V21H14.017ZM5 21L5 18C5 16.896 5.304 16.067 5.912 15.513C6.52 14.959 7.6 14.505 9.152 14.151L9.152 11.775C7.312 11.963 5.992 12.308 5.192 12.81C4.392 13.312 3.992 14.228 3.992 15.558V21H5Z">
                                 </path>
                             </svg>
-                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting has transformed the way we manage our daily operations. The insights and reports provided by the platform have enabled us to make data-driven decisions, eliminating inefficiencies and streamlining our processes. It’s an essential tool for any business looking to optimize their workflow."</p>
+                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting has transformed the way we manage our daily
+                                operations. The insights and reports provided by the platform have enabled us to make
+                                data-driven decisions, eliminating inefficiencies and streamlining our processes. It’s an
+                                essential tool for any business looking to optimize their workflow."</p>
                             <div class="flex items-center gap-4 mt-auto">
                                 <div
                                     class="w-12 h-12 bg-accent-green rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -647,13 +764,17 @@
                     </div>
                     <!-- Testimonial 3 -->
                     <div class="swiper-slide h-auto">
-                        <div class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
                             <svg class="w-10 h-10 text-primary/20 mb-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M14.017 21L14.017 18C14.017 16.896 14.321 16.067 14.929 15.513C15.537 14.959 16.617 14.505 18.169 14.151L18.169 11.775C16.329 11.963 15.009 12.308 14.209 12.81C13.409 13.312 13.009 14.228 13.009 15.558V21H14.017ZM5 21L5 18C5 16.896 5.304 16.067 5.912 15.513C6.52 14.959 7.6 14.505 9.152 14.151L9.152 11.775C7.312 11.963 5.992 12.308 5.192 12.81C4.392 13.312 3.992 14.228 3.992 15.558V21H5Z">
                                 </path>
                             </svg>
-                            <p class="text-text-medium mb-6 flex-grow">"Since implementing Qwaiting, our team has seen a significant improvement in productivity. The monitoring features are incredibly detailed, allowing us to identify bottlenecks and address them proactively. It’s a game-changer for our business!"</p>
+                            <p class="text-text-medium mb-6 flex-grow">"Since implementing Qwaiting, our team has seen a
+                                significant improvement in productivity. The monitoring features are incredibly detailed,
+                                allowing us to identify bottlenecks and address them proactively. It’s a game-changer for
+                                our business!"</p>
                             <div class="flex items-center gap-4 mt-auto">
                                 <div
                                     class="w-12 h-12 bg-accent-yellow rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -667,13 +788,17 @@
                     </div>
                     <!-- Testimonial 4 -->
                     <div class="swiper-slide h-auto">
-                        <div class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
                             <svg class="w-10 h-10 text-primary/20 mb-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M14.017 21L14.017 18C14.017 16.896 14.321 16.067 14.929 15.513C15.537 14.959 16.617 14.505 18.169 14.151L18.169 11.775C16.329 11.963 15.009 12.308 14.209 12.81C13.409 13.312 13.009 14.228 13.009 15.558V21H14.017ZM5 21L5 18C5 16.896 5.304 16.067 5.912 15.513C6.52 14.959 7.6 14.505 9.152 14.151L9.152 11.775C7.312 11.963 5.992 12.308 5.192 12.81C4.392 13.312 3.992 14.228 3.992 15.558V21H5Z">
                                 </path>
                             </svg>
-                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting has been a lifesaver for our IT department. The platform’s ability to provide accurate reports and real-time monitoring has helped us make informed decisions, reducing downtime and improving overall efficiency. Highly recommend it!"</p>
+                            <p class="text-text-medium mb-6 flex-grow">"Qwaiting has been a lifesaver for our IT department.
+                                The platform’s ability to provide accurate reports and real-time monitoring has helped us
+                                make informed decisions, reducing downtime and improving overall efficiency. Highly
+                                recommend it!"</p>
                             <div class="flex items-center gap-4 mt-auto">
                                 <div
                                     class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -687,13 +812,17 @@
                     </div>
                     <!-- Testimonial 5 -->
                     <div class="swiper-slide h-auto">
-                        <div class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
+                        <div
+                            class="p-8 bg-white rounded-2xl border border-gray-100 h-full flex flex-col hover:shadow-lg transition-all duration-300">
                             <svg class="w-10 h-10 text-primary/20 mb-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path
                                     d="M14.017 21L14.017 18C14.017 16.896 14.321 16.067 14.929 15.513C15.537 14.959 16.617 14.505 18.169 14.151L18.169 11.775C16.329 11.963 15.009 12.308 14.209 12.81C13.409 13.312 13.009 14.228 13.009 15.558V21H14.017ZM5 21L5 18C5 16.896 5.304 16.067 5.912 15.513C6.52 14.959 7.6 14.505 9.152 14.151L9.152 11.775C7.312 11.963 5.992 12.308 5.192 12.81C4.392 13.312 3.992 14.228 3.992 15.558V21H5Z">
                                 </path>
                             </svg>
-                            <p class="text-text-medium mb-6 flex-grow">"We’ve been using Qwaiting for a few months now, and the impact on our business has been remarkable. The platform’s analytics have given us a clear picture of our operations, helping us cut down on redundant processes and focus on what truly matters."</p>
+                            <p class="text-text-medium mb-6 flex-grow">"We’ve been using Qwaiting for a few months now, and
+                                the impact on our business has been remarkable. The platform’s analytics have given us a
+                                clear picture of our operations, helping us cut down on redundant processes and focus on
+                                what truly matters."</p>
                             <div class="flex items-center gap-4 mt-auto">
                                 <div
                                     class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
@@ -727,7 +856,8 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-4 lg:px-4 text-center relative z-10">
 
             <h2 class="text-md lg:text-2xl font-bold text-white mb-10 leading-tight">
-                What impact can Qwaiting make on your business? Use our ROI Calculator to see the exact time and cost savings in seconds
+                What impact can Qwaiting make on your business? Use our ROI Calculator to see the exact time and cost
+                savings in seconds
             </h2>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
@@ -771,7 +901,8 @@
                 <div
                     class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all group">
                     <div class="h-48 relative overflow-hidden flex items-center justify-center">
-                        <img src="{{ asset('website/asset/images/msq-logo.png') }}" alt="MSQ" class="w-90 h-90 object-contain p-8">
+                        <img src="{{ asset('website/asset/images/msq-logo.png') }}" alt="MSQ"
+                            class="w-90 h-90 object-contain p-8">
                     </div>
                     <div class="p-6">
                         <h3 class="font-bold text-lg text-text-dark mb-3 group-hover:text-primary transition-colors">Changi
@@ -784,7 +915,8 @@
                 <div
                     class="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-primary/20 hover:shadow-lg transition-all group">
                     <div class="h-48 bg-white relative overflow-hidden flex items-center justify-center">
-                        <img src="{{ asset('website/asset/images/nus-logo.png') }}" alt="NUS" class="w-50 h-50 object-contain">
+                        <img src="{{ asset('website/asset/images/nus-logo.png') }}" alt="NUS"
+                            class="w-50 h-50 object-contain">
                     </div>
                     <div class="p-6">
                         <h3 class="font-bold text-lg text-text-dark mb-3 group-hover:text-primary transition-colors">NUS
@@ -1007,7 +1139,10 @@
                     <div class="p-6">
                         <h3 class="font-bold text-xl text-text-dark mb-3 hover:text-primary transition-colors"><a
                                 href="#">How to End the Frustration of Long Queues Ever</a></h3>
-                        <p class="text-text-medium text-sm mb-4">Long queues can be very boring. Standing in line can make you feel frustrated when it feels longer than its actual time. Waiting is frustrating, but there is a way to address this problem. Businesses can use smart queue management systems to make lines shorter. These systems help people know their place...</p>
+                        <p class="text-text-medium text-sm mb-4">Long queues can be very boring. Standing in line can make
+                            you feel frustrated when it feels longer than its actual time. Waiting is frustrating, but there
+                            is a way to address this problem. Businesses can use smart queue management systems to make
+                            lines shorter. These systems help people know their place...</p>
                         <a href="#" class="text-sm font-semibold text-text-dark hover:text-primary">Read more →</a>
                     </div>
                 </article>
@@ -1020,7 +1155,10 @@
                     <div class="p-6">
                         <h3 class="font-bold text-xl text-text-dark mb-3 hover:text-primary transition-colors"><a
                                 href="#">Why Government Offices Must Modernize Their Queues Before 2026</a></h3>
-                        <p class="text-text-medium text-sm mb-4">We all know that government offices deal with hundreds of citizens every single day. This often leads to long wait times at service counters, which frustrates the public and creates unnecessary confusion for staff. To solve this issue, many government departments are turning to digital...</p>
+                        <p class="text-text-medium text-sm mb-4">We all know that government offices deal with hundreds of
+                            citizens every single day. This often leads to long wait times at service counters, which
+                            frustrates the public and creates unnecessary confusion for staff. To solve this issue, many
+                            government departments are turning to digital...</p>
                         <a href="#" class="text-sm font-semibold text-text-dark hover:text-primary">Read more →</a>
                     </div>
                 </article>
@@ -1033,7 +1171,10 @@
                     <div class="p-6">
                         <h3 class="font-bold text-xl text-text-dark mb-3 hover:text-primary transition-colors"><a
                                 href="#">10 Benefits of Using Queue Management Software in Your Business</a></h3>
-                        <p class="text-text-medium text-sm mb-4">Queue management software is simply like having a smart helper for your business. It makes serving customers easier by organizing queue lines and appointments. This software saves time and makes things run smoothly. Business owners can see what’s happening in real time and make better choices...</p>
+                        <p class="text-text-medium text-sm mb-4">Queue management software is simply like having a smart
+                            helper for your business. It makes serving customers easier by organizing queue lines and
+                            appointments. This software saves time and makes things run smoothly. Business owners can see
+                            what’s happening in real time and make better choices...</p>
                         <a href="#" class="text-sm font-semibold text-text-dark hover:text-primary">Read more →</a>
                     </div>
                 </article>
@@ -1223,8 +1364,8 @@
         </div>
     </section>
 
-<script>
-        document.addEventListener("DOMContentLoaded", function() {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
             if (typeof Swiper !== 'undefined') {
                 new Swiper(".trustSwiper", {
                     loop: true,
