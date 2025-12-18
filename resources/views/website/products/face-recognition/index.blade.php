@@ -16,7 +16,7 @@
 
         </section>
 
-        <div class="relative z-[100] backdrop-blur-xl bg-white/70 border-b border-gray-200">
+        <div class="relative z-[1] backdrop-blur-xl bg-white/70 border-b border-gray-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
 
                 <nav class="flex items-center justify-center gap-3 bg-white rounded-full shadow-md px-4 py-2"

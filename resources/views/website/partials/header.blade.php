@@ -316,7 +316,7 @@
                             </div>
                             <p class="text-sm text-text-medium">Automate workflows and reduce manual tasks with smart queue solutions.</p>
                         </a>
-                        <a href="/solutions/virtual-queuing"
+                        <a href="/solutions/virtual-queue-system"
                             class="group/card block p-3 rounded-xl hover:shadow-md transition-all">
                             <div class="flex items-center gap-3 mb-2">
                                 <img src="https://qwaiting.com/images/qr-code-icon.png" alt="" class="w-8 h-8">
@@ -334,7 +334,7 @@
                             </div>
                             <p class="text-sm text-text-medium">Track and manage visitor entry, exit, and ID verification from a single dashboard.</p>
                         </a>
-                        <a href="/solutions/video-queue-system"
+                        <a href="/solutions/video-queue"
                             class="group/card block p-3 rounded-xl hover:shadow-md transition-all">
                             <div class="flex items-center gap-3 mb-2">
                                 <img src="https://qwaiting.com/images/video_queue.png" alt="" class="w-8 h-8">
@@ -610,7 +610,7 @@
             </div>
 
             <div class="border-t border-gray-100 my-2"></div>
-            <a href="/signup"
+            <a href="/signup?basic_info"
                 class="block px-3 py-3 text-base font-medium text-text-dark hover:bg-gray-50 rounded-md">Sign Up/Sign
                 In</a>
             <a href="/request-demo"
