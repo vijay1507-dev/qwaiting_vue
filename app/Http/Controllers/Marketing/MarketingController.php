@@ -3,6 +3,12 @@
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSequenceRequest;
+use App\Http\Requests\UpdateSequenceRequest;
+use App\Jobs\SendSequenceTestEmailJob;
+use App\Models\EmailNotificationTemplate;
+use App\Models\Sequence;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -177,110 +183,37 @@ class MarketingController extends Controller
      */
     public function sequences(Request $request): Response
     {
-        $sequences = [
-            [
-                'id' => '1',
-                'name' => 'Behavioral Email Sequence (Non-Buyers)',
-                'description' => 'Automated sequence for users who signed up but haven\'t purchased',
-                'status' => 'active',
-                'totalEmails' => 6,
-                'recipients' => 1250,
-                'emails' => [
-                    [
-                        'id' => '1',
-                        'number' => 1,
-                        'timing' => 'Immediate',
-                        'subject' => 'Welcome to Qwaiting - Your Journey Starts Here',
-                        'type' => 'welcome',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '2',
-                        'number' => 2,
-                        'timing' => '24 hours',
-                        'subject' => '5 Features That Will Transform Your Customer Experience',
-                        'type' => 'feature_highlight',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '3',
-                        'number' => 3,
-                        'timing' => '48 hours',
-                        'subject' => 'How {{similar_company}} Reduced Wait Times by 60%',
-                        'type' => 'social_proof',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '4',
-                        'number' => 4,
-                        'timing' => '72 hours',
-                        'subject' => 'Your Trial is Halfway Through - Are You Making the Most of It?',
-                        'type' => 'trial_reminder',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '5',
-                        'number' => 5,
-                        'timing' => '96 hours',
-                        'subject' => '{{first_name}}, Let\'s Talk About Your Queue Management Goals',
-                        'type' => 'sales_outreach',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '6',
-                        'number' => 6,
-                        'timing' => 'Day before trial ends',
-                        'subject' => 'Exclusive: 20% Off Your First Year',
-                        'type' => 'offer',
-                        'status' => 'active',
-                    ],
-                ],
-                'createdAt' => '2025-03-15 10:30AM',
-            ],
-            [
-                'id' => '2',
-                'name' => 'Lead Nurturing Journey - Enterprise',
-                'description' => 'Nurturing sequence for enterprise leads',
-                'status' => 'active',
-                'totalEmails' => 4,
-                'recipients' => 320,
-                'emails' => [
-                    [
-                        'id' => '7',
-                        'number' => 1,
-                        'timing' => 'Immediate',
-                        'subject' => 'Welcome to Qwaiting Enterprise',
-                        'type' => 'welcome',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '8',
-                        'number' => 2,
-                        'timing' => '3 days',
-                        'subject' => 'Enterprise Features Overview',
-                        'type' => 'feature_highlight',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '9',
-                        'number' => 3,
-                        'timing' => '7 days',
-                        'subject' => 'Schedule a Demo with Our Team',
-                        'type' => 'sales_outreach',
-                        'status' => 'active',
-                    ],
-                    [
-                        'id' => '10',
-                        'number' => 4,
-                        'timing' => '14 days',
-                        'subject' => 'Case Study: How {{company}} Scaled with Qwaiting',
-                        'type' => 'social_proof',
-                        'status' => 'active',
-                    ],
-                ],
-                'createdAt' => '2025-03-10 02:15PM',
-            ],
-        ];
+        $sequences = Sequence::with('emailTemplates')
+            ->latest()
+            ->get()
+            ->map(function ($sequence) {
+                return [
+                    'id' => (string) $sequence->id,
+                    'name' => $sequence->name,
+                    'description' => $sequence->description,
+                    'status' => $sequence->status,
+                    'totalEmails' => $sequence->emailTemplates->count(),
+                    'emails' => $sequence->emailTemplates->map(function ($template) {
+                        if ($template->timing_unit === 'immediate' || ($template->timing_value === 0 && $template->timing_unit !== 'days_before_expiry')) {
+                            $timing = 'Immediate';
+                        } elseif ($template->timing_unit === 'days_before_expiry') {
+                            $timing = $template->timing_value.' Day'.($template->timing_value !== 1 ? 's' : '').' Before Expiry';
+                        } else {
+                            $timing = $template->timing_value.' '.$template->timing_unit;
+                        }
+
+                        return [
+                            'id' => (string) $template->id,
+                            'number' => $template->sequence_number,
+                            'timing' => $timing,
+                            'subject' => $template->subject,
+                            'type' => $template->type,
+                            'status' => $template->status,
+                        ];
+                    })->toArray(),
+                    'createdAt' => $sequence->created_at->format('Y-m-d h:iA'),
+                ];
+            });
 
         return Inertia::render('Marketing/Sequences', [
             'sequences' => $sequences,
@@ -469,9 +402,186 @@ class MarketingController extends Controller
      */
     public function sequenceView(Request $request, ?string $id = null): Response
     {
+        $sequence = null;
+
+        if ($id) {
+            $sequence = Sequence::with('emailTemplates')
+                ->findOrFail($id);
+
+            $sequence = [
+                'id' => (string) $sequence->id,
+                'name' => $sequence->name,
+                'description' => $sequence->description,
+                'status' => $sequence->status,
+                'emails' => $sequence->emailTemplates->map(function ($template) {
+                    return [
+                        'id' => (string) $template->id,
+                        'number' => $template->sequence_number,
+                        'timingValue' => $template->timing_value,
+                        'timingUnit' => $template->timing_unit,
+                        'subject' => $template->subject,
+                        'type' => $template->type,
+                        'content' => $template->content,
+                        'status' => $template->status,
+                    ];
+                })->sortBy('sequence_number')->values()->toArray(),
+            ];
+        }
+
+        // Get template variables
+        $templateVariables = \App\Models\TemplateVariable::where('is_active', true)
+            ->orderBy('module')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($variable) {
+                return [
+                    'id' => (string) $variable->id,
+                    'name' => $variable->name,
+                    'module' => $variable->module,
+                    'description' => $variable->description,
+                    'example_value' => $variable->example_value,
+                ];
+            });
+
         return Inertia::render('Marketing/SequenceView', [
             'id' => $id,
+            'sequence' => $sequence,
+            'templateVariables' => $templateVariables,
         ]);
+    }
+
+    /**
+     * Send test email for a specific email template.
+     */
+    public function sendTestEmail(Request $request, string $templateId): RedirectResponse
+    {
+        $request->validate([
+            'test_email' => ['required', 'email'],
+            'test_variables' => ['nullable', 'array'],
+        ]);
+
+        $emailTemplate = EmailNotificationTemplate::findOrFail($templateId);
+
+        // Dispatch job to send test email
+        SendSequenceTestEmailJob::dispatch(
+            $emailTemplate,
+            $request->input('test_email'),
+            $request->input('test_variables', [])
+        );
+
+        return back()->with('success', 'Test email queued successfully. Check your email inbox.');
+    }
+
+    /**
+     * Send batch test emails for all templates in a sequence.
+     */
+    public function sendBatchTestEmails(Request $request, string $sequenceId): RedirectResponse
+    {
+        $request->validate([
+            'test_email' => ['required', 'email'],
+            'test_variables' => ['nullable', 'array'],
+        ]);
+
+        $sequence = Sequence::with('emailTemplates')->findOrFail($sequenceId);
+
+        $emailTemplates = $sequence->emailTemplates()
+            ->where('status', 'active')
+            ->orderBy('sequence_number')
+            ->get();
+
+        if ($emailTemplates->isEmpty()) {
+            return back()->withErrors([
+                'message' => 'No active email templates found in this sequence',
+            ]);
+        }
+
+        $dispatchedCount = 0;
+        foreach ($emailTemplates as $index => $template) {
+            // Add delay to prevent rate limiting (10 seconds between each email)
+            // Mailtrap free tier allows 2 emails/second, so we use 10s to be safe
+            $delay = $index * 10; // 0s, 10s, 20s, 30s, 40s, 50s, etc.
+
+            SendSequenceTestEmailJob::dispatch(
+                $template,
+                $request->input('test_email'),
+                $request->input('test_variables', [])
+            )->delay(now()->addSeconds($delay));
+
+            $dispatchedCount++;
+        }
+
+        return back()->with('success', "{$dispatchedCount} test email(s) queued successfully. Check your email inbox.");
+    }
+
+    /**
+     * Store a newly created sequence.
+     */
+    public function storeSequence(StoreSequenceRequest $request): RedirectResponse
+    {
+        $sequence = Sequence::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'status' => $request->status,
+        ]);
+
+        foreach ($request->emails as $emailData) {
+            EmailNotificationTemplate::create([
+                'sequence_id' => $sequence->id,
+                'sequence_number' => $emailData['sequence_number'],
+                'timing_value' => $emailData['timing_value'],
+                'timing_unit' => $emailData['timing_unit'],
+                'subject' => $emailData['subject'],
+                'type' => $emailData['type'],
+                'content' => $emailData['content'] ?? null,
+                'status' => $emailData['status'],
+            ]);
+        }
+
+        return redirect()->route('marketing.sequences')->with('success', 'Sequence created successfully.');
+    }
+
+    /**
+     * Update the specified sequence.
+     */
+    public function updateSequence(UpdateSequenceRequest $request, string $id): RedirectResponse
+    {
+        $sequence = Sequence::findOrFail($id);
+
+        $sequence->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'status' => $request->status,
+        ]);
+
+        // Delete existing email templates
+        $sequence->emailTemplates()->delete();
+
+        // Create new email templates
+        foreach ($request->emails as $emailData) {
+            EmailNotificationTemplate::create([
+                'sequence_id' => $sequence->id,
+                'sequence_number' => $emailData['sequence_number'],
+                'timing_value' => $emailData['timing_value'],
+                'timing_unit' => $emailData['timing_unit'],
+                'subject' => $emailData['subject'],
+                'type' => $emailData['type'],
+                'content' => $emailData['content'] ?? null,
+                'status' => $emailData['status'],
+            ]);
+        }
+
+        return redirect()->route('marketing.sequences')->with('success', 'Sequence updated successfully.');
+    }
+
+    /**
+     * Remove the specified sequence.
+     */
+    public function destroySequence(string $id): RedirectResponse
+    {
+        $sequence = Sequence::findOrFail($id);
+        $sequence->delete();
+
+        return redirect()->route('marketing.sequences')->with('success', 'Sequence deleted successfully.');
     }
 
     /**
