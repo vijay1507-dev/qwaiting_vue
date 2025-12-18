@@ -4,8 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
-
-
 Route::get('/', function () {
     return view('website.index');
     // return Inertia::render('Welcome', [
@@ -46,17 +44,28 @@ Route::get('quotes/{id}/edit', function ($id) {
 })->middleware(['auth', 'verified'])->name('quotes.edit');
 
 Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Marketing\MarketingController::class, 'index'])->name('index');
+    Route::get('/', function () {
+        return redirect()->route('marketing.campaigns');
+    })->name('index');
     Route::get('/campaigns', [App\Http\Controllers\Marketing\MarketingController::class, 'campaigns'])->name('campaigns');
     Route::get('/campaigns/create', [App\Http\Controllers\Marketing\MarketingController::class, 'campaignView'])->name('campaigns.create');
     Route::get('/campaigns/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'campaignView'])->name('campaigns.edit');
     Route::get('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'sequences'])->name('sequences');
     Route::get('/sequences/create', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.create');
+    Route::post('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'storeSequence'])->name('sequences.store');
     Route::get('/sequences/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.edit');
+    Route::put('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'updateSequence'])->name('sequences.update');
+    Route::delete('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'destroySequence'])->name('sequences.destroy');
+    Route::post('/sequences/{id}/test-batch', [App\Http\Controllers\Marketing\MarketingController::class, 'sendBatchTestEmails'])->name('sequences.test-batch');
+    Route::post('/email-templates/{id}/test', [App\Http\Controllers\Marketing\MarketingController::class, 'sendTestEmail'])->name('email-templates.test');
     Route::get('/workflows', [App\Http\Controllers\Marketing\MarketingController::class, 'workflows'])->name('workflows');
     Route::get('/workflows/create', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.create');
     Route::get('/workflows/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.edit');
     Route::get('/tracking', [App\Http\Controllers\Marketing\MarketingController::class, 'tracking'])->name('tracking');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {
+    Route::get('/template-variables', [App\Http\Controllers\TemplateVariableController::class, 'getAll'])->name('template-variables');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
@@ -85,7 +94,6 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
 
 require __DIR__.'/settings.php';
 
-
 // Website Routes
 
 Route::get('/about', function () {
@@ -103,7 +111,6 @@ Route::get('/reseller-partner-program', function () {
 Route::get('/contact', function () {
     return view('auth.request-demo');
 });
-
 
 Route::get('/refund-cancellation-policy', function () {
     return view('website.refund-policy.index');
@@ -459,8 +466,3 @@ Route::prefix('industries')->group(function () {
         return view('website.industries.barbershop');
     });
 });
-
-Route::get('/features', function () {
-    return view('website.features.index');
-});
-

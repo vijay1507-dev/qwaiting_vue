@@ -2,10 +2,10 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { index as marketingIndex, campaigns, workflows, tracking } from '@/routes/marketing';
+import { campaigns, workflows, tracking } from '@/routes/marketing';
 import { create as sequencesCreate, edit as sequencesEdit } from '@/routes/marketing/sequences';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Filter, Edit, Trash2, Mail, Clock, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
@@ -16,7 +16,6 @@ interface Sequence {
     description: string;
     status: string;
     totalEmails: number;
-    recipients: number;
     emails: Array<{
         id: string;
         number: number;
@@ -41,10 +40,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Marketing Automation',
-        href: marketingIndex().url,
+        href: campaigns().url,
     },
     {
-        title: 'Email Sequences',
+        title: 'Sequences Notifications',
         href: '#',
     },
 ];
@@ -61,8 +60,6 @@ const filterForm = ref({
     name: '',
     description: '',
     status: '',
-    totalEmails: '',
-    recipients: '',
     createdAt: '',
 });
 
@@ -111,18 +108,6 @@ const filteredSequences = computed(() => {
         result = result.filter(sequence =>
             sequence.status === filterForm.value.status
         );
-    }
-    if (filterForm.value.totalEmails) {
-        const value = parseFloat(filterForm.value.totalEmails);
-        if (!isNaN(value)) {
-            result = result.filter(sequence => sequence.totalEmails >= value);
-        }
-    }
-    if (filterForm.value.recipients) {
-        const value = parseFloat(filterForm.value.recipients);
-        if (!isNaN(value)) {
-            result = result.filter(sequence => sequence.recipients >= value);
-        }
     }
 
     return result;
@@ -182,6 +167,14 @@ const formatNumber = (num: number): string => {
         return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
+};
+
+const deleteSequence = (id: string) => {
+    if (confirm('Are you sure you want to delete this sequence? This action cannot be undone.')) {
+        router.delete(`/marketing/sequences/${id}`, {
+            preserveScroll: true,
+        });
+    }
 };
 
 // Filter modal functions
@@ -280,24 +273,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Email Sequences" />
+    <Head title="Sequences Notifications" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2">
             <!-- Header Section -->
             <div class="flex flex-col gap-2">
                 <div>
-                    <h1 class="text-base font-semibold text-foreground">Email Sequences</h1>
+                    <h1 class="text-base font-semibold text-foreground">Sequences Notifications</h1>
                 </div>
 
                 <!-- Navigation Tabs -->
                 <div class="flex gap-0 border-b border-border">
-                    <Link
-                        :href="marketingIndex().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                        Dashboard
-                    </Link>
                     <Link
                         :href="campaigns().url"
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -311,9 +298,9 @@ onUnmounted(() => {
                             'border-blue-600 text-foreground'
                         ]"
                     >
-                        Sequences
+                        Sequences Notifications
                     </Link>
-                    <Link
+                    <!-- <Link
                         :href="workflows().url"
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
@@ -324,7 +311,7 @@ onUnmounted(() => {
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
                         Tracking
-                    </Link>
+                    </Link> -->
                 </div>
 
                 <!-- Action Bar -->
@@ -405,12 +392,6 @@ onUnmounted(() => {
                             <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
                                 Status
                             </th>
-                            <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">
-                                Total Emails
-                            </th>
-                            <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">
-                                Recipients
-                            </th>
                             <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
                                 Created
                             </th>
@@ -421,7 +402,7 @@ onUnmounted(() => {
                     </thead>
                     <tbody>
                         <tr v-if="filteredSequences.length === 0">
-                            <td colspan="7" class="px-4 py-12 text-center">
+                            <td colspan="5" class="px-4 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <p class="text-sm text-muted-foreground">No sequences found</p>
                                     <p class="text-xs text-muted-foreground">
@@ -451,12 +432,6 @@ onUnmounted(() => {
                                     {{ sequence.status }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 align-middle text-right">
-                                <span class="text-foreground">{{ sequence.totalEmails }}</span>
-                            </td>
-                            <td class="px-4 py-3 align-middle text-right">
-                                <span class="text-foreground">{{ formatNumber(sequence.recipients) }}</span>
-                            </td>
                             <td class="px-4 py-3 align-middle">
                                 <span class="text-sm text-muted-foreground">{{ sequence.createdAt }}</span>
                             </td>
@@ -471,10 +446,11 @@ onUnmounted(() => {
                                         </button>
                                     </Link>
                                     <button
-                                        class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                        @click="deleteSequence(sequence.id)"
+                                        class="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
                                         title="Delete"
                                     >
-                                        <Trash2 class="size-4 text-muted-foreground" />
+                                        <Trash2 class="size-4 text-red-600 dark:text-red-400" />
                                     </button>
                                 </div>
                             </td>
@@ -634,32 +610,6 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Total Emails Field -->
-                            <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
-                                    Total Emails
-                                </label>
-                                <Input
-                                    v-model="filterForm.totalEmails"
-                                    type="text"
-                                    placeholder="Total Emails"
-                                    class="w-full"
-                                />
-                            </div>
-
-                            <!-- Recipients Field -->
-                            <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
-                                    Recipients
-                                </label>
-                                <Input
-                                    v-model="filterForm.recipients"
-                                    type="text"
-                                    placeholder="Recipients"
-                                    class="w-full"
-                                />
                             </div>
 
                             <!-- Created At Field -->
