@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\website\SignupController;
 
 Route::get('/', function () {
     return view('website.index');
@@ -92,7 +93,7 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
     Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
 
 // Website Routes
 
@@ -261,13 +262,17 @@ Route::prefix('customer-stories')->group(function () {
 });
 
 // Auth / Action Routes
-Route::get('/signup', function () {
-    return view('website.auth.sign-up');
-});
+Route::get('/signup', [SignupController::class, 'index'])->name('signup');
+Route::post('/signup/step1', [SignupController::class, 'storeStep1'])->name('signup.step1');
+Route::post('/signup/step2', [SignupController::class, 'storeStep2'])->name('signup.step2');
+Route::post('/signup/step3', [SignupController::class, 'storeStep3'])->name('signup.step3');
+Route::post('/signup/step4', [SignupController::class, 'storeStep4'])->name('signup.step4');
+Route::post('/signup/step5', [SignupController::class, 'storeStep5'])->name('signup.step5');
+Route::post('/signup/step6', [SignupController::class, 'storeStep6'])->name('signup.step6');
 
 Route::get('/website-login', function () {
     return view('website.auth.login');
-});
+})->name('website-login');
 
 Route::get('/request-demo', function () {
     return view('website.auth.request-demo');
