@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'parent_domain' => env('PARENT_DOMAIN', 'qwaiting.com'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

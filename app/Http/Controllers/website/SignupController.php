@@ -2,166 +2,127 @@
 
 namespace App\Http\Controllers\website;
 
-use App\Models\User;
-use App\Models\SignupLead;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SignupStepRequest;
+use App\Models\SignupLead;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\View\View;
 
 class SignupController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         return view('website.auth.signup');
     }
 
-    public function storeStep1(Request $request)
+    public function storeStep(SignupStepRequest $request, int $step): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone_number' => 'required|string|max:20',
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'regex:/[a-z]/',      // must contain at least one lowercase letter
-                'regex:/[A-Z]/',      // must contain at least one uppercase letter
-            ],
-        ], [
-            'password.regex' => 'The password must contain at least one uppercase and one lowercase letter.',
-        ]);
+        $validated = $request->validated();
 
-        $lead = SignupLead::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone_number' => $request->country_code . ' ' . $request->phone_number,
-            'password' => Hash::make($request->password),
-            'signup_step' => 1,
-        ]);
+        if ($step === 1) {
+            $lead = SignupLead::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone_number' => $validated['country_code'].' '.$validated['phone_number'],
+                'password' => Hash::make($validated['password']),
+                'signup_step' => 1,
+            ]);
 
-        Session::put('signup_lead_id', $lead->id);
+            Session::put('signup_lead_id', $lead->id);
 
-        return response()->json(['success' => true, 'next_step' => 2]);
-    }
-
-    public function storeStep2(Request $request)
-    {
-        $leadId = Session::get('signup_lead_id');
-        if (!$leadId)
-            return response()->json(['success' => false, 'message' => 'Session expired'], 403);
-
-        $request->validate([
-            'company_name' => 'required|string|max:255',
-            'domain_name' => 'required|string|max:255',
-            'role' => 'required|string|max:255',
-            'website' => 'required|nullable|string|max:255',
-        ]);
-
-        $lead = SignupLead::find($leadId);
-        $domain = str_replace(' ', '-', strtolower($request->domain_name));
-        if (!str_ends_with($domain, '.qwaiting.com')) {
-            $domain .= '.qwaiting.com';
+            return response()->json(['success' => true, 'next_step' => 2]);
         }
 
-        $lead->update([
-            'company_name' => $request->company_name,
-            'domain_name' => $domain,
-            'role' => $request->role,
-            'website' => $request->website,
-            'signup_step' => 2,
-        ]);
+        $lead = SignupLead::find(Session::get('signup_lead_id'));
 
-        return response()->json(['success' => true, 'next_step' => 3]);
-    }
+        if ($step === 6) {
+            return DB::transaction(function () use ($lead, $validated) {
+                $lead->update(array_merge($validated, ['signup_step' => 6]));
 
-    public function storeStep3(Request $request)
-    {
-        $leadId = Session::get('signup_lead_id');
-        if (!$leadId)
-            return response()->json(['success' => false, 'message' => 'Session expired'], 403);
+                // Extract phone_code and phone from phone_number
+                // phone_number is stored as "country_code phone_number" (e.g., "+1 1234567890")
+                $phoneNumber = trim($lead->phone_number ?? '');
+                $phoneParts = explode(' ', $phoneNumber, 2);
+                $phoneCode = $phoneParts[0] ?? '';
+                $phone = isset($phoneParts[1]) ? trim($phoneParts[1]) : '';
+                
+                // Fallback: if no space found, try to extract code from start
+                if (empty($phone) && !empty($phoneNumber)) {
+                    // Try to match country code pattern (e.g., +1, +44, etc.)
+                    if (preg_match('/^(\+\d{1,4})\s*(.+)$/', $phoneNumber, $matches)) {
+                        $phoneCode = $matches[1];
+                        $phone = $matches[2];
+                    } else {
+                        // If no pattern matches, use full number as phone (edge case)
+                        $phone = $phoneNumber;
+                    }
+                }
 
-        $request->validate([
-            'usage_preference' => 'required|string|max:255',
-        ]);
+                // Prepare API payload
+                $apiData = [
+                    'domain' => $lead->domain_name,
+                    'fullname' => $lead->name,
+                    'company_name' => $lead->company_name,
+                    'email' => $lead->email,
+                    'phone' => $phone,
+                    'phone_code' => $phoneCode,
+                ];
 
-        $lead = SignupLead::find($leadId);
-        $lead->update([
-            'usage_preference' => $request->usage_preference,
-            'signup_step' => 3,
-        ]);
+                // Call external API
+                try {
+                    $response = Http::post('https://qwaiting-ai.thevistiq.com/api/create/tenant', $apiData);
 
-        return response()->json(['success' => true, 'next_step' => 4]);
-    }
+                    if ($response->successful()) {
+                        // Soft delete the lead after successful API call
+                        $lead->delete();
 
-    public function storeStep4(Request $request)
-    {
-        $leadId = Session::get('signup_lead_id');
-        if (!$leadId)
-            return response()->json(['success' => false, 'message' => 'Session expired'], 403);
+                        $user = User::create([
+                            'name' => $lead->name,
+                            'email' => $lead->email,
+                            'password' => $lead->password,
+                        ]);
 
-        $request->validate([
-            'industry' => 'required|string|max:255',
-        ]);
+                        Auth::login($user);
+                        Session::forget('signup_lead_id');
 
-        $lead = SignupLead::find($leadId);
-        $lead->update([
-            'industry' => $request->industry,
-            'signup_step' => 4,
-        ]);
+                        return response()->json(['success' => true, 'redirect' => route('website-login')]);
+                    } else {
+                        // Log API error
+                        Log::error('External API call failed', [
+                            'status' => $response->status(),
+                            'body' => $response->body(),
+                            'lead_id' => $lead->id,
+                        ]);
 
-        return response()->json(['success' => true, 'next_step' => 5]);
-    }
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Failed to create tenant. Please try again.',
+                        ], 500);
+                    }
+                } catch (\Exception $e) {
+                    // Log exception
+                    Log::error('External API exception', [
+                        'message' => $e->getMessage(),
+                        'lead_id' => $lead->id,
+                    ]);
 
-    public function storeStep5(Request $request)
-    {
-        $leadId = Session::get('signup_lead_id');
-        if (!$leadId)
-            return response()->json(['success' => false, 'message' => 'Session expired'], 403);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'An error occurred. Please try again.',
+                    ], 500);
+                }
+            });
+        }
 
-        $request->validate([
-            'footfall' => 'required|string|max:255',
-        ]);
+        $lead->update(array_merge($validated, ['signup_step' => $step]));
 
-        $lead = SignupLead::find($leadId);
-        $lead->update([
-            'footfall' => $request->footfall,
-            'signup_step' => 5,
-        ]);
-
-        return response()->json(['success' => true, 'next_step' => 6]);
-    }
-
-    public function storeStep6(Request $request)
-    {
-        $leadId = Session::get('signup_lead_id');
-        if (!$leadId)
-            return response()->json(['success' => false, 'message' => 'Session expired'], 403);
-
-        $request->validate([
-            'current_solution' => 'required|string|max:255',
-        ]);
-
-        $lead = SignupLead::find($leadId);
-        $lead->update([
-            'current_solution' => $request->current_solution,
-            'signup_step' => 6, // Fully Completed
-        ]);
-
-        // Create the actual User record at the end
-        // Note: We only save basic fields to User table since the user deleted extended columns from User table
-        $user = User::create([
-            'name' => $lead->name,
-            'email' => $lead->email,
-            'password' => $lead->password, // Already hashed
-        ]);
-
-        // Log the user in
-        Auth::login($user);
-        Session::forget('signup_lead_id');
-
-        return response()->json(['success' => true, 'redirect' => route('website-login')]);
+        return response()->json(['success' => true, 'next_step' => $step + 1]);
     }
 }
