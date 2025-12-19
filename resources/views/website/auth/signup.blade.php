@@ -7,7 +7,8 @@
     <title>Signup - Qwaiting</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    @vite(['resources/css/app.css'])
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Intl-Tel-Input -->
@@ -164,7 +165,7 @@
                         <div id="password-requirements" class="hidden mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5">
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="min">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
@@ -173,7 +174,7 @@
                             </div>
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="upper">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
@@ -182,7 +183,7 @@
                             </div>
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="lower">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />

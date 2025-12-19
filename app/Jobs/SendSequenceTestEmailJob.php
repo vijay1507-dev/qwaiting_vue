@@ -119,9 +119,9 @@ class SendSequenceTestEmailJob implements ShouldQueue
             'full_name' => 'John Doe',
             'email' => $this->testEmail,
             'company_name' => 'Test Company',
-            'dashboard_url' => config('app.url').'/dashboard',
-            'unsubscribe_url' => config('app.url').'/unsubscribe',
-            'preferences_url' => config('app.url').'/preferences',
+            'dashboard_url' => rtrim(config('app.url'), '/').'/dashboard',
+            'unsubscribe_url' => rtrim(config('app.url'), '/').'/unsubscribe',
+            'preferences_url' => rtrim(config('app.url'), '/').'/preferences',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
         ], $this->testVariables);

@@ -160,8 +160,8 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             'email' => $this->userEmail,
             'company_name' => $this->userData['company_name'] ?? 'Your Company',
             'dashboard_url' => $dashboardUrl,
-            'unsubscribe_url' => $dashboardUrl.'/unsubscribe',
-            'preferences_url' => $dashboardUrl.'/preferences',
+            'unsubscribe_url' => rtrim($dashboardUrl, '/').'/unsubscribe',
+            'preferences_url' => rtrim($dashboardUrl, '/').'/preferences',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
             'phone' => $this->userData['phone'] ?? '',
@@ -184,7 +184,7 @@ class SendSequenceEmailToUserJob implements ShouldQueue
     {
         // If domain is empty, fallback to app URL
         if (empty($domain)) {
-            return config('app.url').'/dashboard';
+            return rtrim(config('app.url'), '/').'/dashboard';
         }
 
         // Check if domain already includes protocol

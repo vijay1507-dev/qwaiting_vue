@@ -273,7 +273,7 @@ Route::get('/website-login', function () {
 
 Route::get('/request-demo', function () {
     return view('website.auth.request-demo');
-});
+})->name('request-demo');
 
 // Products Routes Group
 Route::prefix('products')->group(function () {
