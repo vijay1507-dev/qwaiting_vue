@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { index as marketingIndex, campaigns } from '@/routes/marketing';
+import { campaigns } from '@/routes/marketing';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Marketing Automation',
-        href: marketingIndex().url,
+        href: campaigns().url,
     },
     {
         title: 'Campaigns',

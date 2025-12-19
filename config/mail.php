@@ -115,4 +115,49 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Logo URL
+    |--------------------------------------------------------------------------
+    |
+    | The URL for the logo image displayed in email templates.
+    |
+    */
+
+    'logo_url' => env('MAIL_LOGO_URL', 'https://beta.qwaiting.com/storage/logo/3/80/kI7GpiPMhzY3zP0xPrkWqXUL5cGoYbzSK85eaEFw.png'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Footer Content
+    |--------------------------------------------------------------------------
+    |
+    | The footer content displayed at the bottom of email templates.
+    | Use {{year}} as a placeholder for the current year.
+    |
+    */
+
+    'footer_content' => env('MAIL_FOOTER_CONTENT', 'Copyright {{year}} © Qwaiting Inc. All Rights Reserved.'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support Email
+    |--------------------------------------------------------------------------
+    |
+    | The support email address displayed in email templates.
+    |
+    */
+
+    'support_email' => env('SUPPORT_EMAIL', 'support@qwaiting.com'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Website URL
+    |--------------------------------------------------------------------------
+    |
+    | The website URL displayed in email templates.
+    |
+    */
+
+    'website_url' => env('WEBSITE_URL', 'https://www.qwaiting.com'),
+
 ];

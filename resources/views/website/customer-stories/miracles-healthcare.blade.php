@@ -1,0 +1,569 @@
+@extends('website.layout.website')
+
+@section('content')
+    <div class="font-sans antialiased text-gray-900 bg-white selection:bg-indigo-100 selection:text-indigo-700">
+
+        <!-- Hero Section -->
+        <section class="relative pt-32 pb-12 overflow-hidden bg-gradient-to-b from-white to-gray-50 lg:pt-40 lg:pb-16">
+            <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+                <div
+                    class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]">
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+
+                <!-- Title Section -->
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full mb-6">
+                        <span class="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
+                        <span class="text-sm font-semibold text-indigo-600">Healthcare Success Story</span>
+                    </div>
+                    <h1 class="mx-auto max-w-5xl text-4xl font-bold tracking-tight text-black sm:text-6xl mb-6">
+                        Miracles Healthcare Streamlined Patient Flow and Boosted Staff Efficiency with <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Qwaiting</span>
+                    </h1>
+                </div>
+
+                <!-- Featured Image -->
+                <div class="max-w-5xl mx-auto mb-12">
+                    <div class="relative rounded-3xl overflow-hidden shadow-2xl">
+                        <div class="aspect-[16/9] bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <img src="https://qwaiting.com/frontimg/miracles-healthcare.jpg" alt="Miracles Healthcare"
+                                    class="w-full h-full object-cover"
+                                    onerror="this.style.display='none'; this.parentElement.innerHTML='<svg class=\'w-32 h-32 text-indigo-200\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4\'/></svg>';">
+                            </div>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent"></div>
+                    </div>
+                </div>
+
+                <!-- Introduction Text -->
+                <div class="max-w-4xl mx-auto text-center space-y-6">
+                    <p class="text-xl leading-8 text-gray-700">
+                        Gurugram’s Miracles Healthcare is one of the most visited healthcare centers in the city. It has
+                        earned the trust of hundreds of patients over the years. The hospital is known for its advanced
+                        medical technology and highly experienced medical staff.
+                    </p>
+                    <p class="text-xl leading-8 text-gray-700">
+                        With 3 branches across the city, each hospital serves 200-300 patients daily. The lack of a
+                        well-organized queue and performance system impacted the hospital's dedication to providing quick,
+                        compassionate patient care.
+                    </p>
+                    <p class="text-xl leading-8 text-gray-700">
+                        To overcome the difficulties and manage a smooth patient flow, the authorities decided to partner
+                        with Qwaiting’s advanced cutting-edge queuing solutions to organize chaos into calm.
+                    </p>
+                </div>
+            </div>
+
+            <div
+                class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">
+                <div
+                    class="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]">
+                </div>
+            </div>
+        </section>
+
+        <!-- Client Overview Card -->
+        <section class="py-20 bg-white">
+            <div class="max-w-6xl mx-auto px-6 lg:p-8 shadow-xl rounded-3xl bg-gray-50">
+
+                <!-- Overview Heading -->
+                <h2 class="text-4xl font-bold text-gray-900 text-center mb-12">Overview</h2>
+
+                <!-- Top Info Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-14">
+
+                    <!-- Client -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Client</p>
+                            <p class="text-lg font-semibold text-gray-900">Miracles Healthcare</p>
+                        </div>
+                    </div>
+
+                    <!-- Industry -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Industry</p>
+                            <p class="text-lg font-semibold text-gray-900">Healthcare</p>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Location</p>
+                            <p class="text-lg font-semibold text-gray-900">Delhi-NCR</p>
+                        </div>
+                    </div>
+
+                    <!-- Type -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 5h6a2 2 0 012 2v12a2 2 0 01-2 2H9a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Type</p>
+                            <p class="text-lg font-semibold text-gray-900">Hospital</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paragraph -->
+                <div class="mx-auto mb-16">
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        Established in 2002, Miracles Healthcare is a trusted multispecialty hospital in Gurugram. With 3
+                        branches in Delhi-NCR, each branch serves 200-300 patients daily. The hospital partners with leading
+                        healthcare organizations and is accredited by NABH and NABL.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+
+                    <!-- Challenges -->
+                    <div>
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            Challenges faced
+                        </h3>
+
+                        <ul class="space-y-3 text-gray-700 text-lg">
+                            <li>• Unorganized patient flow</li>
+                            <li>• Overworked staff members</li>
+                            <li>• Long wait lines causing frustration among patients</li>
+                        </ul>
+                    </div>
+
+                    <!-- Solutions -->
+                    <div>
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            Solutions Provided
+                        </h3>
+
+                        <ul class="space-y-3 text-gray-700 text-lg">
+                            <li>• Smart routing system</li>
+                            <li>• Centralized dashboard to track performance of 3 branches</li>
+                            <li>• Notification alerts to keep patients informed</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div>
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2 mt-10">
+                        Results
+                    </h3>
+
+                    <ul class="space-y-3 text-gray-700 text-lg">
+                        <li>• Wait times dropped by less than 20 minutes</li>
+                        <li>• Improved staff productivity</li>
+                        <li>• Branch-wise tracking for smarter decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problems Faced Section -->
+        <section class="py-24 sm:py-32 bg-white relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Challenges Miracles Healthcare
+                        faced</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+                        Miracles Hospital's front staff had to manage walk-in and online appointments simultaneously.
+                        Without proper software, managing patient flow was becoming extremely difficult. Long lines at the
+                        service counters were chaotic. 
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @php
+                        $problems = [
+                            [
+                                'title' => '1. Unorganized patient flow',
+                                'desc' => 'It was difficult for the front staff to segregate walk-in, appointment-based, and emergency patient lines. Tracking the patient journey manually caused confusion and slowed down the whole process.',
+                                'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                            ],
+                            [
+                                'title' => '2. Frustrated patients',
+                                'desc' => 'Patients had to stand in long lines without any idea of their expected wait times before consultation. Many patients even left the hospital without consultation. This directly impacted the hospital\'s reputation.',
+                                'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+                            ],
+                            [
+                                'title' => '3. Staff burnout',
+                                'desc' => 'Manual record-keeping systems and managing the long patient wait lines physically drained staff members\' energy. This ultimately slowed down the whole process, leaving the hospital unorganized and chaotic.',
+                                'icon' => 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'
+                            ]
+                        ];
+                    @endphp
+
+                    @foreach($problems as $problem)
+                        <div
+                            class="group relative bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                            <div
+                                class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mb-6 text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors duration-300">
+                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="{{ $problem['icon'] }}" />
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-3">{{ $problem['title'] }}</h3>
+                            <p class="text-gray-600 group-hover:text-gray-900 transition-colors">{{ $problem['desc'] }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="mt-10 text-lg text-gray-600 max-w-5xl mx-auto text-center">
+                    The hospital's core problem was patient flow, which required immediate improvement. That's when Qwaiting
+                    stepped in and completely transformed the hospital operations for better staff efficiency.
+                </p>
+            </div>
+        </section>
+
+        <!-- Solutions Implemented Section -->
+        <section class="py-24 bg-gray-50 relative">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="text-center mb-20">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-green-50 rounded-full mb-4">
+                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-sm font-semibold text-green-600">Solutions Implemented</span>
+                    </div>
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl mb-6">Solutions Qwaiting provided
+                        to streamline patient flow</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+                        The partnership of Team Qwaiting and Miracles Healthcare was nothing less than a success. After
+                        curating the best solutions, Miracles hospital tried a 14-day demo to see if it fits and meets their
+                        hospital's needs. The solutions provided were:
+                    </p>
+                </div>
+
+                <!-- Solution 1: Centralized dashboard -->
+                <div class="mb-32">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div class="order-2 lg:order-1">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="text-indigo-600 font-bold text-lg">Solution 01</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-900 mb-6">Centralized dashboard</h3>
+                            <p class="text-lg text-gray-700 mb-6">
+                                We provided the Miracles Healthcare team with a centralized <a
+                                    href="https://qwaiting.com/solutions/business-intelligence"
+                                    class="text-indigo-600 hover:text-indigo-500 underline">dashboard</a>.
+                            </p>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">Using the dashboard, now the executive staff members
+                                        can track queues for all 3 locations in real time.</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">This helped them distribute their patients within
+                                        locations and departments depending on the doctor's availability and patient
+                                        emergency.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-1 lg:order-2">
+                            <img src="https://qwaiting.com/frontimg/miracles-healthcare-consulting-departments-menu.jpg" alt="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solution 2: Smart queue logic -->
+                <div class="mb-32">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div class="order-1 lg:order-1">
+                            <img src="https://qwaiting.com/frontimg/miracles-healthcare-appointment-options.jpg" alt="">
+                        </div>
+                        <div class="order-2 lg:order-2">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="text-blue-600 font-bold text-lg">Solution 02</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-900 mb-6">Smart queue logic</h3>
+                            <p class="text-lg text-gray-700 mb-6">
+                                To avoid any wait time bias or confusion, we suggested a smart solution that front staff can
+                                easily implement to distinguish between emergency patients and routine checkup patients.
+                            </p>
+                            <ul class="space-y-4 mb-6">
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">The rule suggested: 3 appointments served for every
+                                        1 walk-in. It balanced scheduled appointments with urgent visits, giving staff a
+                                        manageable daily rhythm.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solution 3: Notification alerts -->
+                <div class="">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div class="order-2 lg:order-1">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="text-purple-600 font-bold text-lg">Solution 03</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-gray-900 mb-6">Notification alerts</h3>
+                            <ul class="space-y-4 mb-6">
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">To keep patients informed of their wait times, we
+                                        integrated messaging features into their existing software.</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">The software then sends tailored messages to
+                                        individuals displaying their reporting counter numbers and average wait
+                                        times.</span>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center mt-1">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="3"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-gray-700 text-lg">This allows patients to wait conveniently from
+                                        anywhere until their reporting time arrives. This helps the hospital staff keep the
+                                        counters manageable and calm.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-1 lg:order-2">
+                            <img src="https://qwaiting.com/frontimg/customer-messaging-services-SMS-and-whatsApp.png" alt="">
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-20 text-lg text-gray-600 max-w-5xl mx-auto text-center">
+                    After implementing these changes, the results were more rewarding and high-performing. Everything was
+                    more organized, and routine tasks got automated, relieving staff burden.
+                </p>
+
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="py-24 sm:py-32 bg-white relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">The results Miracles Healthcare
+                        saw after implementing Qwaiting's smart solutions</h2>
+                    <p class="mt-4 text-lg text-gray-600">The transformation was clear within just a few weeks.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                    <div
+                        class="group relative bg-gradient-to-br from-indigo-50 to-white p-8 rounded-3xl shadow-lg border border-indigo-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                        <div
+                            class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-6 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Patient wait times cut to less than 20 minutes</h3>
+                        <p class="text-gray-600 group-hover:text-gray-900 transition-colors">Earlier, there were no records
+                            of how long patients were waiting. Using smart routing and a centralized dashboard, the average
+                            wait time is less than 20 minutes. That’s a massive win for both patients and doctors.</p>
+                    </div>
+
+                    <div
+                        class="group relative bg-gradient-to-br from-indigo-50 to-white p-8 rounded-3xl shadow-lg border border-indigo-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                        <div
+                            class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-6 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Staff productivity and morale improved</h3>
+                        <p class="text-gray-600 group-hover:text-gray-900 transition-colors">With digital queue flow and
+                            reduced admin burden, hospital staff could focus on serving more patients in less time. Doctors
+                            now handle appointments more efficiently, while support teams manage queues with zero confusion.
+                        </p>
+                    </div>
+
+                    <div
+                        class="group relative bg-gradient-to-br from-indigo-50 to-white p-8 rounded-3xl shadow-lg border border-indigo-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                        <div
+                            class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mb-6 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-3">Branch-wise reporting with data-backed decisions
+                        </h3>
+                        <p class="text-gray-600 group-hover:text-gray-900 transition-colors">Thanks to Qwaiting’s
+                            centralized dashboard, the leadership team has full visibility into number of patients served
+                            daily, branch performance comparison, wait times per department, and staff productivity reports. This allowed Miracles Hospitals to move from guesswork to data-driven decisions—a major milestone in their operational journey. 
+                        </p>
+                    </div>
+
+                </div>
+                <p class="mt-10 text-lg text-gray-600 max-w-5xl mx-auto text-center">
+                    With transparent updates, faster service, and reduced wait time, patient
+                    satisfaction levels improved. Word-of-mouth improved. More repeat visitors showed up. Referrals
+                    increased.
+                </p>
+            </div>
+        </section>
+
+        <!-- Conclusion Section -->
+        <section class="py-24 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div>
+                    <!-- Main Content -->
+                    <div class="">
+                        <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-6">Conclusion</h2>
+                        <div class="space-y-4 text-gray-700 text-lg leading-relaxed">
+                            <p>
+                                Partnering with Qwaiting completely transformed Miracles Healthcare into a faster, smarter,
+                                and more organized healthcare facility. With automated queues and real-time dashboards,
+                                patient wait times dropped below 20 minutes, and staff productivity skyrocketed. Patient
+                                satisfaction went up, repeat visits increased, and the hospital’s reputation grew stronger.
+                            </p>
+                            <p class="font-semibold text-gray-900">
+                                If your healthcare facility is still struggling with long lines, frustrated patients, or
+                                staff burnout, it’s time to act.
+                            </p>
+                            <p>
+                                <a href="https://qwaiting.com/signup"
+                                    class="text-indigo-600 hover:text-indigo-500 underline">Try Qwaiting’s 14-day free
+                                    demo</a> today and see how smart queue management can revolutionize your hospital
+                                operations.
+                            </p>
+                        </div>
+                        <div class="mt-8">
+                            <a href="https://qwaiting.com/contact"
+                                class="inline-flex items-center justify-center rounded-full bg-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all duration-300 transform hover:-translate-y-1">
+                                Talk to our team
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Trusted By Section -->
+        <div class="trusted-section">
+            <h2>Trusted by 65K+ Businesses Worldwide</h2>
+            <p>Join the industry leaders who trust Q-Waiting for their queue management</p>
+
+            <div class="trusted-logos">
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/daleel_alzowar.jpg') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/hospital_at_maayo.jpg') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/ministry_of_hajj_and_umrah.jpg') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/tatapwer_ddl.jpg') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/PSB.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/jtc.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/stuffd.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/a1-business.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/nus-logo.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/dhl-logo.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="{{ asset('website/asset/images/wgs.png') }}" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/HDT_taxi_logo.jpg" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Singapore_Polytechnic_logo.png"
+                        alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/skechers-logo.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/healthway-medical.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Loreal.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Nirvana.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/NTUC_FairPrice.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Ministry_of_Education.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/msq-logo.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/MND-singapore.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/current-corporate-signature.png"
+                        alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/MOH.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/cropped-BL.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/logo-dark.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/andy-cr-icon.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/cortinawatch.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/subway.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/TianPo.jpg" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/grab.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Inland-Revenue-Authority.png"
+                        alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Ministry-of-Manpower.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/NLB.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/ntuc-learning-hub.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Raffles-Medical-Group.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/service-SG.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/SIM-SOC.png" alt=""> </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/Singapore-Medical.png" alt="">
+                </div>
+                <div class="logo-item"> <img src="https://qwaiting.com/frontimg/clients/apollo_hospoitals.jpg" alt="">
+                </div>
+            </div>
+        </div>
+
+    </div>
+@endsection

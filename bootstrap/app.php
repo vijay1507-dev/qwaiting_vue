@@ -22,6 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
     })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // Schedule sequence emails to run daily at 9:00 AM
+        $schedule->command('sequences:send-emails')
+            ->daily()
+            ->at('09:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

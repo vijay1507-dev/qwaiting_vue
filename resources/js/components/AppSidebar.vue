@@ -14,7 +14,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
 import { index as quotesIndex } from '@/routes/quotes';
-import { index as marketingIndex } from '@/routes/marketing';
+import { campaigns as marketingCampaigns } from '@/routes/marketing';
 import { index as financeIndex } from '@/routes/finance';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
 import { type NavItem } from '@/types';
@@ -40,7 +40,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Marketing',
-        href: marketingIndex(),
+        href: marketingCampaigns(),
         icon: Mail,
     },
     {

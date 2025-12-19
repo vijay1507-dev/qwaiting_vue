@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { index as marketingIndex, campaigns, sequences, tracking } from '@/routes/marketing';
+import { campaigns, sequences, tracking } from '@/routes/marketing';
 import { create as workflowsCreate, edit as workflowsEdit } from '@/routes/marketing/workflows';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
@@ -32,7 +32,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Marketing Automation',
-        href: marketingIndex().url,
+        href: campaigns().url,
     },
     {
         title: 'Workflow Triggers',
@@ -277,12 +277,6 @@ onUnmounted(() => {
                 <!-- Navigation Tabs -->
                 <div class="flex gap-0 border-b border-border">
                     <Link
-                        :href="marketingIndex().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                        Dashboard
-                    </Link>
-                    <Link
                         :href="campaigns().url"
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
@@ -292,7 +286,7 @@ onUnmounted(() => {
                         :href="sequences().url"
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     >
-                        Sequences
+                        Sequences Notifications
                     </Link>
                     <Link
                         :href="'/marketing/workflows'"
