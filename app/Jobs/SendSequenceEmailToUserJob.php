@@ -69,6 +69,12 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             Mail::html($wrappedContent, function ($message) use ($subject) {
                 $message->to($this->userEmail)
                     ->subject($subject);
+
+                // CC admin emails if configured
+                $adminCcEmails = $this->getAdminCcEmails();
+                if (! empty($adminCcEmails)) {
+                    $message->cc($adminCcEmails);
+                }
             });
 
             // Mark as sent
@@ -196,5 +202,25 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         $protocol = config('app.env') === 'local' ? 'http://' : 'https://';
 
         return $protocol.rtrim($domain, '/').'/dashboard';
+    }
+
+    /**
+     * Get admin CC emails from configuration.
+     */
+    private function getAdminCcEmails(): array
+    {
+        $ccEmails = config('mail.admin_cc_emails', '');
+
+        if (empty($ccEmails)) {
+            return [];
+        }
+
+        // Split by comma and trim each email
+        $emails = array_map('trim', explode(',', $ccEmails));
+
+        // Filter out empty values and validate email format
+        return array_filter($emails, function ($email) {
+            return ! empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
     }
 }
