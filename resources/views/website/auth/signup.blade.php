@@ -84,11 +84,11 @@
                     </svg>
                 </div>
 
-                <div id="logo-img" class="mb-8">
+                <div id="logo-img" class="mb-4">
                     <img src="https://qwaiting.com/images/qwaiting-logo.svg" alt="">
                 </div>
                 <h1 id="sidebar-dynamic-title"
-                    class="text-5xl font-bold leading-tight mb-6 transition-all duration-300 mt-10">Try Queue Management
+                    class="text-4xl font-bold leading-tight mb-6 transition-all duration-300">Try Queue Management
                     System for Free</h1>
                 <p id="sidebar-dynamic-subtitle" class="text-lg opacity-90 mb-10 transition-all duration-300">No credit
                     card required. No strings attached.</p>
@@ -98,22 +98,22 @@
                     <div class="grid grid-cols-3 gap-4">
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/apollo_hospoitals.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/ministry_of_hajj_and_umrah.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/tatapwer_ddl.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/Singapore_Polytechnic_logo.png" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/nus-logo.png" alt=""
-                                class="w-full h-full"></span>
-                        <span class="bg-white flex rounded-lg text-sm font-medium w-30 h-20"><img
+                                class="w-full h-full object-contain"></span>
+                        <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/skechers-logo.png" alt=""
-                                class="m-auto"></span>
+                                class="w-full h-full object-contain"></span>
                     </div>
                 </div>
             </div>
@@ -789,10 +789,7 @@
                 $('#phone_actual').val(iti.getNumber().replace(dialCode, '').replace(/\D/g, ''));
                 $('#country_code_val').val(dialCode);
             }
-            if (stepNum === 2) {
-                const $domain = $('#domain_name'), val = $domain.val();
-                if (val && !val.endsWith('.qwaiting.com')) $domain.val(val.toLowerCase().replace(/\s+/g, '-') + '.qwaiting.com');
-            }
+             
 
             $form.find('[data-error]').text('').addClass('hidden');
             $btn.prop('disabled', true).find('.spinner').removeClass('hidden');
