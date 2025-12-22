@@ -73,6 +73,15 @@ class SignupController extends Controller
                     'email' => $lead->email,
                     'phone' => $phone,
                     'phone_code' => $phoneCode,
+                    'additional_info' => [
+                                            'role'             => $lead->role,
+                                            'website'          => $lead->website,
+                                            'usage_preference' => $lead->usage_preference,
+                                            'industry'         => $lead->industry,
+                                            'footfall'         => $lead->footfall,
+                                            'current_solution' => $lead->current_solution,
+                                            'signup_step'      => $lead->signup_step,
+                                        ],
                 ];
 
                 // Call external API
@@ -83,13 +92,13 @@ class SignupController extends Controller
                         // Soft delete the lead after successful API call
                         $lead->delete();
 
-                        $user = User::create([
-                            'name' => $lead->name,
-                            'email' => $lead->email,
-                            'password' => $lead->password,
-                        ]);
+                        // $user = User::create([
+                        //     'name' => $lead->name,
+                        //     'email' => $lead->email,
+                        //     'password' => $lead->password,
+                        // ]);
 
-                        Auth::login($user);
+                        // Auth::login($user);
                         Session::forget('signup_lead_id');
 
                         return response()->json(['success' => true, 'redirect' => route('website-login')]);
