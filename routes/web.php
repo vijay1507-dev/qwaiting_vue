@@ -99,6 +99,10 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
     Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
 });
 
+Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index');
+});
+
 require __DIR__.'/settings.php';
 
 // Website Routes
