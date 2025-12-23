@@ -23,10 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
-        // Schedule sequence emails to run daily at 9:00 AM
+        // Schedule sequence emails to run daily at 8:00 PM
         $schedule->command('sequences:send-emails')
             ->daily()
-            ->at('09:00')
+            ->at('20:00')
             ->withoutOverlapping()
             ->runInBackground();
     })
