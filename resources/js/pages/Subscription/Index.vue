@@ -2,8 +2,14 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
+import { index as subscriptionIndex, preview as subscriptionPreview } from '@/routes/subscription';
+import { store as storeFeature, update as updateFeature, destroy as destroyFeature } from '@/routes/subscription/features';
+import { store as storePackage, update as updatePackage, destroy as destroyPackage } from '@/routes/subscription/packages';
+import { store as storeCoupon, update as updateCoupon, destroy as destroyCoupon, usage as couponUsage } from '@/routes/subscription/coupons';
+import { get as getPackageConfigurationRoute, update as updatePackageConfigurationRoute } from '@/routes/subscription/packages/configuration';
+import { get as getPackagePricing, store as storePricing, update as updatePricing, destroy as destroyPricing } from '@/routes/subscription/packages/pricing';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { FileText, Package, Settings, DollarSign, Eye, Plus, Info, Check, X, Edit, Trash2, ChevronLeft, ChevronRight, Lightbulb, Gift, CreditCard, BarChart, ChevronDown, Monitor, Star, Ticket, Calendar } from 'lucide-vue-next';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
@@ -15,6 +21,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/composables/useToast';
 
+interface Feature {
+    id: string;
+    name: string;
+    key: string;
+    dataType: string;
+    metered: boolean;
+    status: string;
+}
+
+interface Package {
+    id: string;
+    name: string;
+    code?: string;
+    subtitle: string;
+    status: string;
+    description: string;
+    monthlyEnabled: boolean;
+    annualEnabled: boolean;
+    trialDays: number | null;
+    creditCardRequired: boolean;
+}
+
+interface Coupon {
+    id: string;
+    code: string;
+    discount: string;
+    discountType: string;
+    discountValue: number;
+    type: string;
+    validFrom: string;
+    validTo: string;
+    usage: number;
+    usageLimit: number | null;
+    status: string;
+}
+
+interface Props {
+    features?: Feature[];
+    packages?: Package[];
+    coupons?: Coupon[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    features: () => [],
+    packages: () => [],
+    coupons: () => [],
+});
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
@@ -25,6 +79,12 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '#',
     },
 ];
+
+// Handle metered checkbox toggle
+const onMeteredToggle = () => {
+    editFeature.value.isMetered = !editFeature.value.isMetered;
+    console.log('Is Metered value updated to:', editFeature.value.isMetered);
+};
 
 // Active tab state
 const activeTab = ref('features');
@@ -43,265 +103,48 @@ const tabs = [
 const currentPage = ref(1);
 const perPage = ref(10);
 
-// Dummy data for subscription features
-const features = ref([
-    {
-        id: 1,
-        name: 'Projects',
-        key: 'projects',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 2,
-        name: 'Storage (GB)',
-        key: 'storage_gb',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 3,
-        name: 'Team Members',
-        key: 'team_members',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 4,
-        name: 'API Access',
-        key: 'api_access',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 5,
-        name: 'Custom Domain',
-        key: 'custom_domain',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 6,
-        name: 'Email Support',
-        key: 'email_support',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 7,
-        name: 'Priority Support',
-        key: 'priority_support',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'inactive',
-    },
-    {
-        id: 8,
-        name: 'Monthly API Calls',
-        key: 'api_calls',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 9,
-        name: 'Database Size (GB)',
-        key: 'database_gb',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 10,
-        name: 'Bandwidth (GB)',
-        key: 'bandwidth_gb',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 11,
-        name: 'SSL Certificates',
-        key: 'ssl_certificates',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 12,
-        name: 'Backup Storage',
-        key: 'backup_storage',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 13,
-        name: 'Advanced Analytics',
-        key: 'advanced_analytics',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 14,
-        name: 'Custom Branding',
-        key: 'custom_branding',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 15,
-        name: 'White Label',
-        key: 'white_label',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'inactive',
-    },
-    {
-        id: 16,
-        name: 'Mobile App Access',
-        key: 'mobile_app',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 17,
-        name: 'Webhooks',
-        key: 'webhooks',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 18,
-        name: 'Integrations',
-        key: 'integrations',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 19,
-        name: 'Monthly Reports',
-        key: 'monthly_reports',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 20,
-        name: 'Custom Reports',
-        key: 'custom_reports',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 21,
-        name: 'Data Export',
-        key: 'data_export',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 22,
-        name: 'SMS Notifications',
-        key: 'sms_notifications',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 23,
-        name: 'Email Notifications',
-        key: 'email_notifications',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-    {
-        id: 24,
-        name: 'Push Notifications',
-        key: 'push_notifications',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 25,
-        name: 'Multi-language Support',
-        key: 'multi_language',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 26,
-        name: 'Advanced Permissions',
-        key: 'advanced_permissions',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 27,
-        name: 'Audit Logs',
-        key: 'audit_logs',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 28,
-        name: 'Two-Factor Authentication',
-        key: 'two_factor_auth',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 29,
-        name: 'Single Sign-On (SSO)',
-        key: 'sso',
-        dataType: 'Boolean',
-        metered: false,
-        status: 'inactive',
-    },
-    {
-        id: 30,
-        name: 'Custom Workflows',
-        key: 'custom_workflows',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 31,
-        name: 'Automation Rules',
-        key: 'automation_rules',
-        dataType: 'Number',
-        metered: false,
-        status: 'active',
-    },
-    {
-        id: 32,
-        name: 'API Rate Limit',
-        key: 'api_rate_limit',
-        dataType: 'Number',
-        metered: true,
-        status: 'active',
-    },
-]);
+// Dynamic data from props
+const features = ref<Feature[]>(props.features.map(f => ({
+    ...f,
+    metered: Boolean(f.metered), // Ensure boolean conversion
+})));
+const packages = ref<Package[]>([...props.packages]);
+const coupons = ref<Coupon[]>([...props.coupons]);
+
+// Watch for prop changes and update local refs
+watch(() => props.features, (newFeatures) => {
+    features.value = newFeatures.map(f => ({
+        ...f,
+        metered: Boolean(f.metered), // Ensure boolean conversion
+    }));
+}, { deep: true });
+
+watch(() => props.packages, (newPackages) => {
+    packages.value = [...newPackages];
+}, { deep: true });
+
+// Auto-select first package when configuration tab is active or packages are loaded
+watch([() => activeTab.value, () => packages.value], ([newTab, newPackages]) => {
+    if (newTab === 'configuration' && !selectedPackage.value && newPackages.length > 0) {
+        selectedPackage.value = newPackages[0].id;
+    }
+}, { immediate: true });
+
+watch(() => props.coupons, (newCoupons) => {
+    coupons.value = [...newCoupons];
+}, { deep: true });
+
+// Handle flash messages from backend
+const page = usePage();
+watch(() => (page.props as any).flash?.success, (message) => {
+    if (message) {
+        success(message);
+        // Reload page data
+        router.reload({ only: ['features', 'packages', 'coupons'] });
+    }
+}, { immediate: true });
+
+// Old dummy data removed - now using props from backend
 
 // Pagination computed properties
 const paginatedFeatures = computed(() => {
@@ -354,36 +197,101 @@ const { success } = useToast();
 
 // Delete confirmation modals
 const showDeleteFeatureModal = ref(false);
-const featureToDelete = ref<number | null>(null);
+const featureToDelete = ref<string | null>(null);
 
 const showDeletePackageModal = ref(false);
-const packageToDelete = ref<number | null>(null);
+const packageToDelete = ref<string | null>(null);
+
+const showDeletePriceModal = ref(false);
+const priceToDelete = ref<string | null>(null);
 
 const showDeleteCouponModal = ref(false);
 const couponToDelete = ref<any | null>(null);
 
-const handleEdit = (featureId: number) => {
-    console.log('Edit feature:', featureId);
-    // TODO: Implement edit functionality
+// Edit Feature Modal State
+const showEditFeatureModal = ref(false);
+const editingFeature = ref<any | null>(null);
+const editFeature = ref({
+    name: '',
+    key: '',
+    dataType: 'Number',
+    isMetered: false,
+    description: '',
+    status: 'active',
+});
+
+const handleEdit = (featureId: string) => {
+    // Find feature and populate edit form
+    const feature = features.value.find(f => f.id === featureId);
+    if (feature) {
+        editingFeature.value = feature;
+        editFeature.value = {
+            name: feature.name || '',
+            key: feature.key || '',
+            dataType: feature.dataType || 'Number',
+            isMetered: Boolean(feature.metered),
+            description: feature.description || '',
+            status: feature.status || 'active',
+        };
+        showEditFeatureModal.value = true;
+    }
 };
 
-const handleDelete = (featureId: number) => {
+const handleCloseEditFeatureModal = () => {
+    showEditFeatureModal.value = false;
+    editingFeature.value = null;
+    // Reset form
+    editFeature.value = {
+        name: '',
+        key: '',
+        dataType: 'Number',
+        isMetered: false,
+        description: '',
+        status: 'active',
+    };
+};
+
+const handleUpdateFeature = () => {
+    if (!editingFeature.value || !editFeature.value.name || !editFeature.value.dataType) {
+        return;
+    }
+
+    const payload = {
+        name: editFeature.value.name,
+        key: editFeature.value.key || editFeature.value.name.toLowerCase().replace(/\s+/g, '_'),
+        data_type: editFeature.value.dataType,
+        is_metered: editFeature.value.isMetered === true,
+        description: editFeature.value.description,
+        status: editFeature.value.status,
+    };
+
+    console.log('Sending update request with payload:', payload);
+    console.log('isMetered value:', editFeature.value.isMetered, 'Type:', typeof editFeature.value.isMetered);
+
+    router.put(updateFeature(editingFeature.value.id).url, payload, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Feature updated successfully.');
+            handleCloseEditFeatureModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+    });
+};
+
+const handleDelete = (featureId: string) => {
     featureToDelete.value = featureId;
     showDeleteFeatureModal.value = true;
 };
 
 const confirmDeleteFeature = () => {
     if (featureToDelete.value !== null) {
-        // Remove feature from the list
-        features.value = features.value.filter(f => f.id !== featureToDelete.value);
-        // Reset to page 1 if current page becomes empty
-        if (paginatedFeatures.value.length === 0 && currentPage.value > 1) {
-            currentPage.value = Math.max(1, currentPage.value - 1);
-        }
-        
-        // Show success toast
-        success('Feature deleted successfully.');
-        
+        router.delete(destroyFeature(featureToDelete.value).url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                success('Feature deleted successfully.');
+                router.reload({ only: ['features', 'packages', 'coupons'] });
+            },
+        });
         featureToDelete.value = null;
     }
     showDeleteFeatureModal.value = false;
@@ -394,42 +302,7 @@ const cancelDeleteFeature = () => {
     showDeleteFeatureModal.value = false;
 };
 
-// Dummy data for subscription packages
-const packages = ref([
-    {
-        id: 1,
-        name: 'Basic Plan',
-        subtitle: 'BASIC',
-        status: 'active',
-        description: 'Perfect for individuals and small teams getting started',
-        monthlyEnabled: true,
-        annualEnabled: true,
-        trialDays: 14,
-        creditCardRequired: false,
-    },
-    {
-        id: 2,
-        name: 'Professional Plan',
-        subtitle: 'PRO',
-        status: 'active',
-        description: 'For growing teams and businesses needing more power',
-        monthlyEnabled: true,
-        annualEnabled: true,
-        trialDays: 30,
-        creditCardRequired: true,
-    },
-    {
-        id: 3,
-        name: 'Enterprise Plan',
-        subtitle: 'ENTERPRISE',
-        status: 'active',
-        description: 'Advanced features and unlimited resources for large organizations',
-        monthlyEnabled: true,
-        annualEnabled: true,
-        trialDays: null,
-        creditCardRequired: true,
-    },
-]);
+// Packages data now comes from props - removed dummy data
 
 // Create Package Modal State
 const showCreatePackageModal = ref(false);
@@ -437,14 +310,28 @@ const newPackage = ref({
     name: '',
     code: '',
     description: '',
-    billingType: 'monthly',
+    monthlyEnabled: true,
+    annualEnabled: false,
     enableTrial: false,
     creditCardRequired: true,
     status: 'active',
 });
 
-const billingTypes = ['monthly', 'annual'];
 const packageStatusOptions = ['active', 'inactive'];
+
+// Edit Package Modal State
+const showEditPackageModal = ref(false);
+const editingPackage = ref<Package | null>(null);
+const editPackage = ref({
+    name: '',
+    code: '',
+    description: '',
+    monthlyEnabled: true,
+    annualEnabled: false,
+    enableTrial: false,
+    creditCardRequired: true,
+    status: 'active',
+});
 
 const handleCreatePackage = () => {
     showCreatePackageModal.value = true;
@@ -457,7 +344,8 @@ const handleClosePackageModal = () => {
         name: '',
         code: '',
         description: '',
-        billingType: 'monthly',
+        monthlyEnabled: true,
+        annualEnabled: false,
         enableTrial: false,
         creditCardRequired: true,
         status: 'active',
@@ -466,51 +354,117 @@ const handleClosePackageModal = () => {
 
 const handleSubmitPackage = () => {
     // Validate required fields
-    if (!newPackage.value.name || !newPackage.value.code || !newPackage.value.billingType) {
+    if (!newPackage.value.name || !newPackage.value.status) {
+        return;
+    }
+    
+    // At least one billing type must be selected
+    if (!newPackage.value.monthlyEnabled && !newPackage.value.annualEnabled) {
         return;
     }
 
-    // Generate package code from name if not provided
-    if (!newPackage.value.code) {
-        newPackage.value.code = newPackage.value.name.toLowerCase().replace(/\s+/g, '_');
+    router.post(storePackage().url, {
+        name: newPackage.value.name,
+        code: newPackage.value.code || newPackage.value.name.toLowerCase().replace(/\s+/g, '_'),
+        description: newPackage.value.description,
+        monthly_enabled: newPackage.value.monthlyEnabled,
+        annual_enabled: newPackage.value.annualEnabled,
+        trial_days: newPackage.value.enableTrial ? 14 : null,
+        credit_card_required: newPackage.value.creditCardRequired,
+        status: newPackage.value.status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Package created successfully.');
+            handleClosePackageModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+    });
+};
+
+const handleEditPackage = (packageId: string) => {
+    // Find package and populate edit form
+    const pkg = packages.value.find(p => p.id === packageId);
+    if (pkg) {
+        editingPackage.value = pkg;
+        editPackage.value = {
+            name: pkg.name,
+            code: pkg.code || '',
+            description: pkg.description || '',
+            monthlyEnabled: pkg.monthlyEnabled,
+            annualEnabled: pkg.annualEnabled,
+            enableTrial: pkg.trialDays ? pkg.trialDays > 0 : false,
+            creditCardRequired: pkg.creditCardRequired,
+            status: pkg.status,
+        };
+        showEditPackageModal.value = true;
+    }
+};
+
+const handleCloseEditPackageModal = () => {
+    showEditPackageModal.value = false;
+    editingPackage.value = null;
+    editPackage.value = {
+        name: '',
+        code: '',
+        description: '',
+        monthlyEnabled: true,
+        annualEnabled: false,
+        enableTrial: false,
+        creditCardRequired: true,
+        status: 'active',
+    };
+};
+
+const handleUpdatePackage = () => {
+    // Validate required fields
+    if (!editingPackage.value || !editPackage.value.name || !editPackage.value.status) {
+        return;
+    }
+    
+    // At least one billing type must be selected
+    if (!editPackage.value.monthlyEnabled && !editPackage.value.annualEnabled) {
+        return;
     }
 
-    // Add new package to the list
-    const newId = packages.value.length > 0 ? Math.max(...packages.value.map(p => p.id)) + 1 : 1;
-    packages.value.push({
-        id: newId,
-        name: newPackage.value.name,
-        subtitle: newPackage.value.code.toUpperCase(),
-        status: newPackage.value.status,
-        description: newPackage.value.description,
-        monthlyEnabled: newPackage.value.billingType === 'monthly',
-        annualEnabled: newPackage.value.billingType === 'annual',
-        trialDays: newPackage.value.enableTrial ? 14 : null,
-        creditCardRequired: newPackage.value.creditCardRequired,
+    // Preserve existing trial days if trial is enabled, otherwise set to null
+    const trialDays = editPackage.value.enableTrial 
+        ? (editingPackage.value.trialDays || 14) 
+        : null;
+
+    router.put(updatePackage(editingPackage.value.id).url, {
+        name: editPackage.value.name,
+        code: editPackage.value.code || editPackage.value.name.toLowerCase().replace(/\s+/g, '_'),
+        description: editPackage.value.description || null,
+        monthly_enabled: editPackage.value.monthlyEnabled,
+        annual_enabled: editPackage.value.annualEnabled,
+        trial_days: trialDays,
+        credit_card_required: editPackage.value.creditCardRequired,
+        status: editPackage.value.status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Package updated successfully.');
+            handleCloseEditPackageModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
     });
-
-    // Close modal and reset form
-    handleClosePackageModal();
 };
 
-const handleEditPackage = (packageId: number) => {
-    console.log('Edit package:', packageId);
-    // TODO: Implement edit package functionality
-};
-
-const handleDeletePackage = (packageId: number) => {
+const handleDeletePackage = (packageId: string) => {
     packageToDelete.value = packageId;
     showDeletePackageModal.value = true;
 };
 
 const confirmDeletePackage = () => {
     if (packageToDelete.value !== null) {
-        // Remove package from the list
-        packages.value = packages.value.filter(p => p.id !== packageToDelete.value);
-        
-        // Show success toast
-        success('Package deleted successfully.');
-        
+        router.delete(destroyPackage(packageToDelete.value).url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                success('Package deleted successfully.');
+                router.reload({ only: ['features', 'packages', 'coupons'] });
+            },
+        });
         packageToDelete.value = null;
     }
     showDeletePackageModal.value = false;
@@ -523,74 +477,62 @@ const cancelDeletePackage = () => {
 
 // Configuration tab state
 const selectedPackage = ref<string>('');
+const configurationData = ref<Array<{
+    feature_id: string;
+    feature_name: string;
+    limit_type: string;
+    limit_value: number;
+}>>([]);
+const loadingConfiguration = ref(false);
+const selectedPackageName = ref<string>('');
 
-// Dummy data for configuration table - editable per package
-const configurationData = ref([
-    {
-        feature: 'Projects',
-        basic: { type: 'limited', value: 0 },
-        pro: { type: 'limited', value: 0 },
-        enterprise: { type: 'unlimited', value: 0 },
-    },
-    {
-        feature: 'Storage (GB)',
-        basic: { type: 'limited', value: 0 },
-        pro: { type: 'limited', value: 0 },
-        enterprise: { type: 'unlimited', value: 0 },
-    },
-    {
-        feature: 'Team Members',
-        basic: { type: 'limited', value: 0 },
-        pro: { type: 'limited', value: 0 },
-        enterprise: { type: 'unlimited', value: 0 },
-    },
-    {
-        feature: 'API Access',
-        basic: { type: 'disabled', value: 0 },
-        pro: { type: 'limited', value: 0 },
-        enterprise: { type: 'unlimited', value: 0 },
-    },
-]);
 
-// Computed property to get the package key
-const packageKey = computed(() => {
-    if (!selectedPackage.value) return null;
-    return selectedPackage.value as 'basic' | 'pro' | 'enterprise';
-});
-
-// Watch for package selection and initialize values
-watch(selectedPackage, () => {
-    if (!packageKey.value) return;
+// Watch for package selection and fetch configuration from API
+watch(selectedPackage, async (packageId) => {
+    if (!packageId) {
+        configurationData.value = [];
+        selectedPackageName.value = '';
+        return;
+    }
     
-    configurationData.value.forEach((item) => {
-        const config = item[packageKey.value!];
-        // Ensure all values default to 0
-        if (config.value === null || config.value === undefined) {
-            config.value = 0;
-        }
-    });
-}, { immediate: true });
+    loadingConfiguration.value = true;
+    try {
+        const response = await fetch(getPackageConfigurationRoute(packageId).url);
+        const data = await response.json();
+        
+        configurationData.value = data.configuration.map((item: any) => ({
+            feature_id: item.feature_id,
+            feature_name: item.feature_name,
+            limit_type: item.limit_type || 'disabled',
+            limit_value: item.limit_value || 0,
+        }));
+        selectedPackageName.value = data.package.name;
+    } catch (error) {
+        console.error('Error fetching package configuration:', error);
+        configurationData.value = [];
+        selectedPackageName.value = '';
+    } finally {
+        loadingConfiguration.value = false;
+    }
+});
 
 // Watch for limit type changes and reset value if needed
 watch(() => configurationData.value, () => {
-    if (!packageKey.value) return;
-    
     configurationData.value.forEach((item) => {
-        const config = item[packageKey.value!];
-        if (config.type !== 'limited') {
+        if (item.limit_type !== 'limited') {
             // Set to 0 when unlimited or disabled
-            config.value = 0;
-        } else if (config.type === 'limited' && (config.value === null || config.value === undefined)) {
+            item.limit_value = 0;
+        } else if (item.limit_type === 'limited' && (item.limit_value === null || item.limit_value === undefined)) {
             // Default to 0 for limited if not set
-            config.value = 0;
+            item.limit_value = 0;
         }
     });
 }, { deep: true });
 
-const getLimitTypeDisplay = (limit: { type: string; value: number }): string => {
-    if (limit.type === 'limited') {
-        return `Limited (${limit.value ?? 0})`;
-    } else if (limit.type === 'unlimited') {
+const getLimitTypeDisplay = (limitType: string, limitValue: number): string => {
+    if (limitType === 'limited') {
+        return `Limited (${limitValue ?? 0})`;
+    } else if (limitType === 'unlimited') {
         return 'Unlimited';
     } else {
         return 'Disabled';
@@ -611,9 +553,25 @@ const getLimitTypeColor = (type: string): string => {
 };
 
 const handleSaveConfiguration = () => {
-    console.log('Saving configuration for package:', selectedPackage.value);
-    console.log('Configuration data:', configurationData.value);
-    // TODO: Implement save functionality
+    if (!selectedPackage.value) {
+        return;
+    }
+
+    const features = configurationData.value.map((item) => ({
+        feature_id: item.feature_id,
+        limit_type: item.limit_type,
+        limit_value: item.limit_type === 'limited' ? item.limit_value : null,
+    }));
+
+    router.put(updatePackageConfigurationRoute(selectedPackage.value).url, {
+        features: features,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Package configuration updated successfully.');
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+    });
 };
 
 // Add Feature Modal State
@@ -649,33 +607,39 @@ const handleCloseFeatureModal = () => {
 
 const handleCreateFeature = () => {
     // Validate required fields
-    if (!newFeature.value.name || !newFeature.value.key || !newFeature.value.dataType) {
+    if (!newFeature.value.name || !newFeature.value.dataType) {
         return;
     }
 
-    // Generate feature key from name if not provided
-    if (!newFeature.value.key) {
-        newFeature.value.key = newFeature.value.name.toLowerCase().replace(/\s+/g, '_');
-    }
-
-    // Add new feature to the list
-    const newId = features.value.length > 0 ? Math.max(...features.value.map(f => f.id)) + 1 : 1;
-    features.value.push({
-        id: newId,
+    router.post(storeFeature().url, {
         name: newFeature.value.name,
-        key: newFeature.value.key,
-        dataType: newFeature.value.dataType,
-        metered: newFeature.value.isMetered,
+        key: newFeature.value.key || newFeature.value.name.toLowerCase().replace(/\s+/g, '_'),
+        data_type: newFeature.value.dataType,
+        is_metered: Boolean(newFeature.value.isMetered),
+        description: newFeature.value.description,
         status: newFeature.value.status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Feature created successfully.');
+            handleCloseFeatureModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
     });
-
-    // Close modal and reset form
-    handleCloseFeatureModal();
 };
 
 // Pricing tab state
 const selectedPackageForPricing = ref<string>('');
 const selectedCurrency = ref<string>('USD');
+const pricingData = ref<Array<{
+    id: string;
+    currency: string;
+    billingCycle: string;
+    price: number;
+    status: string;
+}>>([]);
+const loadingPricing = ref(false);
+const selectedPackageNameForPricing = ref<string>('');
 
 const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR'];
 
@@ -690,17 +654,116 @@ const newPrice = ref({
 const billingCycles = ['monthly', 'annual'];
 const priceStatusOptions = ['active', 'inactive'];
 
+// Computed property to get available billing cycles (excluding those that already have prices)
+const availableBillingCycles = computed(() => {
+    if (!selectedPackageForPricing.value || !selectedCurrency.value) {
+        return billingCycles;
+    }
+    
+    // Get existing billing cycles for the selected currency
+    const existingCycles = pricingData.value
+        .filter((item: any) => item.currency === selectedCurrency.value)
+        .map((item: any) => item.billingCycle);
+    
+    // Filter out cycles that already have prices
+    return billingCycles.filter(cycle => !existingCycles.includes(cycle));
+});
+
+// Computed property to check if both monthly and annual prices exist
+const allBillingCyclesAdded = computed(() => {
+    if (!selectedPackageForPricing.value || !selectedCurrency.value) {
+        return false;
+    }
+    
+    // Get existing billing cycles for the selected currency
+    const existingCycles = pricingData.value
+        .filter((item: any) => item.currency === selectedCurrency.value)
+        .map((item: any) => item.billingCycle);
+    
+    // Check if both monthly and annual exist
+    return existingCycles.includes('monthly') && existingCycles.includes('annual');
+});
+
+// Computed property for package name to ensure reactivity
+const currentPackageName = computed(() => {
+    if (!selectedPackageForPricing.value) return '';
+    const pkg = packages.value.find(p => p.id === selectedPackageForPricing.value);
+    return pkg ? pkg.name : '';
+});
+
+// Watch for package selection to set package name immediately (for backward compatibility)
+watch(() => selectedPackageForPricing.value, (packageId) => {
+    if (packageId) {
+        const pkg = packages.value.find(p => p.id === packageId);
+        selectedPackageNameForPricing.value = pkg ? pkg.name : '';
+    } else {
+        selectedPackageNameForPricing.value = '';
+    }
+}, { immediate: true });
+
+// Watch for package and currency selection to fetch pricing
+watch([() => selectedPackageForPricing.value, () => selectedCurrency.value], async ([packageId, currency]) => {
+    if (!packageId || !currency) {
+        pricingData.value = [];
+        return;
+    }
+    
+    // Set package name immediately
+    const pkg = packages.value.find(p => p.id === packageId);
+    selectedPackageNameForPricing.value = pkg ? pkg.name : '';
+    
+    loadingPricing.value = true;
+    try {
+        const response = await fetch(getPackagePricing(packageId).url);
+        const data = await response.json();
+        
+        // Filter pricing by selected currency
+        pricingData.value = data.pricing
+            .filter((item: any) => item.currency === currency)
+            .map((item: any) => ({
+                id: item.id,
+                currency: item.currency,
+                billingCycle: item.billingCycle,
+                price: item.price,
+                status: item.status,
+            }));
+    } catch (error) {
+        console.error('Error fetching package pricing:', error);
+        pricingData.value = [];
+    } finally {
+        loadingPricing.value = false;
+    }
+});
+
+// Auto-select first package when pricing tab is active
+watch([() => activeTab.value, () => packages.value], ([newTab, newPackages]) => {
+    if (newTab === 'pricing' && !selectedPackageForPricing.value && newPackages.length > 0) {
+        selectedPackageForPricing.value = newPackages[0].id;
+    }
+}, { immediate: true });
+
 const handleAddPrice = () => {
     if (!selectedPackageForPricing.value || !selectedCurrency.value) {
         return;
     }
-    showAddPriceModal.value = true;
-    // Reset form
+    
+    // Ensure package name is set (in case it wasn't set by watcher)
+    const pkg = packages.value.find(p => p.id === selectedPackageForPricing.value);
+    if (pkg) {
+        selectedPackageNameForPricing.value = pkg.name;
+    }
+    
+    // Get available billing cycles and pre-select the first one
+    const availableCycles = availableBillingCycles.value;
+    
+    // Reset form with first available billing cycle pre-selected
     newPrice.value = {
-        billingCycle: 'monthly',
+        billingCycle: availableCycles.length > 0 ? availableCycles[0] : '',
         price: 0,
         status: 'active',
     };
+    
+    showAddPriceModal.value = true;
 };
 
 const handleClosePriceModal = () => {
@@ -715,83 +778,167 @@ const handleClosePriceModal = () => {
 
 const handleSubmitPrice = () => {
     // Validate required fields
-    if (!newPrice.value.billingCycle || newPrice.value.price === null || newPrice.value.price === undefined) {
+    if (!newPrice.value.billingCycle || newPrice.value.price === null || newPrice.value.price === undefined || !selectedPackageForPricing.value) {
         return;
     }
 
-    // TODO: Implement save price functionality
-    console.log('Adding price:', {
-        package: selectedPackageForPricing.value,
+    router.post(storePricing(selectedPackageForPricing.value).url, {
         currency: selectedCurrency.value,
-        billingCycle: newPrice.value.billingCycle,
+        billing_cycle: newPrice.value.billingCycle,
         price: newPrice.value.price,
         status: newPrice.value.status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Pricing added successfully.');
+            handleClosePriceModal();
+            // Reload pricing data
+            const packageId = selectedPackageForPricing.value;
+            const currency = selectedCurrency.value;
+            fetch(getPackagePricing(packageId).url)
+                .then(response => response.json())
+                .then(data => {
+                    pricingData.value = data.pricing
+                        .filter((item: any) => item.currency === currency)
+                        .map((item: any) => ({
+                            id: item.id,
+                            currency: item.currency,
+                            billingCycle: item.billingCycle,
+                            price: item.price,
+                            status: item.status,
+                        }));
+                });
+        },
     });
-
-    // Close modal and reset form
-    handleClosePriceModal();
 };
 
 // Helper function to get package display name
-const getPackageDisplayName = (packageKey: string) => {
-    switch (packageKey) {
-        case 'basic':
-            return 'Basic Plan';
-        case 'pro':
-            return 'Professional Plan';
-        case 'enterprise':
-            return 'Enterprise Plan';
-        default:
-            return packageKey;
-    }
+const getPackageDisplayName = (packageId: string) => {
+    const pkg = packages.value.find(p => p.id === packageId);
+    return pkg ? pkg.name : packageId;
 };
 
-// Date pickers for coupon modal
-const validFromPicker = ref<Instance | null>(null);
-const validFromInputRef = ref<HTMLInputElement | null>(null);
-const validUntilPicker = ref<Instance | null>(null);
-const validUntilInputRef = ref<HTMLInputElement | null>(null);
+// Edit Price Modal State
+const showEditPriceModal = ref(false);
+const editingPrice = ref<{ id: string; billingCycle: string; price: number; status: string } | null>(null);
+const editPrice = ref({
+    billingCycle: 'monthly',
+    price: 0,
+    status: 'active',
+});
 
-const initializeCouponDatePickers = () => {
-    // Initialize Valid From date picker
-    if (validFromInputRef.value && !validFromPicker.value) {
-        validFromPicker.value = flatpickr(validFromInputRef.value, {
-            dateFormat: 'Y-m-d',
-            defaultDate: newCoupon.value.validFrom || null,
-            allowInput: false,
-            clickOpens: true,
-            wrap: false,
-            onChange: (selectedDates, dateStr) => {
-                newCoupon.value.validFrom = dateStr;
+const handleEditPrice = (price: any) => {
+    editingPrice.value = price;
+    // Ensure package name is set
+    const pkg = packages.value.find(p => p.id === selectedPackageForPricing.value);
+    if (pkg) {
+        selectedPackageNameForPricing.value = pkg.name;
+    }
+    // Populate edit form with price data
+    editPrice.value = {
+        billingCycle: price.billingCycle || 'monthly',
+        price: price.price || 0,
+        status: price.status || 'active',
+    };
+    showEditPriceModal.value = true;
+};
+
+const handleCloseEditPriceModal = () => {
+    showEditPriceModal.value = false;
+    editingPrice.value = null;
+    editPrice.value = {
+        billingCycle: 'monthly',
+        price: 0,
+        status: 'active',
+    };
+};
+
+const handleUpdatePrice = () => {
+    if (!editingPrice.value || !selectedPackageForPricing.value) {
+        return;
+    }
+
+    // Validate price is provided
+    if (editPrice.value.price === null || editPrice.value.price === undefined) {
+        return;
+    }
+
+    router.put(updatePricing([selectedPackageForPricing.value, editingPrice.value.id]).url, {
+        price: parseFloat(editPrice.value.price.toString()),
+        status: editPrice.value.status,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Pricing updated successfully.');
+            handleCloseEditPriceModal();
+            // Reload pricing data
+            const packageId = selectedPackageForPricing.value;
+            const currency = selectedCurrency.value;
+            fetch(getPackagePricing(packageId).url)
+                .then(response => response.json())
+                .then(data => {
+                    pricingData.value = data.pricing
+                        .filter((item: any) => item.currency === currency)
+                        .map((item: any) => ({
+                            id: item.id,
+                            currency: item.currency,
+                            billingCycle: item.billingCycle,
+                            price: item.price,
+                            status: item.status,
+                        }));
+                })
+                .catch(error => {
+                    console.error('Error reloading pricing data:', error);
+                });
+        },
+        onError: (errors) => {
+            console.error('Error updating price:', errors);
+        },
+    });
+};
+
+const handleDeletePrice = (priceId: string) => {
+    if (!selectedPackageForPricing.value) {
+        return;
+    }
+    priceToDelete.value = priceId;
+    showDeletePriceModal.value = true;
+};
+
+const confirmDeletePrice = () => {
+    if (priceToDelete.value !== null && selectedPackageForPricing.value) {
+        router.delete(destroyPricing(selectedPackageForPricing.value, priceToDelete.value).url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                success('Pricing deleted successfully.');
+                // Reload pricing data
+                const packageId = selectedPackageForPricing.value;
+                const currency = selectedCurrency.value;
+                fetch(getPackagePricing(packageId).url)
+                    .then(response => response.json())
+                    .then(data => {
+                        pricingData.value = data.pricing
+                            .filter((item: any) => item.currency === currency)
+                            .map((item: any) => ({
+                                id: item.id,
+                                currency: item.currency,
+                                billingCycle: item.billingCycle,
+                                price: item.price,
+                                status: item.status,
+                            }));
+                    });
             },
         });
+        priceToDelete.value = null;
     }
-
-    // Initialize Valid Until date picker
-    if (validUntilInputRef.value && !validUntilPicker.value) {
-        validUntilPicker.value = flatpickr(validUntilInputRef.value, {
-            dateFormat: 'Y-m-d',
-            defaultDate: newCoupon.value.validUntil || null,
-            allowInput: false,
-            clickOpens: true,
-            wrap: false,
-            onChange: (selectedDates, dateStr) => {
-                newCoupon.value.validUntil = dateStr;
-            },
-        });
-    }
+    showDeletePriceModal.value = false;
 };
 
-const destroyCouponDatePickers = () => {
-    if (validFromPicker.value) {
-        validFromPicker.value.destroy();
-        validFromPicker.value = null;
-    }
-    if (validUntilPicker.value) {
-        validUntilPicker.value.destroy();
-        validUntilPicker.value = null;
-    }
+const cancelDeletePrice = () => {
+    priceToDelete.value = null;
+    showDeletePriceModal.value = false;
 };
+
 
 // Preview tab state
 const displayCurrency = ref<string>('USD');
@@ -800,113 +947,7 @@ const displayCurrency = ref<string>('USD');
 const currentPageCoupons = ref(1);
 const perPageCoupons = ref(10);
 
-// Dummy data for coupons
-const coupons = ref([
-    {
-        id: 1,
-        code: 'SUMMER2024',
-        discount: '25%',
-        discountType: 'percentage',
-        discountValue: 25,
-        type: 'once',
-        validFrom: '2024-06-01',
-        validTo: '2024-08-31',
-        usage: 12,
-        usageLimit: 100,
-        status: 'expired',
-    },
-    {
-        id: 2,
-        code: 'WELCOME50',
-        discount: '$50',
-        discountType: 'fixed',
-        discountValue: 50,
-        type: 'recurring',
-        validFrom: '2024-01-01',
-        validTo: '2024-12-31',
-        usage: 45,
-        usageLimit: 200,
-        status: 'active',
-    },
-    {
-        id: 3,
-        code: 'BLACKFRIDAY',
-        discount: '30%',
-        discountType: 'percentage',
-        discountValue: 30,
-        type: 'once',
-        validFrom: '2024-11-25',
-        validTo: '2024-11-30',
-        usage: 0,
-        usageLimit: 500,
-        status: 'active',
-    },
-    {
-        id: 4,
-        code: 'STUDENT10',
-        discount: '10%',
-        discountType: 'percentage',
-        discountValue: 10,
-        type: 'recurring',
-        validFrom: '2024-01-01',
-        validTo: '2024-12-31',
-        usage: 89,
-        usageLimit: null, // unlimited
-        status: 'active',
-    },
-    {
-        id: 5,
-        code: 'NEWYEAR2024',
-        discount: '$100',
-        discountType: 'fixed',
-        discountValue: 100,
-        type: 'once',
-        validFrom: '2024-01-01',
-        validTo: '2024-01-31',
-        usage: 150,
-        usageLimit: 150,
-        status: 'expired',
-    },
-    {
-        id: 6,
-        code: 'SPRING20',
-        discount: '20%',
-        discountType: 'percentage',
-        discountValue: 20,
-        type: 'recurring',
-        validFrom: '2024-03-01',
-        validTo: '2024-05-31',
-        usage: 23,
-        usageLimit: 100,
-        status: 'expired',
-    },
-    {
-        id: 7,
-        code: 'VIP15',
-        discount: '15%',
-        discountType: 'percentage',
-        discountValue: 15,
-        type: 'recurring',
-        validFrom: '2024-01-01',
-        validTo: '2024-12-31',
-        usage: 5,
-        usageLimit: 50,
-        status: 'active',
-    },
-    {
-        id: 8,
-        code: 'FIRST100',
-        discount: '$100',
-        discountType: 'fixed',
-        discountValue: 100,
-        type: 'once',
-        validFrom: '2024-02-01',
-        validTo: '2024-02-29',
-        usage: 0,
-        usageLimit: 100,
-        status: 'expired',
-    },
-]);
+// Coupons data now comes from props - removed dummy data
 
 // Coupons pagination
 const paginatedCoupons = computed(() => {
@@ -1021,92 +1062,41 @@ const handleCloseCouponModal = () => {
 
 const handleSubmitCoupon = () => {
     // Validate required fields
-    if (!newCoupon.value.code || !newCoupon.value.discountType || !newCoupon.value.discountValue || !newCoupon.value.durationType) {
+    if (!newCoupon.value.code || !newCoupon.value.discountType || !newCoupon.value.discountValue || !newCoupon.value.durationType || !newCoupon.value.validFrom || !newCoupon.value.validUntil) {
         return;
     }
 
-    // Format discount display
-    const discountDisplay = newCoupon.value.discountType === 'percentage' 
-        ? `${newCoupon.value.discountValue}%`
-        : `${newCoupon.value.currency === 'USD' ? '$' : newCoupon.value.currency}${newCoupon.value.discountValue}`;
-
-    // Map duration type to coupon type
-    const couponType = newCoupon.value.durationType === 'once' ? 'once' : 
-                       newCoupon.value.durationType === 'recurring' ? 'recurring' : 'once';
-
-    // Add new coupon to the list
-    const newId = coupons.value.length > 0 ? Math.max(...coupons.value.map(c => c.id)) + 1 : 1;
-    coupons.value.push({
-        id: newId,
+    router.post(storeCoupon().url, {
         code: newCoupon.value.code.toUpperCase(),
-        discount: discountDisplay,
-        discountType: newCoupon.value.discountType,
-        discountValue: newCoupon.value.discountValue,
-        type: couponType,
-        validFrom: newCoupon.value.validFrom || '2024-01-01',
-        validTo: newCoupon.value.validUntil || '2024-12-31',
-        usage: 0,
-        usageLimit: newCoupon.value.usageLimit === 0 ? null : newCoupon.value.usageLimit,
+        discount_type: newCoupon.value.discountType,
+        discount_value: newCoupon.value.discountValue,
+        currency: newCoupon.value.discountType === 'fixed' ? newCoupon.value.currency : null,
+        duration_type: newCoupon.value.durationType,
+        number_of_months: newCoupon.value.durationType === 'recurring' ? newCoupon.value.numberOfMonths : null,
+        usage_limit: newCoupon.value.usageLimit === 0 ? null : newCoupon.value.usageLimit,
+        valid_from: newCoupon.value.validFrom,
+        valid_until: newCoupon.value.validUntil,
         status: newCoupon.value.status,
+        applicable_packages: newCoupon.value.applicablePackages,
+        package_ids: newCoupon.value.applicablePackages === 'specific' ? newCoupon.value.selectedPackages.map(id => Number(id)) : [],
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Coupon created successfully.');
+            handleCloseCouponModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
     });
-
-    // Close modal and reset form
-    handleCloseCouponModal();
 };
 
-// Watch for modal open/close to initialize/destroy date pickers
-watch(showCreateCouponModal, (isOpen) => {
-    if (isOpen) {
-        // Wait for DOM to be ready
-        setTimeout(() => {
-            initializeCouponDatePickers();
-        }, 100);
-    } else {
-        destroyCouponDatePickers();
-    }
-});
-
-onUnmounted(() => {
-    destroyCouponDatePickers();
-});
 
 // Usage History Modal State
 const showUsageHistoryModal = ref(false);
 const selectedCouponForUsage = ref<any>(null);
 
-// Dummy data for usage history
-const usageHistoryData = ref([
-    {
-        id: 1,
-        customerName: 'Bob Wilson',
-        customerEmail: 'bob.wilson@example.com',
-        package: 'Professional Plan',
-        discount: 7.25,
-        currency: 'USD',
-        date: '2025-12-22',
-        relativeDate: 'Yesterday',
-    },
-    {
-        id: 2,
-        customerName: 'Jane Smith',
-        customerEmail: 'jane.smith@example.com',
-        package: 'Basic Plan',
-        discount: 2.25,
-        currency: 'USD',
-        date: '2025-12-20',
-        relativeDate: '3 days ago',
-    },
-    {
-        id: 3,
-        customerName: 'John Doe',
-        customerEmail: 'john.doe@example.com',
-        package: 'Professional Plan',
-        discount: 7.25,
-        currency: 'USD',
-        date: '2025-12-18',
-        relativeDate: '5 days ago',
-    },
-]);
+// Usage history data - will be fetched from API
+const usageHistoryData = ref<any[]>([]);
+const loadingUsageData = ref(false);
 
 // Computed properties for usage statistics
 const usageStats = computed(() => {
@@ -1132,9 +1122,22 @@ const usageStats = computed(() => {
     };
 });
 
-const handleViewUsage = (coupon: any) => {
+const handleViewUsage = async (coupon: any) => {
     selectedCouponForUsage.value = coupon;
     showUsageHistoryModal.value = true;
+    loadingUsageData.value = true;
+    
+    // Fetch usage data from API
+    try {
+        const response = await fetch(couponUsage(coupon.id).url);
+        const data = await response.json();
+        usageHistoryData.value = data.usages || [];
+    } catch (error) {
+        console.error('Error fetching coupon usage:', error);
+        usageHistoryData.value = [];
+    } finally {
+        loadingUsageData.value = false;
+    }
 };
 
 const handleCloseUsageHistoryModal = () => {
@@ -1295,40 +1298,33 @@ const handleCloseEditCouponModal = () => {
 
 const handleUpdateCoupon = () => {
     // Validate required fields
-    if (!editCoupon.value.code || !editCoupon.value.discountType || !editCoupon.value.discountValue || !editCoupon.value.durationType) {
+    if (!editCoupon.value.code || !editCoupon.value.discountType || !editCoupon.value.discountValue || !editCoupon.value.durationType || !editCoupon.value.validFrom || !editCoupon.value.validUntil) {
         return;
     }
 
     if (!editingCoupon.value) return;
 
-    // Format discount display
-    const discountDisplay = editCoupon.value.discountType === 'percentage' 
-        ? `${editCoupon.value.discountValue}%`
-        : `${editCoupon.value.currency === 'USD' ? '$' : editCoupon.value.currency}${editCoupon.value.discountValue}`;
-
-    // Map duration type to coupon type
-    const couponType = editCoupon.value.durationType === 'once' ? 'once' : 
-                       editCoupon.value.durationType === 'recurring' ? 'recurring' : 'once';
-
-    // Update coupon in the list
-    const couponIndex = coupons.value.findIndex(c => c.id === editingCoupon.value.id);
-    if (couponIndex !== -1) {
-        coupons.value[couponIndex] = {
-            ...coupons.value[couponIndex],
-            code: editCoupon.value.code.toUpperCase(),
-            discount: discountDisplay,
-            discountType: editCoupon.value.discountType,
-            discountValue: editCoupon.value.discountValue,
-            type: couponType,
-            validFrom: editCoupon.value.validFrom || '2024-01-01',
-            validTo: editCoupon.value.validUntil || '2024-12-31',
-            usageLimit: editCoupon.value.usageLimit === 0 ? null : editCoupon.value.usageLimit,
-            status: editCoupon.value.status,
-        };
-    }
-
-    // Close modal and reset form
-    handleCloseEditCouponModal();
+    router.put(updateCoupon(editingCoupon.value.id).url, {
+        code: editCoupon.value.code.toUpperCase(),
+        discount_type: editCoupon.value.discountType,
+        discount_value: editCoupon.value.discountValue,
+        currency: editCoupon.value.discountType === 'fixed' ? editCoupon.value.currency : null,
+        duration_type: editCoupon.value.durationType,
+        number_of_months: editCoupon.value.durationType === 'recurring' ? editCoupon.value.numberOfMonths : null,
+        usage_limit: editCoupon.value.usageLimit === 0 ? null : editCoupon.value.usageLimit,
+        valid_from: editCoupon.value.validFrom,
+        valid_until: editCoupon.value.validUntil,
+        status: editCoupon.value.status,
+        applicable_packages: editCoupon.value.applicablePackages,
+        package_ids: editCoupon.value.applicablePackages === 'specific' ? editCoupon.value.selectedPackages.map(id => Number(id)) : [],
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            success('Coupon updated successfully.');
+            handleCloseEditCouponModal();
+            router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+    });
 };
 
 // Watch for edit modal open/close to initialize/destroy date pickers
@@ -1351,16 +1347,13 @@ const handleDeleteCoupon = (coupon: any) => {
 
 const confirmDeleteCoupon = () => {
     if (couponToDelete.value) {
-        // Remove coupon from the list
-        coupons.value = coupons.value.filter(c => c.id !== couponToDelete.value.id);
-        // Reset to page 1 if current page becomes empty
-        if (paginatedCoupons.value.length === 0 && currentPageCoupons.value > 1) {
-            currentPageCoupons.value = Math.max(1, currentPageCoupons.value - 1);
-        }
-        
-        // Show success toast
-        success('Coupon deleted successfully.');
-        
+        router.delete(destroyCoupon(couponToDelete.value.id).url, {
+            preserveScroll: true,
+            onSuccess: () => {
+                success('Coupon deleted successfully.');
+                router.reload({ only: ['features', 'packages', 'coupons'] });
+            },
+        });
         couponToDelete.value = null;
     }
     showDeleteCouponModal.value = false;
@@ -1371,57 +1364,61 @@ const cancelDeleteCoupon = () => {
     showDeleteCouponModal.value = false;
 };
 
-// Preview packages data with features
-const previewPackages = ref([
-    {
-        id: 1,
-        name: 'Basic Plan',
-        description: 'Perfect for individuals and small teams getting started',
-        isMostPopular: false,
-        trialDays: 14,
-        features: [
-            { name: 'Projects', included: false },
-            { name: 'Storage (GB)', included: false },
-            { name: 'Team Members', included: false },
-            { name: 'API-Access', included: false },
-            { name: 'Custom-Domain', included: false },
-            { name: 'Priority Support', included: false },
-            { name: 'API-Calls (Monthly)', included: false },
-        ],
-    },
-    {
-        id: 2,
-        name: 'Professional Plan',
-        description: 'For growing teams and businesses needing more power',
-        isMostPopular: true,
-        trialDays: 30,
-        features: [
-            { name: 'Projects', included: false },
-            { name: 'Storage (GB)', included: false },
-            { name: 'Team Members', included: false },
-            { name: 'API-Access', included: false },
-            { name: 'Custom-Domain', included: false },
-            { name: 'Priority Support', included: false },
-            { name: 'API-Calls (Monthly)', included: false },
-        ],
-    },
-    {
-        id: 3,
-        name: 'Enterprise Plan',
-        description: 'Advanced features and unlimited resources for large organizations',
-        isMostPopular: false,
-        trialDays: null,
-        features: [
-            { name: 'Projects', included: false },
-            { name: 'Storage (GB)', included: false },
-            { name: 'Team Members', included: false },
-            { name: 'API-Access', included: false },
-            { name: 'Custom-Domain', included: false },
-            { name: 'Priority Support', included: false },
-            { name: 'API-Calls (Monthly)', included: false },
-        ],
-    },
-]);
+// Preview tab state
+interface PreviewPackage {
+    id: string;
+    name: string;
+    description: string;
+    isMostPopular: boolean;
+    trialDays: number | null;
+    monthlyPrice: number | null;
+    annualPrice: number | null;
+    features: Array<{
+        name: string;
+        included: boolean;
+        limit_type: string;
+        limit_value: number;
+    }>;
+}
+
+const previewPackages = ref<PreviewPackage[]>([]);
+const loadingPreview = ref(false);
+
+// Function to fetch preview data
+const fetchPreviewData = async (currency: string) => {
+    loadingPreview.value = true;
+    try {
+        const response = await fetch(subscriptionPreview().url + `?currency=${currency}`);
+        const data = await response.json();
+        previewPackages.value = data.packages || [];
+    } catch (error) {
+        console.error('Error fetching preview data:', error);
+        previewPackages.value = [];
+    } finally {
+        loadingPreview.value = false;
+    }
+};
+
+// Watch for currency changes and tab changes to fetch preview data
+watch([() => activeTab.value, () => displayCurrency.value], async ([newTab, newCurrency]) => {
+    if (newTab === 'preview') {
+        await fetchPreviewData(newCurrency);
+    }
+}, { immediate: true });
+
+// Helper function to format feature display
+const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
+    if (!feature.included) {
+        return feature.name;
+    }
+    if (feature.limit_type === 'unlimited') {
+        return `${feature.name} (Unlimited)`;
+    }
+    if (feature.limit_type === 'limited' && feature.limit_value) {
+        return `${feature.name} (${feature.limit_value})`;
+    }
+    return feature.name;
+};
 </script>
 
 <template>
@@ -1700,27 +1697,19 @@ const previewPackages = ref([
                             <p class="text-sm text-muted-foreground mb-4">{{ pkg.description }}</p>
 
                             <!-- Billing Options -->
-                            <div class="flex gap-2 mb-4">
-                                <button
-                                    :class="[
-                                        'flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors',
-                                        pkg.monthlyEnabled
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-                                    ]"
+                            <div v-if="pkg.monthlyEnabled || pkg.annualEnabled" style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                                <span
+                                    v-if="pkg.monthlyEnabled"
+                                    style="background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;"
                                 >
                                     Monthly
-                                </button>
-                                <button
-                                    :class="[
-                                        'flex-1 rounded-md px-3 py-2 text-xs font-medium transition-colors',
-                                        pkg.annualEnabled
-                                            ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
-                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-                                    ]"
+                                </span>
+                                <span
+                                    v-if="pkg.annualEnabled"
+                                    style="background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;"
                                 >
                                     Annual
-                                </button>
+                                </span>
                             </div>
 
                             <!-- Trial Info -->
@@ -1796,66 +1785,37 @@ const previewPackages = ref([
                             <select
                                 v-model="selectedPackage"
                                 class="w-64 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
+                                :disabled="loadingConfiguration"
                             >
                                 <option value="">-- Choose a package --</option>
-                                <option value="basic">Basic Plan</option>
-                                <option value="pro">Professional Plan</option>
-                                <option value="enterprise">Enterprise Plan</option>
+                                <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">
+                                    {{ pkg.name }}
+                                </option>
                             </select>
                             <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         </div>
                         <p class="text-xs text-muted-foreground">Select a package to configure its features.</p>
                     </div>
 
-                    <!-- Example Configuration Table (shown when no package selected) -->
-                    <div v-if="!selectedPackage || !packageKey" class="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 p-4">
-                        <div class="flex items-center gap-2 mb-4">
-                            <BarChart class="size-5 text-muted-foreground" />
-                            <h3 class="text-base font-semibold text-foreground">Example Configuration</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-200 dark:border-gray-700">
-                                        <th class="px-4 py-3 text-left font-medium text-foreground">Feature</th>
-                                        <th class="px-4 py-3 text-center font-medium text-foreground">Basic Plan</th>
-                                        <th class="px-4 py-3 text-center font-medium text-foreground">Pro Plan</th>
-                                        <th class="px-4 py-3 text-center font-medium text-foreground">Enterprise</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr
-                                        v-for="(row, index) in configurationData"
-                                        :key="index"
-                                        class="border-b border-gray-200 dark:border-gray-700"
-                                    >
-                                        <td class="px-4 py-3 text-foreground font-medium">{{ row.feature }}</td>
-                                        <td class="px-4 py-3 text-center">
-                                            <span :class="getLimitTypeColor(row.basic.type)">
-                                                {{ getLimitTypeDisplay(row.basic) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-center">
-                                            <span :class="getLimitTypeColor(row.pro.type)">
-                                                {{ getLimitTypeDisplay(row.pro) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-center">
-                                            <span :class="getLimitTypeColor(row.enterprise.type)">
-                                                {{ getLimitTypeDisplay(row.enterprise) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="mt-4 text-xs text-muted-foreground text-center">
-                            This is just an example. Your actual features will appear once you select a package.
+                    <!-- Empty State (shown when no package selected) -->
+                    <div v-if="!selectedPackage" class="rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
+                        <BarChart class="size-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 class="text-base font-semibold text-foreground mb-2">No Package Selected</h3>
+                        <p class="text-sm text-muted-foreground">
+                            Please select a package from the dropdown above to configure its features.
                         </p>
                     </div>
 
-                    <!-- Interactive Configuration Table (shown when package is selected) -->
-                    <div v-else class="rounded-lg border border-border bg-card">
+                    <!-- Loading State -->
+                    <div v-if="loadingConfiguration" class="rounded-lg border border-border bg-card p-8 text-center">
+                        <p class="text-sm text-muted-foreground">Loading configuration...</p>
+                    </div>
+
+                    <!-- Interactive Configuration Table (shown when package is selected and loaded) -->
+                    <div v-else-if="selectedPackage && configurationData.length > 0" class="rounded-lg border border-border bg-card">
+                        <div class="p-4 border-b border-border">
+                            <h3 class="text-lg font-semibold text-foreground">Configure: {{ selectedPackageName }}</h3>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-muted/50">
@@ -1874,20 +1834,20 @@ const previewPackages = ref([
                                 <tbody>
                                     <tr
                                         v-for="(item, index) in configurationData"
-                                        :key="index"
+                                        :key="item.feature_id"
                                         class="border-b border-border transition-colors hover:bg-muted/50"
                                     >
                                         <td class="px-4 py-3 align-middle">
-                                            <span class="text-foreground font-medium">{{ item.feature }}</span>
+                                            <span class="text-foreground font-medium">{{ item.feature_name }}</span>
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <div class="flex items-center gap-4">
                                                 <label class="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="radio"
-                                                        :name="`limit-type-${index}`"
+                                                        :name="`limit-type-${item.feature_id}`"
                                                         value="limited"
-                                                        v-model="item[packageKey].type"
+                                                        v-model="item.limit_type"
                                                         class="size-4 text-blue-600 focus:ring-blue-500"
                                                     />
                                                     <span class="text-sm text-foreground">Limited</span>
@@ -1895,9 +1855,9 @@ const previewPackages = ref([
                                                 <label class="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="radio"
-                                                        :name="`limit-type-${index}`"
+                                                        :name="`limit-type-${item.feature_id}`"
                                                         value="unlimited"
-                                                        v-model="item[packageKey].type"
+                                                        v-model="item.limit_type"
                                                         class="size-4 text-blue-600 focus:ring-blue-500"
                                                     />
                                                     <span class="text-sm text-foreground">Unlimited</span>
@@ -1905,9 +1865,9 @@ const previewPackages = ref([
                                                 <label class="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="radio"
-                                                        :name="`limit-type-${index}`"
+                                                        :name="`limit-type-${item.feature_id}`"
                                                         value="disabled"
-                                                        v-model="item[packageKey].type"
+                                                        v-model="item.limit_type"
                                                         class="size-4 text-blue-600 focus:ring-blue-500"
                                                     />
                                                     <span class="text-sm text-foreground">Disabled</span>
@@ -1916,11 +1876,11 @@ const previewPackages = ref([
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <Input
-                                                v-model.number="item[packageKey].value"
+                                                v-model.number="item.limit_value"
                                                 type="number"
-                                                :disabled="item[packageKey].type !== 'limited'"
+                                                :disabled="item.limit_type !== 'limited'"
                                                 class="w-24"
-                                                :class="{ 'opacity-50 cursor-not-allowed': item[packageKey].type !== 'limited' }"
+                                                :class="{ 'opacity-50 cursor-not-allowed': item.limit_type !== 'limited' }"
                                                 min="0"
                                             />
                                         </td>
@@ -1934,10 +1894,16 @@ const previewPackages = ref([
                             <Button
                                 @click="handleSaveConfiguration"
                                 class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                                :disabled="loadingConfiguration"
                             >
                                 Save Changes
                             </Button>
                         </div>
+                    </div>
+
+                    <!-- Empty State when package has no features -->
+                    <div v-else-if="selectedPackage && !loadingConfiguration && configurationData.length === 0" class="rounded-lg border border-border bg-card p-8 text-center">
+                        <p class="text-sm text-muted-foreground">No features available for this package.</p>
                     </div>
                 </div>
 
@@ -1979,10 +1945,10 @@ const previewPackages = ref([
                                     v-model="selectedPackageForPricing"
                                     class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
                                 >
-                                    <option value="">-- Choose a package --</option>
-                                    <option value="basic">Basic Plan</option>
-                                    <option value="pro">Professional Plan</option>
-                                    <option value="enterprise">Enterprise Plan</option>
+                                <option value="">-- Choose a package --</option>
+                                <option v-for="pkg in packages" :key="pkg.id" :value="pkg.id">
+                                    {{ pkg.name }}
+                                </option>
                                 </select>
                                 <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                             </div>
@@ -2003,14 +1969,27 @@ const previewPackages = ref([
                         </div>
                     </div>
 
+                    <!-- Loading State -->
+                    <div v-if="loadingPricing" class="rounded-lg border border-border bg-card p-8 text-center">
+                        <p class="text-sm text-muted-foreground">Loading pricing...</p>
+                    </div>
+
                     <!-- Pricing Management Area -->
-                    <div v-if="selectedPackageForPricing && selectedCurrency" class="rounded-lg border border-border bg-card">
+                    <div v-else-if="selectedPackageForPricing && selectedCurrency" class="rounded-lg border border-border bg-card">
                         <!-- Header with Title and Add Price Button -->
                         <div class="flex items-center justify-between p-6 border-b border-border">
-                            <h3 class="text-lg font-semibold text-foreground">Pricing for {{ selectedCurrency }}</h3>
+                            <div>
+                                <h3 class="text-lg font-semibold text-foreground">Pricing for {{ selectedCurrency }}</h3>
+                                <p class="text-sm text-muted-foreground mt-1">{{ selectedPackageNameForPricing }}</p>
+                            </div>
                             <Button 
                                 @click="handleAddPrice"
-                                class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                                :disabled="allBillingCyclesAdded"
+                                :class="[
+                                    allBillingCyclesAdded 
+                                        ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed' 
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                                ]"
                             >
                                 <Plus class="size-4 mr-2" />
                                 Add Price
@@ -2032,18 +2011,62 @@ const previewPackages = ref([
                                             <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
                                                 Status
                                             </th>
-                                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                                            <th class="h-10 px-4 text-right align-middle font-medium text-muted-foreground">
                                                 Actions
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
+                                        <tr v-if="pricingData.length === 0">
                                             <td colspan="4" class="px-4 py-12 text-center">
                                                 <div class="flex flex-col items-center justify-center gap-2">
                                                     <p class="text-sm text-muted-foreground">
                                                         No pricing set for this package and currency. Click "Add Price" to get started.
                                                     </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr
+                                            v-for="price in pricingData"
+                                            :key="price.id"
+                                            class="border-b border-border transition-colors hover:bg-muted/50"
+                                        >
+                                            <td class="px-4 py-3 align-middle">
+                                                <span class="text-foreground font-medium capitalize">{{ price.billingCycle }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 align-middle">
+                                                <span class="text-foreground">{{ selectedCurrency }} {{ price.price.toFixed(2) }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 align-middle">
+                                                <span 
+                                                    :class="[
+                                                        'px-2 py-1 rounded-full text-xs font-medium',
+                                                        price.status === 'active' 
+                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                                                    ]"
+                                                >
+                                                    {{ price.status.charAt(0).toUpperCase() + price.status.slice(1) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 align-middle">
+                                                <div class="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        @click="handleEditPrice(price)"
+                                                        class="cursor-pointer"
+                                                    >
+                                                        <Edit class="size-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        @click="handleDeletePrice(price.id)"
+                                                        class="cursor-pointer text-red-600 hover:text-red-700"
+                                                    >
+                                                        <Trash2 class="size-4" />
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -2060,7 +2083,7 @@ const previewPackages = ref([
                 <!-- Preview Tab Content -->
                 <div v-else-if="activeTab === 'preview'" class="flex flex-col gap-6">
                     <!-- Header Section -->
-                    <div class="flex items-center justify-between">
+                    <div class="items-center justify-between">
                         <div>
                             <div class="flex items-center gap-2">
                                 <Monitor class="size-5 text-muted-foreground" />
@@ -2086,20 +2109,30 @@ const previewPackages = ref([
                         </div>
                     </div>
 
+                    <!-- Loading State -->
+                    <div v-if="loadingPreview" class="rounded-lg border border-border bg-card p-8 text-center">
+                        <p class="text-sm text-muted-foreground">Loading preview...</p>
+                    </div>
+
                     <!-- Preview Section -->
-                    <div class="rounded-lg border border-border bg-muted/30 p-8">
+                    <div style="background-color: #e4e4f7; " v-else class="rounded-lg border border-border bg-muted/30 p-8">
                         <div class="text-center mb-8">
                             <h2 class="text-3xl font-bold text-foreground mb-2">Choose Your Plan</h2>
                             <p class="text-muted-foreground">Select the perfect plan for your needs</p>
                         </div>
 
+                        <!-- Empty State -->
+                        <div v-if="previewPackages.length === 0" class="text-center py-12">
+                            <p class="text-muted-foreground">No active packages available for preview.</p>
+                        </div>
+
                         <!-- Package Cards -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <!-- Package Card Template -->
                             <div
                                 v-for="pkg in previewPackages"
                                 :key="pkg.id"
-                                class="bg-white rounded-lg p-6 shadow-lg relative"
+                                class="bg-white rounded-xl p-6 shadow-lg relative"
                             >
                                 <!-- Most Popular Badge -->
                                 <div v-if="pkg.isMostPopular" class="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -2117,8 +2150,18 @@ const previewPackages = ref([
                                 
                                 <!-- Pricing/Action -->
                                 <div class="mb-6">
-                                    <div class="text-3xl font-bold text-foreground mb-1">Contact Us</div>
-                                    <p class="text-xs text-muted-foreground">Custom pricing</p>
+                                    <div v-if="pkg.monthlyPrice !== null || pkg.annualPrice !== null" class="text-3xl font-bold text-foreground mb-1">
+                                        <span v-if="pkg.monthlyPrice !== null">{{ displayCurrency }} {{ pkg.monthlyPrice.toFixed(2) }}</span>
+                                        <span v-if="pkg.monthlyPrice !== null && pkg.annualPrice !== null"> / </span>
+                                        <span v-if="pkg.annualPrice !== null">{{ displayCurrency }} {{ pkg.annualPrice.toFixed(2) }}</span>
+                                    </div>
+                                    <div v-else class="text-3xl font-bold text-foreground mb-1">Contact Us</div>
+                                    <p class="text-xs text-muted-foreground">
+                                        <span v-if="pkg.monthlyPrice !== null && pkg.annualPrice !== null">Monthly / Annual</span>
+                                        <span v-else-if="pkg.monthlyPrice !== null">Per month</span>
+                                        <span v-else-if="pkg.annualPrice !== null">Per year</span>
+                                        <span v-else>Custom pricing</span>
+                                    </p>
                                 </div>
 
                                 <!-- Features List -->
@@ -2128,8 +2171,9 @@ const previewPackages = ref([
                                         :key="index"
                                         class="flex items-center gap-2 text-sm text-foreground"
                                     >
-                                        <X class="size-4 text-muted-foreground flex-shrink-0" />
-                                        <span>{{ feature.name }}</span>
+                                        <Check v-if="feature.included" class="size-4 text-green-600 flex-shrink-0" />
+                                        <X v-else class="size-4 text-muted-foreground flex-shrink-0" />
+                                        <span>{{ getFeatureDisplay(feature) }}</span>
                                     </div>
                                 </div>
 
@@ -2484,6 +2528,127 @@ const previewPackages = ref([
             </DialogContent>
         </Dialog>
 
+        <!-- Edit Feature Modal -->
+        <Dialog :open="showEditFeatureModal" @update:open="showEditFeatureModal = $event">
+            <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader class="text-left">
+                    <DialogTitle>Edit Feature</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4 py-4">
+                    <!-- Feature Name -->
+                    <div class="space-y-2">
+                        <Label for="edit-feature-name" class="text-sm font-medium text-foreground">
+                            Feature Name <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="edit-feature-name"
+                            v-model="editFeature.name"
+                            placeholder="Enter feature name"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Feature Key -->
+                    <div class="space-y-2">
+                        <Label for="edit-feature-key" class="text-sm font-medium text-foreground">
+                            Feature Key <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="edit-feature-key"
+                            v-model="editFeature.key"
+                            placeholder="Enter feature key (e.g., projects)"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Data Type -->
+                    <div class="space-y-2">
+                        <Label for="edit-data-type" class="text-sm font-medium text-foreground">
+                            Data Type <span class="text-red-500">*</span>
+                        </Label>
+                        <div class="relative">
+                            <select
+                                id="edit-data-type"
+                                v-model="editFeature.dataType"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
+                            >
+                                <option v-for="type in dataTypes" :key="type" :value="type">
+                                    {{ type }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+
+                    <!-- Is Metered -->
+                    <div class="flex items-center space-x-2">
+                        <Checkbox
+                            id="edit-is-metered"
+                            :checked="editFeature.isMetered"
+                            @click="onMeteredToggle"
+                        />
+                        <Label
+                            for="edit-is-metered"
+                            class="text-sm font-medium text-foreground cursor-pointer"
+                        >
+                            Is Metered?
+                        </Label>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="space-y-2">
+                        <Label for="edit-description" class="text-sm font-medium text-foreground">
+                            Description
+                        </Label>
+                        <textarea
+                            id="edit-description"
+                            v-model="editFeature.description"
+                            placeholder="Enter feature description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <Label for="edit-status" class="text-sm font-medium text-foreground">
+                            Status
+                        </Label>
+                        <div class="relative">
+                            <select
+                                id="edit-status"
+                                v-model="editFeature.status"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
+                            >
+                                <option v-for="status in statusOptions" :key="status" :value="status">
+                                    {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        @click="handleCloseEditFeatureModal"
+                        class="cursor-pointer"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        @click="handleUpdateFeature"
+                        :disabled="!editFeature.name || !editFeature.key || !editFeature.dataType"
+                    >
+                        Update Feature
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
         <!-- Create Package Modal -->
         <Dialog :open="showCreatePackageModal" @update:open="showCreatePackageModal = $event">
             <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -2539,12 +2704,9 @@ const previewPackages = ref([
                         </Label>
                         <div class="flex items-center gap-6">
                             <div class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
+                                <Checkbox
                                     id="billing-monthly"
-                                    v-model="newPackage.billingType"
-                                    value="monthly"
-                                    class="size-4 text-blue-600 focus:ring-blue-500"
+                                    v-model:checked="newPackage.monthlyEnabled"
                                 />
                                 <Label
                                     for="billing-monthly"
@@ -2554,12 +2716,9 @@ const previewPackages = ref([
                                 </Label>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <input
-                                    type="radio"
+                                <Checkbox
                                     id="billing-annual"
-                                    v-model="newPackage.billingType"
-                                    value="annual"
-                                    class="size-4 text-blue-600 focus:ring-blue-500"
+                                    v-model:checked="newPackage.annualEnabled"
                                 />
                                 <Label
                                     for="billing-annual"
@@ -2569,6 +2728,9 @@ const previewPackages = ref([
                                 </Label>
                             </div>
                         </div>
+                        <p class="text-xs text-muted-foreground">
+                            Select at least one billing type. You can enable both monthly and annual billing.
+                        </p>
                     </div>
 
                     <!-- Enable Trial Period -->
@@ -2635,9 +2797,165 @@ const previewPackages = ref([
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleSubmitPackage"
-                        :disabled="!newPackage.name || !newPackage.code || !newPackage.billingType"
+                        :disabled="!newPackage.name || !newPackage.code || (!newPackage.monthlyEnabled && !newPackage.annualEnabled)"
                     >
                         Create Package
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Edit Package Modal -->
+        <Dialog :open="showEditPackageModal" @update:open="showEditPackageModal = $event">
+            <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader class="text-left">
+                    <DialogTitle>Edit Package</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4 py-4">
+                    <!-- Package Name -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-name" class="text-sm font-medium text-foreground">
+                            Package Name <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="edit-package-name"
+                            v-model="editPackage.name"
+                            placeholder="Enter package name"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Package Code -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-code" class="text-sm font-medium text-foreground">
+                            Package Code
+                        </Label>
+                        <Input
+                            id="edit-package-code"
+                            v-model="editPackage.code"
+                            placeholder="Enter package code (auto-generated if empty)"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Description -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-description" class="text-sm font-medium text-foreground">
+                            Description
+                        </Label>
+                        <textarea
+                            id="edit-package-description"
+                            v-model="editPackage.description"
+                            placeholder="Enter package description"
+                            rows="4"
+                            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                        ></textarea>
+                    </div>
+
+                    <!-- Billing Type -->
+                    <div class="space-y-2">
+                        <Label class="text-sm font-medium text-foreground">
+                            Billing Type <span class="text-red-500">*</span>
+                        </Label>
+                        <div class="flex items-center gap-6">
+                            <div class="flex items-center space-x-2">
+                                <Checkbox
+                                    id="edit-billing-monthly"
+                                    v-model:checked="editPackage.monthlyEnabled"
+                                />
+                                <Label
+                                    for="edit-billing-monthly"
+                                    class="text-sm font-medium text-foreground cursor-pointer"
+                                >
+                                    Monthly
+                                </Label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <Checkbox
+                                    id="edit-billing-annual"
+                                    v-model:checked="editPackage.annualEnabled"
+                                />
+                                <Label
+                                    for="edit-billing-annual"
+                                    class="text-sm font-medium text-foreground cursor-pointer"
+                                >
+                                    Annual
+                                </Label>
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Select at least one billing type. You can enable both monthly and annual billing.
+                        </p>
+                    </div>
+
+                    <!-- Enable Trial Period -->
+                    <div class="flex items-center space-x-2">
+                        <Checkbox
+                            id="edit-enable-trial"
+                            v-model:checked="editPackage.enableTrial"
+                        />
+                        <Label
+                            for="edit-enable-trial"
+                            class="text-sm font-medium text-foreground cursor-pointer"
+                        >
+                            Enable Trial Period
+                        </Label>
+                    </div>
+
+                    <!-- Credit Card Required -->
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id="edit-credit-card-required"
+                                v-model:checked="editPackage.creditCardRequired"
+                            />
+                            <Label
+                                for="edit-credit-card-required"
+                                class="text-sm font-medium text-foreground cursor-pointer"
+                            >
+                                Credit Card Required
+                            </Label>
+                        </div>
+                        <p class="text-xs text-muted-foreground ml-6">
+                            When enabled, customers must provide payment information during signup (even for free trials)
+                        </p>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-status" class="text-sm font-medium text-foreground">
+                            Status
+                        </Label>
+                        <div class="relative">
+                            <select
+                                id="edit-package-status"
+                                v-model="editPackage.status"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
+                            >
+                                <option v-for="status in packageStatusOptions" :key="status" :value="status">
+                                    {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        @click="handleCloseEditPackageModal"
+                        class="cursor-pointer"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        @click="handleUpdatePackage"
+                        :disabled="!editPackage.name || (!editPackage.monthlyEnabled && !editPackage.annualEnabled)"
+                    >
+                        Update Package
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -2658,9 +2976,10 @@ const previewPackages = ref([
                         </Label>
                         <Input
                             id="price-package"
-                            :value="getPackageDisplayName(selectedPackageForPricing)"
+                            :model-value="currentPackageName || selectedPackageNameForPricing"
                             readonly
                             class="w-full bg-muted"
+                            placeholder="Select a package above"
                         />
                     </div>
 
@@ -2671,9 +2990,10 @@ const previewPackages = ref([
                         </Label>
                         <Input
                             id="price-currency"
-                            :value="selectedCurrency"
+                            :model-value="selectedCurrency"
                             readonly
                             class="w-full bg-muted"
+                            placeholder="Select a currency above"
                         />
                     </div>
 
@@ -2682,17 +3002,20 @@ const previewPackages = ref([
                         <Label for="billing-cycle" class="text-sm font-medium text-foreground">
                             Billing Cycle <span class="text-red-500">*</span>
                         </Label>
-                        <div class="relative">
+                        <div v-if="availableBillingCycles.length > 0" class="relative">
                             <select
                                 id="billing-cycle"
                                 v-model="newPrice.billingCycle"
                                 class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
                             >
-                                <option v-for="cycle in billingCycles" :key="cycle" :value="cycle">
+                                <option v-for="cycle in availableBillingCycles" :key="cycle" :value="cycle">
                                     {{ cycle.charAt(0).toUpperCase() + cycle.slice(1) }}
                                 </option>
                             </select>
                             <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                        <div v-else class="rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+                            All billing cycles already have prices for this currency.
                         </div>
                     </div>
 
@@ -2743,9 +3066,111 @@ const previewPackages = ref([
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleSubmitPrice"
-                        :disabled="!newPrice.billingCycle || newPrice.price === null || newPrice.price === undefined"
+                        :disabled="!newPrice.billingCycle || newPrice.price === null || newPrice.price === undefined || availableBillingCycles.length === 0"
                     >
                         Add Price
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Edit Price Modal -->
+        <Dialog :open="showEditPriceModal" @update:open="showEditPriceModal = $event">
+            <DialogContent class="sm:max-w-[500px]">
+                <DialogHeader class="text-left">
+                    <DialogTitle>Edit Price</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4 py-4">
+                    <!-- Package (Read-only) -->
+                    <div class="space-y-2">
+                        <Label for="edit-price-package" class="text-sm font-medium text-foreground">
+                            Package
+                        </Label>
+                        <Input
+                            id="edit-price-package"
+                            :model-value="currentPackageName || selectedPackageNameForPricing"
+                            readonly
+                            class="w-full bg-muted"
+                        />
+                    </div>
+
+                    <!-- Currency (Read-only) -->
+                    <div class="space-y-2">
+                        <Label for="edit-price-currency" class="text-sm font-medium text-foreground">
+                            Currency
+                        </Label>
+                        <Input
+                            id="edit-price-currency"
+                            :model-value="selectedCurrency"
+                            readonly
+                            class="w-full bg-muted"
+                        />
+                    </div>
+
+                    <!-- Billing Cycle (Read-only) -->
+                    <div class="space-y-2">
+                        <Label for="edit-price-billing-cycle" class="text-sm font-medium text-foreground">
+                            Billing Cycle
+                        </Label>
+                        <Input
+                            id="edit-price-billing-cycle"
+                            :model-value="editPrice.billingCycle ? editPrice.billingCycle.charAt(0).toUpperCase() + editPrice.billingCycle.slice(1) : ''"
+                            readonly
+                            class="w-full bg-muted"
+                        />
+                    </div>
+
+                    <!-- Price -->
+                    <div class="space-y-2">
+                        <Label for="edit-price-amount" class="text-sm font-medium text-foreground">
+                            Price ({{ selectedCurrency }}) <span class="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            id="edit-price-amount"
+                            v-model.number="editPrice.price"
+                            type="number"
+                            placeholder="0"
+                            min="0"
+                            step="0.01"
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- Status -->
+                    <div class="space-y-2">
+                        <Label for="edit-price-status" class="text-sm font-medium text-foreground">
+                            Status
+                        </Label>
+                        <div class="relative">
+                            <select
+                                id="edit-price-status"
+                                v-model="editPrice.status"
+                                class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring appearance-none pr-8"
+                            >
+                                <option v-for="status in priceStatusOptions" :key="status" :value="status">
+                                    {{ status.charAt(0).toUpperCase() + status.slice(1) }}
+                                </option>
+                            </select>
+                            <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        @click="handleCloseEditPriceModal"
+                        class="cursor-pointer"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        @click="handleUpdatePrice"
+                        :disabled="editPrice.price === null || editPrice.price === undefined"
+                    >
+                        Update Price
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -2936,37 +3361,27 @@ const previewPackages = ref([
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <Label for="valid-from" class="text-sm font-medium text-foreground">
-                                Valid From
+                                Valid From <span class="text-red-500">*</span>
                             </Label>
-                            <div class="relative">
-                                <input
-                                    ref="validFromInputRef"
-                                    id="valid-from"
-                                    type="text"
-                                    placeholder="YYYY-MM-DD"
-                                    readonly
-                                    :value="newCoupon.validFrom"
-                                    class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pr-10 cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                                />
-                                <Calendar class="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                            </div>
+                            <Input
+                                id="valid-from"
+                                v-model="newCoupon.validFrom"
+                                type="date"
+                                class="w-full"
+                                :min="new Date().toISOString().split('T')[0]"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="valid-until" class="text-sm font-medium text-foreground">
-                                Valid Until
+                                Valid Until <span class="text-red-500">*</span>
                             </Label>
-                            <div class="relative">
-                                <input
-                                    ref="validUntilInputRef"
-                                    id="valid-until"
-                                    type="text"
-                                    placeholder="YYYY-MM-DD"
-                                    readonly
-                                    :value="newCoupon.validUntil"
-                                    class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pr-10 cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                                />
-                                <Calendar class="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                            </div>
+                            <Input
+                                id="valid-until"
+                                v-model="newCoupon.validUntil"
+                                type="date"
+                                class="w-full"
+                                :min="newCoupon.validFrom || new Date().toISOString().split('T')[0]"
+                            />
                         </div>
                     </div>
 
@@ -3014,69 +3429,34 @@ const previewPackages = ref([
                                 Select Packages
                             </Label>
                             <div class="space-y-3">
-                                <div class="flex items-center space-x-2">
+                                <div
+                                    v-for="pkg in packages"
+                                    :key="pkg.id"
+                                    class="flex items-center space-x-2"
+                                >
                                     <Checkbox
-                                        id="package-basic"
-                                        :checked="newCoupon.selectedPackages.includes('basic')"
-                                        @update:checked="(checked) => {
+                                        :id="`package-${pkg.id}`"
+                                        :checked="newCoupon.selectedPackages.includes(pkg.id)"
+                                        @update:checked="(checked: boolean) => {
                                             if (checked) {
-                                                if (!newCoupon.selectedPackages.includes('basic')) {
-                                                    newCoupon.selectedPackages.push('basic');
+                                                if (!newCoupon.selectedPackages.includes(pkg.id)) {
+                                                    newCoupon.selectedPackages.push(pkg.id);
                                                 }
                                             } else {
-                                                newCoupon.selectedPackages = newCoupon.selectedPackages.filter(p => p !== 'basic');
+                                                newCoupon.selectedPackages = newCoupon.selectedPackages.filter(p => p !== pkg.id);
                                             }
                                         }"
                                     />
                                     <Label
-                                        for="package-basic"
+                                        :for="`package-${pkg.id}`"
                                         class="text-sm font-medium text-foreground cursor-pointer"
                                     >
-                                        Basic Plan
+                                        {{ pkg.name }}
                                     </Label>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="package-professional"
-                                        :checked="newCoupon.selectedPackages.includes('pro')"
-                                        @update:checked="(checked) => {
-                                            if (checked) {
-                                                if (!newCoupon.selectedPackages.includes('pro')) {
-                                                    newCoupon.selectedPackages.push('pro');
-                                                }
-                                            } else {
-                                                newCoupon.selectedPackages = newCoupon.selectedPackages.filter(p => p !== 'pro');
-                                            }
-                                        }"
-                                    />
-                                    <Label
-                                        for="package-professional"
-                                        class="text-sm font-medium text-foreground cursor-pointer"
-                                    >
-                                        Professional Plan
-                                    </Label>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="package-enterprise"
-                                        :checked="newCoupon.selectedPackages.includes('enterprise')"
-                                        @update:checked="(checked) => {
-                                            if (checked) {
-                                                if (!newCoupon.selectedPackages.includes('enterprise')) {
-                                                    newCoupon.selectedPackages.push('enterprise');
-                                                }
-                                            } else {
-                                                newCoupon.selectedPackages = newCoupon.selectedPackages.filter(p => p !== 'enterprise');
-                                            }
-                                        }"
-                                    />
-                                    <Label
-                                        for="package-enterprise"
-                                        class="text-sm font-medium text-foreground cursor-pointer"
-                                    >
-                                        Enterprise Plan
-                                    </Label>
-                                </div>
+                                <p v-if="packages.length === 0" class="text-sm text-muted-foreground">
+                                    No packages available
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -3112,7 +3492,7 @@ const previewPackages = ref([
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleSubmitCoupon"
-                        :disabled="!newCoupon.code || !newCoupon.discountType || !newCoupon.discountValue || !newCoupon.durationType"
+                        :disabled="!newCoupon.code || !newCoupon.discountType || !newCoupon.discountValue || !newCoupon.durationType || !newCoupon.validFrom || !newCoupon.validUntil"
                     >
                         Create Coupon
                     </Button>
@@ -3527,69 +3907,34 @@ const previewPackages = ref([
                                 Select Packages
                             </Label>
                             <div class="space-y-3">
-                                <div class="flex items-center space-x-2">
+                                <div
+                                    v-for="pkg in packages"
+                                    :key="pkg.id"
+                                    class="flex items-center space-x-2"
+                                >
                                     <Checkbox
-                                        id="edit-package-basic"
-                                        :checked="editCoupon.selectedPackages.includes('basic')"
-                                        @update:checked="(checked) => {
+                                        :id="`edit-package-${pkg.id}`"
+                                        :checked="editCoupon.selectedPackages.includes(pkg.id)"
+                                        @update:checked="(checked: boolean) => {
                                             if (checked) {
-                                                if (!editCoupon.selectedPackages.includes('basic')) {
-                                                    editCoupon.selectedPackages.push('basic');
+                                                if (!editCoupon.selectedPackages.includes(pkg.id)) {
+                                                    editCoupon.selectedPackages.push(pkg.id);
                                                 }
                                             } else {
-                                                editCoupon.selectedPackages = editCoupon.selectedPackages.filter(p => p !== 'basic');
+                                                editCoupon.selectedPackages = editCoupon.selectedPackages.filter(p => p !== pkg.id);
                                             }
                                         }"
                                     />
                                     <Label
-                                        for="edit-package-basic"
+                                        :for="`edit-package-${pkg.id}`"
                                         class="text-sm font-medium text-foreground cursor-pointer"
                                     >
-                                        Basic Plan
+                                        {{ pkg.name }}
                                     </Label>
                                 </div>
-                                <div class="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="edit-package-professional"
-                                        :checked="editCoupon.selectedPackages.includes('pro')"
-                                        @update:checked="(checked) => {
-                                            if (checked) {
-                                                if (!editCoupon.selectedPackages.includes('pro')) {
-                                                    editCoupon.selectedPackages.push('pro');
-                                                }
-                                            } else {
-                                                editCoupon.selectedPackages = editCoupon.selectedPackages.filter(p => p !== 'pro');
-                                            }
-                                        }"
-                                    />
-                                    <Label
-                                        for="edit-package-professional"
-                                        class="text-sm font-medium text-foreground cursor-pointer"
-                                    >
-                                        Professional Plan
-                                    </Label>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="edit-package-enterprise"
-                                        :checked="editCoupon.selectedPackages.includes('enterprise')"
-                                        @update:checked="(checked) => {
-                                            if (checked) {
-                                                if (!editCoupon.selectedPackages.includes('enterprise')) {
-                                                    editCoupon.selectedPackages.push('enterprise');
-                                                }
-                                            } else {
-                                                editCoupon.selectedPackages = editCoupon.selectedPackages.filter(p => p !== 'enterprise');
-                                            }
-                                        }"
-                                    />
-                                    <Label
-                                        for="edit-package-enterprise"
-                                        class="text-sm font-medium text-foreground cursor-pointer"
-                                    >
-                                        Enterprise Plan
-                                    </Label>
-                                </div>
+                                <p v-if="packages.length === 0" class="text-sm text-muted-foreground">
+                                    No packages available
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -3625,7 +3970,7 @@ const previewPackages = ref([
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleUpdateCoupon"
-                        :disabled="!editCoupon.code || !editCoupon.discountType || !editCoupon.discountValue || !editCoupon.durationType"
+                        :disabled="!editCoupon.code || !editCoupon.discountType || !editCoupon.discountValue || !editCoupon.durationType || !editCoupon.validFrom || !editCoupon.validUntil"
                     >
                         Update Coupon
                     </Button>
@@ -3687,6 +4032,37 @@ const previewPackages = ref([
                     </DialogClose>
                     <Button
                         @click="confirmDeletePackage"
+                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                    >
+                        Delete
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete Price Confirmation Modal -->
+        <Dialog :open="showDeletePriceModal" @update:open="(value) => { if (!value) cancelDeletePrice(); }">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle class="text-lg font-semibold text-foreground">
+                        Are you sure?
+                    </DialogTitle>
+                    <DialogDescription class="text-sm text-muted-foreground pt-2">
+                        Are you sure you want to delete this pricing? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter class="gap-3">
+                    <DialogClose as-child>
+                        <Button
+                            variant="secondary"
+                            @click="cancelDeletePrice"
+                            class="cursor-pointer"
+                        >
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                    <Button
+                        @click="confirmDeletePrice"
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                     >
                         Delete
