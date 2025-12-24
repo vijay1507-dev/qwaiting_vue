@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: rtrim(str_replace('127.0.0.1', 'localhost', env('APP_URL', 'http://localhost:8000')), '/') . '/auth/google/callback',
+    ],
+
+    'microsoft' => [
+        'client_id' => env('MICROSOFT_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect' => env('MICROSOFT_REDIRECT_URI', env('APP_URL') . '/auth/microsoft/callback'),
+        'tenant' => env('MICROSOFT_TENANT_ID', 'common'), // 'common' for multi-tenant, or specific tenant ID
+    ],
+
 ];

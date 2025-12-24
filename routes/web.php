@@ -272,14 +272,29 @@ Route::prefix('customer-stories')->group(function () {
 });
 
 // Auth / Action Routes
-Route::get('/signup', [SignupController::class, 'index'])->name('signup');
+Route::get('/signup', [SignupController::class, 'index'])
+    ->middleware(\App\Http\Middleware\ValidateSignupStep::class)
+    ->name('signup');
 Route::post('/signup/step{step}', [SignupController::class, 'storeStep'])
     ->where('step', '[1-6]')
+    ->middleware(\App\Http\Middleware\ValidateSignupStepPost::class)
     ->name('signup.step');
+Route::post('/signup/send-verification', [SignupController::class, 'sendVerificationEmail'])->name('signup.send-verification');
+Route::get('/signup/verify/{id}/{hash}', [SignupController::class, 'verifyEmail'])->name('signup.verify');
+Route::get('/signup/verify-redirect', [SignupController::class, 'verifyRedirect'])->name('signup.verify-redirect');
+Route::get('/signup/verify-email-sent', [SignupController::class, 'showVerifyEmailSent'])->name('signup.verify-email-sent');
+Route::post('/signup/resend-verification', [SignupController::class, 'resendVerificationEmail'])->name('signup.resend-verification');
+Route::post('/signup/clear-session', [SignupController::class, 'clearSession'])->name('signup.clear-session');
 
 Route::get('/website-login', function () {
     return view('website.auth.login');
 })->name('website-login');
+
+// Social Authentication Routes
+Route::get('/auth/google', [\App\Http\Controllers\website\SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [\App\Http\Controllers\website\SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/auth/microsoft', [\App\Http\Controllers\website\SocialAuthController::class, 'redirectToMicrosoft'])->name('auth.microsoft');
+Route::get('/auth/microsoft/callback', [\App\Http\Controllers\website\SocialAuthController::class, 'handleMicrosoftCallback'])->name('auth.microsoft.callback');
 
 Route::get('/request-demo', function () {
     return view('website.auth.request-demo');
