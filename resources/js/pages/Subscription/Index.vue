@@ -55,6 +55,8 @@ interface Coupon {
     usage: number;
     usageLimit: number | null;
     status: string;
+    applicablePackages?: string;
+    packageIds?: string[];
 }
 
 interface Props {
@@ -83,7 +85,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 // Handle metered checkbox toggle
 const onMeteredToggle = () => {
     editFeature.value.isMetered = !editFeature.value.isMetered;
-    console.log('Is Metered value updated to:', editFeature.value.isMetered);
 };
 
 // Active tab state
@@ -193,7 +194,7 @@ const getDataTypeColor = (dataType: string): string => {
 };
 
 // Toast notification
-const { success } = useToast();
+const { success, error } = useToast();
 
 // Delete confirmation modals
 const showDeleteFeatureModal = ref(false);
@@ -265,9 +266,6 @@ const handleUpdateFeature = () => {
         description: editFeature.value.description,
         status: editFeature.value.status,
     };
-
-    console.log('Sending update request with payload:', payload);
-    console.log('isMetered value:', editFeature.value.isMetered, 'Type:', typeof editFeature.value.isMetered);
 
     router.put(updateFeature(editingFeature.value.id).url, payload, {
         preserveScroll: true,
@@ -996,6 +994,8 @@ const getTypeColor = (type: string) => {
             return 'bg-yellow-100 text-yellow-800 border-yellow-200';
         case 'recurring':
             return 'bg-blue-100 text-blue-800 border-blue-200';
+        case 'forever':
+            return 'bg-green-100 text-green-800 border-green-200';
         default:
             return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -1022,6 +1022,85 @@ const discountTypes = ['percentage', 'fixed'];
 const durationTypes = ['once', 'recurring', 'forever'];
 const applicablePackageOptions = ['all', 'specific'];
 const couponStatusOptions = ['active', 'inactive'];
+
+// Direct checkbox change handler
+const handleCheckboxChange = (event: Event, packageId: string | number) => {
+    const target = event.target as HTMLInputElement;
+    const id = String(packageId);
+    const isChecked = target.checked;
+    
+    if (isChecked) {
+        if (!newCoupon.value.selectedPackages.includes(id)) {
+            newCoupon.value.selectedPackages.push(id);
+        }
+    } else {
+        const index = newCoupon.value.selectedPackages.indexOf(id);
+        if (index > -1) {
+            newCoupon.value.selectedPackages.splice(index, 1);
+        }
+    }
+};
+
+// Label click handler for create coupon
+const handleLabelClick = (packageId: string | number, event: Event) => {
+    event.preventDefault();
+    const id = String(packageId);
+    const checkbox = document.getElementById(`package-${id}`) as HTMLInputElement;
+    if (checkbox) {
+        // Toggle the checkbox state
+        checkbox.checked = !checkbox.checked;
+        // Trigger the change handler directly
+        handleCheckboxChange({ target: checkbox } as Event, packageId);
+    }
+};
+
+// Label click handler for edit coupon
+const handleEditLabelClick = (packageId: string | number, event: Event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const id = String(packageId);
+    const checkbox = document.getElementById(`edit-package-${id}`) as HTMLInputElement;
+    if (checkbox) {
+        // Toggle the checkbox state
+        checkbox.checked = !checkbox.checked;
+        // Trigger the change handler directly
+        handleEditCheckboxChange({ target: checkbox } as Event, packageId);
+    }
+};
+
+// Direct checkbox change handler for edit coupon
+const handleEditCheckboxChange = (event: Event, packageId: string | number) => {
+    const target = event.target as HTMLInputElement;
+    const id = String(packageId);
+    const isChecked = target.checked;
+    
+    if (isChecked) {
+        if (!editCoupon.value.selectedPackages.includes(id)) {
+            editCoupon.value.selectedPackages.push(id);
+        }
+    } else {
+        const index = editCoupon.value.selectedPackages.indexOf(id);
+        if (index > -1) {
+            editCoupon.value.selectedPackages.splice(index, 1);
+        }
+    }
+};
+
+// Method to handle package selection for edit coupon
+const handleEditPackageSelection = (packageId: string | number, checked?: boolean) => {
+    const id = String(packageId);
+    const isCurrentlySelected = editCoupon.value.selectedPackages.includes(id);
+    const shouldBeSelected = checked !== undefined ? checked : !isCurrentlySelected;
+    
+    if (shouldBeSelected && !isCurrentlySelected) {
+        editCoupon.value.selectedPackages.push(id);
+    } else if (!shouldBeSelected && isCurrentlySelected) {
+        const index = editCoupon.value.selectedPackages.indexOf(id);
+        if (index > -1) {
+            editCoupon.value.selectedPackages.splice(index, 1);
+        }
+    }
+};
 
 const handleCreateCoupon = () => {
     showCreateCouponModal.value = true;
@@ -1061,13 +1140,24 @@ const handleCloseCouponModal = () => {
     };
 };
 
+
 const handleSubmitCoupon = () => {
     // Validate required fields
     if (!newCoupon.value.code || !newCoupon.value.discountType || !newCoupon.value.discountValue || !newCoupon.value.durationType || !newCoupon.value.validFrom || !newCoupon.value.validUntil) {
         return;
     }
 
-    router.post(storeCoupon().url, {
+    // Validate that packages are selected when "specific" is chosen
+    if (newCoupon.value.applicablePackages === 'specific' && newCoupon.value.selectedPackages.length === 0) {
+        console.error('Validation failed: No packages selected but applicablePackages is "specific"', {
+            applicablePackages: newCoupon.value.applicablePackages,
+            selectedPackages: newCoupon.value.selectedPackages,
+            selectedPackagesLength: newCoupon.value.selectedPackages.length,
+        });
+        return;
+    }
+
+    const payload: any = {
         code: newCoupon.value.code.toUpperCase(),
         discount_type: newCoupon.value.discountType,
         discount_value: newCoupon.value.discountValue,
@@ -1079,13 +1169,29 @@ const handleSubmitCoupon = () => {
         valid_until: newCoupon.value.validUntil,
         status: newCoupon.value.status,
         applicable_packages: newCoupon.value.applicablePackages,
-        package_ids: newCoupon.value.applicablePackages === 'specific' ? newCoupon.value.selectedPackages.map(id => Number(id)) : [],
-    }, {
+    };
+
+    // Only include package_ids when specific packages are selected
+    if (newCoupon.value.applicablePackages === 'specific') {
+        payload.package_ids = newCoupon.value.selectedPackages.map(id => Number(id));
+    }
+
+    router.post(storeCoupon().url, payload, {
         preserveScroll: true,
         onSuccess: () => {
             success('Coupon created successfully.');
             handleCloseCouponModal();
             router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+        onError: (errors: any) => {
+            console.error('Coupon creation error:', {
+                errors,
+                fullErrors: JSON.stringify(errors, null, 2),
+                package_ids_error: errors.package_ids,
+                applicable_packages_error: errors.applicable_packages,
+            });
+            const errorMessage = errors.package_ids?.[0] || errors.message || 'Failed to create coupon. Please check the form and try again.';
+            error(errorMessage);
         },
     });
 };
@@ -1241,7 +1347,7 @@ const destroyEditCouponDatePickers = () => {
     }
 };
 
-const handleEditCoupon = (coupon: any) => {
+const handleEditCoupon = async (coupon: any) => {
     editingCoupon.value = coupon;
     
     // Parse discount type and value
@@ -1255,9 +1361,19 @@ const handleEditCoupon = (coupon: any) => {
     
     // Map coupon type to duration type
     const durationType = coupon.type === 'once' ? 'once' : 
-                        coupon.type === 'recurring' ? 'recurring' : 'once';
+                        coupon.type === 'recurring' ? 'recurring' : 
+                        coupon.type === 'forever' ? 'forever' : 'once';
     
-    // Populate edit form
+    // Get package IDs from coupon data - try multiple possible property names
+    const packageIds = coupon.packageIds || coupon.package_ids || coupon.packages?.map((p: any) => String(p.id)) || [];
+    
+    // Use applicablePackages from database, fallback to inferring from packageIds
+    // Priority: applicablePackages (camelCase) > applicable_packages (snake_case) > infer from packageIds
+    const applicablePackagesFromDB = coupon.applicablePackages || coupon.applicable_packages;
+    const applicablePackages = applicablePackagesFromDB || 
+        (Array.isArray(packageIds) && packageIds.length > 0 ? 'specific' : 'all');
+    
+    // Populate edit form - ensure applicablePackages is set correctly
     editCoupon.value = {
         code: coupon.code,
         discountType: isPercentage ? 'percentage' : 'fixed',
@@ -1268,10 +1384,17 @@ const handleEditCoupon = (coupon: any) => {
         usageLimit: coupon.usageLimit === null ? 0 : coupon.usageLimit,
         validFrom: coupon.validFrom || '',
         validUntil: coupon.validTo || '',
-        applicablePackages: 'all', // Default, can be enhanced
-        selectedPackages: [],
+        applicablePackages: String(applicablePackages),
+        selectedPackages: Array.isArray(packageIds) ? packageIds.map((id: string | number) => String(id)) : [],
         status: coupon.status,
     };
+    
+    // Wait for next tick to ensure reactivity
+    await nextTick();
+    
+    // Force set from DB value if available, otherwise use the computed value
+    const finalApplicablePackages = applicablePackagesFromDB || applicablePackages;
+    editCoupon.value.applicablePackages = String(finalApplicablePackages);
     
     showEditCouponModal.value = true;
 };
@@ -1303,9 +1426,14 @@ const handleUpdateCoupon = () => {
         return;
     }
 
+    // Validate that packages are selected when "specific" is chosen
+    if (editCoupon.value.applicablePackages === 'specific' && editCoupon.value.selectedPackages.length === 0) {
+        return;
+    }
+
     if (!editingCoupon.value) return;
 
-    router.put(updateCoupon(editingCoupon.value.id).url, {
+    const payload: any = {
         code: editCoupon.value.code.toUpperCase(),
         discount_type: editCoupon.value.discountType,
         discount_value: editCoupon.value.discountValue,
@@ -1317,13 +1445,23 @@ const handleUpdateCoupon = () => {
         valid_until: editCoupon.value.validUntil,
         status: editCoupon.value.status,
         applicable_packages: editCoupon.value.applicablePackages,
-        package_ids: editCoupon.value.applicablePackages === 'specific' ? editCoupon.value.selectedPackages.map(id => Number(id)) : [],
-    }, {
+    };
+
+    // Only include package_ids when specific packages are selected
+    if (editCoupon.value.applicablePackages === 'specific') {
+        payload.package_ids = editCoupon.value.selectedPackages.map(id => Number(id));
+    }
+
+    router.put(updateCoupon(editingCoupon.value.id).url, payload, {
         preserveScroll: true,
         onSuccess: () => {
             success('Coupon updated successfully.');
             handleCloseEditCouponModal();
             router.reload({ only: ['features', 'packages', 'coupons'] });
+        },
+        onError: (errors: any) => {
+            const errorMessage = errors.package_ids?.[0] || errors.message || 'Failed to update coupon. Please check the form and try again.';
+            error(errorMessage);
         },
     });
 };
@@ -1333,6 +1471,15 @@ watch(showEditCouponModal, async (isOpen) => {
     if (isOpen) {
         // Wait for DOM to be ready and form data to be populated
         await nextTick();
+        
+        // Force update radio buttons to ensure they reflect the correct value
+        const allRadio = document.getElementById('edit-packages-all') as HTMLInputElement;
+        const specificRadio = document.getElementById('edit-packages-specific') as HTMLInputElement;
+        if (allRadio && specificRadio) {
+            allRadio.checked = editCoupon.value.applicablePackages === 'all';
+            specificRadio.checked = editCoupon.value.applicablePackages === 'specific';
+        }
+        
         setTimeout(() => {
             initializeEditCouponDatePickers();
         }, 200);
@@ -2342,7 +2489,7 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                                                     getTypeColor(coupon.type)
                                                 ]"
                                             >
-                                                {{ coupon.type === 'once' ? 'Once' : 'Recurring' }}
+                                                {{ coupon.type === 'once' ? 'Once' : coupon.type === 'recurring' ? 'Recurring' : coupon.type === 'forever' ? 'Forever' : 'Once' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
@@ -3439,22 +3586,17 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                                     :key="pkg.id"
                                     class="flex items-center space-x-2"
                                 >
-                                    <Checkbox
+                                    <input
+                                        type="checkbox"
                                         :id="`package-${pkg.id}`"
-                                        :checked="newCoupon.selectedPackages.includes(pkg.id)"
-                                        @update:checked="(checked: boolean) => {
-                                            if (checked) {
-                                                if (!newCoupon.selectedPackages.includes(pkg.id)) {
-                                                    newCoupon.selectedPackages.push(pkg.id);
-                                                }
-                                            } else {
-                                                newCoupon.selectedPackages = newCoupon.selectedPackages.filter(p => p !== pkg.id);
-                                            }
-                                        }"
+                                        :checked="newCoupon.selectedPackages.includes(String(pkg.id))"
+                                        @change="handleCheckboxChange($event, pkg.id)"
+                                        class="size-4 rounded border-border text-blue-600 focus:ring-blue-500 cursor-pointer"
                                     />
                                     <Label
                                         :for="`package-${pkg.id}`"
                                         class="text-sm font-medium text-foreground cursor-pointer"
+                                        @click.prevent="handleLabelClick(pkg.id, $event)"
                                     >
                                         {{ pkg.name }}
                                     </Label>
@@ -3497,7 +3639,7 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleSubmitCoupon"
-                        :disabled="!newCoupon.code || !newCoupon.discountType || !newCoupon.discountValue || !newCoupon.durationType || !newCoupon.validFrom || !newCoupon.validUntil"
+                        :disabled="!newCoupon.code || !newCoupon.discountType || !newCoupon.discountValue || !newCoupon.durationType || !newCoupon.validFrom || !newCoupon.validUntil || (newCoupon.applicablePackages === 'specific' && newCoupon.selectedPackages.length === 0)"
                     >
                         Create Coupon
                     </Button>
@@ -3917,22 +4059,17 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                                     :key="pkg.id"
                                     class="flex items-center space-x-2"
                                 >
-                                    <Checkbox
+                                    <input
+                                        type="checkbox"
                                         :id="`edit-package-${pkg.id}`"
-                                        :checked="editCoupon.selectedPackages.includes(pkg.id)"
-                                        @update:checked="(checked: boolean) => {
-                                            if (checked) {
-                                                if (!editCoupon.selectedPackages.includes(pkg.id)) {
-                                                    editCoupon.selectedPackages.push(pkg.id);
-                                                }
-                                            } else {
-                                                editCoupon.selectedPackages = editCoupon.selectedPackages.filter(p => p !== pkg.id);
-                                            }
-                                        }"
+                                        :checked="editCoupon.selectedPackages.includes(String(pkg.id))"
+                                        @change="handleEditCheckboxChange($event, pkg.id)"
+                                        class="size-4 rounded border-border text-blue-600 focus:ring-blue-500 cursor-pointer"
                                     />
                                     <Label
                                         :for="`edit-package-${pkg.id}`"
                                         class="text-sm font-medium text-foreground cursor-pointer"
+                                        @click.stop="handleEditLabelClick(pkg.id, $event)"
                                     >
                                         {{ pkg.name }}
                                     </Label>
@@ -3975,7 +4112,7 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                     <Button
                         class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
                         @click="handleUpdateCoupon"
-                        :disabled="!editCoupon.code || !editCoupon.discountType || !editCoupon.discountValue || !editCoupon.durationType || !editCoupon.validFrom || !editCoupon.validUntil"
+                        :disabled="!editCoupon.code || !editCoupon.discountType || !editCoupon.discountValue || !editCoupon.durationType || !editCoupon.validFrom || !editCoupon.validUntil || (editCoupon.applicablePackages === 'specific' && editCoupon.selectedPackages.length === 0)"
                     >
                         Update Coupon
                     </Button>

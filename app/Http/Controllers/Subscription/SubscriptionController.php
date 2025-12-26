@@ -60,7 +60,8 @@ class SubscriptionController extends Controller
                 ];
             });
 
-        $coupons = SubscriptionCoupon::orderBy('created_at', 'desc')
+        $coupons = SubscriptionCoupon::with('packages')
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($coupon) {
                 $discountDisplay = $coupon->discount_type === 'percentage'
@@ -79,6 +80,8 @@ class SubscriptionController extends Controller
                     'usage' => $coupon->usage_count,
                     'usageLimit' => $coupon->usage_limit,
                     'status' => $coupon->status,
+                    'applicablePackages' => $coupon->applicable_packages ?? 'all',
+                    'packageIds' => $coupon->packages->pluck('id')->map(fn ($id) => (string) $id)->toArray(),
                 ];
             });
 
@@ -303,27 +306,34 @@ class SubscriptionController extends Controller
      */
     public function storeCoupon(StoreCouponRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request) {
-            $coupon = SubscriptionCoupon::create($request->only([
-                'code',
-                'discount_type',
-                'discount_value',
-                'currency',
-                'duration_type',
-                'number_of_months',
-                'usage_limit',
-                'valid_from',
-                'valid_until',
-                'status',
-            ]));
+        try {
+            DB::transaction(function () use ($request) {
+                $coupon = SubscriptionCoupon::create($request->only([
+                    'code',
+                    'discount_type',
+                    'discount_value',
+                    'currency',
+                    'duration_type',
+                    'number_of_months',
+                    'usage_limit',
+                    'valid_from',
+                    'valid_until',
+                    'status',
+                    'applicable_packages',
+                ]));
 
-            // Attach packages if applicable_packages is 'specific'
-            if ($request->applicable_packages === 'specific' && $request->has('package_ids')) {
-                $coupon->packages()->attach($request->package_ids);
-            }
-        });
+                // Attach packages if applicable_packages is 'specific'
+                if ($request->applicable_packages === 'specific' && $request->has('package_ids') && ! empty($request->package_ids)) {
+                    $coupon->packages()->attach($request->package_ids);
+                }
+            });
 
-        return back()->with('success', 'Coupon created successfully.');
+            return back()->with('success', 'Coupon created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     /**
@@ -345,10 +355,11 @@ class SubscriptionController extends Controller
                 'valid_from',
                 'valid_until',
                 'status',
+                'applicable_packages',
             ]));
 
             // Sync packages
-            if ($request->applicable_packages === 'specific' && $request->has('package_ids')) {
+            if ($request->applicable_packages === 'specific' && $request->has('package_ids') && ! empty($request->package_ids)) {
                 $coupon->packages()->sync($request->package_ids);
             } else {
                 $coupon->packages()->detach();

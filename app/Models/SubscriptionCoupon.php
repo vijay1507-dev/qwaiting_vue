@@ -22,6 +22,7 @@ class SubscriptionCoupon extends Model
         'valid_from',
         'valid_until',
         'status',
+        'applicable_packages',
     ];
 
     protected function casts(): array
