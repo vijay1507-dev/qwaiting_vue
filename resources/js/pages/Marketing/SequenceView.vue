@@ -8,6 +8,15 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { ArrowLeft, Save, Plus, Trash2, Mail, Clock, ChevronRight, Send, X } from 'lucide-vue-next';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
@@ -223,6 +232,10 @@ const testEmailForm = ref({
 const testEmailLoading = ref(false);
 const testEmailTarget = ref<'sequence' | string | null>(null); // 'sequence' for batch, email id for single
 
+// Delete confirmation modal
+const showDeleteEmailModal = ref(false);
+const emailToDelete = ref<string | null>(null);
+
 // Handle paste event to remove color styles
 const handlePaste = (emailId: string) => {
     return (e: ClipboardEvent) => {
@@ -335,14 +348,31 @@ const addEmail = () => {
     });
 };
 
-const removeEmail = (emailId: string) => {
+const handleDeleteEmail = (emailId: string) => {
     if (sequence.value.emails.length > 1) {
-        sequence.value.emails = sequence.value.emails.filter(e => e.id !== emailId);
+        emailToDelete.value = emailId;
+        showDeleteEmailModal.value = true;
+    }
+};
+
+const confirmDeleteEmail = () => {
+    if (emailToDelete.value && sequence.value.emails.length > 1) {
+        sequence.value.emails = sequence.value.emails.filter(e => {
+            const emailIdentifier = e.id || `email-${e.number}`;
+            return emailIdentifier !== emailToDelete.value;
+        });
         // Renumber emails
         sequence.value.emails.forEach((email, index) => {
             email.number = index + 1;
         });
+        emailToDelete.value = null;
     }
+    showDeleteEmailModal.value = false;
+};
+
+const cancelDeleteEmail = () => {
+    emailToDelete.value = null;
+    showDeleteEmailModal.value = false;
 };
 
 const toggleEmail = (emailId: string) => {
@@ -724,7 +754,7 @@ const handleSave = () => {
                                                 </button>
                                                 <button
                                                     v-if="sequence.emails.length > 1"
-                                                    @click.stop="removeEmail(email.id || `email-${email.number}`)"
+                                                    @click.stop="handleDeleteEmail(email.id || `email-${email.number}`)"
                                                     class="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
                                                     title="Remove Email"
                                                 >
@@ -957,6 +987,37 @@ const handleSave = () => {
             </div>
         </div>
     </div>
+
+    <!-- Delete Email Confirmation Modal -->
+    <Dialog :open="showDeleteEmailModal" @update:open="(value) => { if (!value) cancelDeleteEmail(); }">
+        <DialogContent class="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle class="text-lg font-semibold text-foreground">
+                    Are you sure?
+                </DialogTitle>
+                <DialogDescription class="text-sm text-muted-foreground pt-2">
+                    Are you sure you want to delete this email? This action cannot be undone.
+                </DialogDescription>
+            </DialogHeader>
+            <DialogFooter class="gap-3">
+                <DialogClose as-child>
+                    <Button
+                        variant="secondary"
+                        @click="cancelDeleteEmail"
+                        class="cursor-pointer"
+                    >
+                        Cancel
+                    </Button>
+                </DialogClose>
+                <Button
+                    @click="confirmDeleteEmail"
+                    class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                >
+                    Delete
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <style scoped>
