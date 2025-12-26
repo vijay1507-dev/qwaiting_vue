@@ -18,9 +18,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Save, Plus, Trash2, Mail, Clock, ChevronRight, Send, X } from 'lucide-vue-next';
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import Quill from 'quill';
+import { JoditEditor } from 'jodit-vue';
+import 'jodit/es2021/jodit.min.css';
+import type { IJodit } from 'jodit';
 import { onMounted, nextTick } from 'vue';
 
 interface EmailTemplate {
@@ -81,31 +81,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Clean HTML content by removing color styles
+// Clean HTML content - now disabled since we're using full HTML templates
+// Keeping function for backward compatibility but it just returns the HTML as-is
 const cleanHtmlContent = (html: string): string => {
     if (!html) return html;
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    // Remove all color and background-color styles recursively
-    const removeColorStyles = (element: HTMLElement) => {
-        if (element.style) {
-            element.style.removeProperty('color');
-            element.style.removeProperty('background-color');
-            element.style.removeProperty('background');
-        }
-        // Remove color attribute if present
-        if (element.hasAttribute('color')) {
-            element.removeAttribute('color');
-        }
-        Array.from(element.children).forEach((child) => {
-            removeColorStyles(child as HTMLElement);
-        });
-    };
-
-    removeColorStyles(tempDiv);
-    return tempDiv.innerHTML;
+    // Return HTML as-is - no cleaning since we're using full HTML templates
+    return html;
 };
 
 // Initialize sequence data from props or defaults
@@ -122,7 +103,7 @@ const sequence = ref<SequenceData>({
             timingUnit: email.timingUnit || 'hours',
             subject: email.subject || '',
             type: email.type || 'welcome',
-            content: email.content ? cleanHtmlContent(email.content) : '',
+            content: email.content || '',
             status: email.status || 'active',
         }))
         : [
@@ -153,24 +134,24 @@ watch(() => props.sequence, (newSequence) => {
                 timingUnit: email.timingUnit || 'hours',
                 subject: email.subject || '',
                 type: email.type || 'welcome',
-                content: email.content ? cleanHtmlContent(email.content) : '',
+                content: email.content || '',
                 status: email.status || 'active',
             })),
         };
     }
 }, { immediate: true });
 
-// Watch email content changes to clean color styles
-watch(() => sequence.value.emails, (emails) => {
-    emails.forEach((email) => {
-        if (email.content) {
-            const cleaned = cleanHtmlContent(email.content);
-            if (cleaned !== email.content) {
-                email.content = cleaned;
-            }
-        }
-    });
-}, { deep: true });
+// Watch email content changes - no longer cleaning styles since we're using full HTML templates
+// watch(() => sequence.value.emails, (emails) => {
+//     emails.forEach((email) => {
+//         if (email.content) {
+//             const cleaned = cleanHtmlContent(email.content);
+//             if (cleaned !== email.content) {
+//                 email.content = cleaned;
+//             }
+//         }
+//     });
+// }, { deep: true });
 
 const isEditMode = computed(() => !!props.id);
 const expandedEmail = ref<string | null>(null);
@@ -207,19 +188,125 @@ const timingUnits = [
     { value: 'on_expired', label: 'On Expired' },
 ];
 
-// Quill editor toolbar configuration for email template design
-const quillToolbar = [
-    [{ header: [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    [{ align: [] }],
-    ['link', 'image'],
-    [{ color: [] }, { background: [] }],
-    ['clean'],
-];
+// Jodit editor configuration for email template design
+const joditConfig = {
+    readonly: false,
+    toolbar: true,
+    toolbarButtonSize: 'middle',
+    buttons: [
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'ul',
+        'ol',
+        '|',
+        'outdent',
+        'indent',
+        '|',
+        'font',
+        'fontsize',
+        'paragraph',
+        '|',
+        'image',
+        'link',
+        '|',
+        'align',
+        '|',
+        'undo',
+        'redo',
+        '|',
+        'hr',
+        'eraser',
+        'fullsize',
+        'source',
+    ],
+    height: 300,
+    placeholder: 'Enter email content...',
+    removeButtons: ['brush', 'file'],
+    showCharsCounter: false,
+    showWordsCounter: false,
+    showXPathInStatusbar: false,
+    // Disable HTML cleaning to preserve button formatting
+    cleanHTML: false,
+    // Don't remove any attributes or styles
+    removeEmptyBlocks: false,
+    // Preserve all styles and formatting
+    cleanSpaces: false,
+    // Allow inline styles (critical for email templates)
+    allowInlineStyles: true,
+    // Preserve button structure - don't wrap in paragraphs
+    enter: 'P',
+    enterBlock: 'DIV',
+    // Allow all HTML tags
+    allowTags: {
+        button: true,
+        a: true,
+        table: true,
+        tr: true,
+        td: true,
+        th: true,
+        tbody: true,
+        thead: true,
+        tfoot: true,
+        div: true,
+        span: true,
+        p: true,
+        img: true,
+        h1: true,
+        h2: true,
+        h3: true,
+        h4: true,
+        h5: true,
+        h6: true,
+        ul: true,
+        ol: true,
+        li: true,
+        strong: true,
+        em: true,
+        u: true,
+        s: true,
+        br: true,
+        hr: true,
+        style: true,
+    },
+    // Preserve all attributes on elements
+    allowAttributes: {
+        style: true,
+        class: true,
+        id: true,
+        href: true,
+        src: true,
+        alt: true,
+        width: true,
+        height: true,
+        border: true,
+        cellpadding: true,
+        cellspacing: true,
+        role: true,
+        align: true,
+        bgcolor: true,
+        color: true,
+        target: true,
+        onclick: true,
+        type: true,
+        value: true,
+    },
+};
 
 // Store editor refs for each email
-const editorRefs = ref<Record<string, any>>({});
+const editorRefs = ref<Record<string, IJodit>>({});
+const editorComponentRefs = ref<Record<string, any>>({});
+
+// Watch for editor components to be ready
+watch(editorComponentRefs, (refs) => {
+    Object.keys(refs).forEach((emailId) => {
+        if (refs[emailId] && !editorRefs.value[emailId]) {
+            setupEditor(emailId);
+        }
+    });
+}, { deep: true });
 const copiedVariable = ref<string | null>(null);
 const showCopiedNotification = ref(false);
 
@@ -236,31 +323,13 @@ const testEmailTarget = ref<'sequence' | string | null>(null); // 'sequence' for
 const showDeleteEmailModal = ref(false);
 const emailToDelete = ref<string | null>(null);
 
-// Handle paste event to remove color styles
-const handlePaste = (emailId: string) => {
-    return (e: ClipboardEvent) => {
-        e.preventDefault();
-        const editor = editorRefs.value[emailId];
-        if (!editor) return;
+// Handle paste event - now preserving all styles
+const handlePaste = (emailId: string, html: string) => {
+    const editor = editorRefs.value[emailId];
+    if (!editor) return html;
 
-        const range = editor.getSelection(true);
-        const text = e.clipboardData?.getData('text/plain') || '';
-        const html = e.clipboardData?.getData('text/html') || '';
-
-        if (html) {
-            // Clean the HTML content
-            const cleanHtml = cleanHtmlContent(html);
-
-            // Insert cleaned content
-            const delta = editor.clipboard.convert(cleanHtml);
-            editor.updateContents(delta, 'user');
-            editor.setSelection(range.index + delta.length(), 'silent');
-        } else if (text) {
-            // Plain text fallback
-            editor.insertText(range.index, text, 'user');
-            editor.setSelection(range.index + text.length, 'silent');
-        }
-    };
+    // Return HTML as-is - preserve all styles and attributes
+    return html;
 };
 
 // Copy variable to clipboard
@@ -279,60 +348,104 @@ const copyVariable = async (variableName: string) => {
 };
 
 // Setup editor after mount
-const setupEditor = (emailId: string, editor: any) => {
-    if (editor) {
-        editorRefs.value[emailId] = editor;
-        const editorElement = editor.root;
-        if (editorElement) {
-            // Handle paste for cleaning HTML colors
-            editorElement.addEventListener('paste', handlePaste(emailId));
+const setupEditor = (emailId: string) => {
+    nextTick(() => {
+        const editorComponent = editorComponentRefs.value[emailId];
+        if (!editorComponent) return;
+        
+        // Try different ways to access the editor instance
+        const editor = (editorComponent as any).jodit || (editorComponent as any).$jodit || (editorComponent as any).editor;
+        
+        if (editor && !editorRefs.value[emailId]) {
+            editorRefs.value[emailId] = editor as IJodit;
+            
+            // Handle paste - preserving all HTML and styles
+            editor.events.on('beforePaste', (html: string) => {
+                return handlePaste(emailId, html);
+            });
+            
+            // Prevent Jodit from modifying button elements
+            editor.events.on('beforeCommand', (command: string) => {
+                const selection = editor.selection.current();
+                if (selection) {
+                    const button = selection.closest('button, a[role="button"], .button, [class*="button"]');
+                    if (button && (command === 'bold' || command === 'italic' || command === 'underline' || command === 'removeFormat')) {
+                        return false; // Prevent formatting buttons
+                    }
+                }
+            });
             
             // Add paste handler to insert copied variable (higher priority)
-            const variablePasteHandler = (e: ClipboardEvent) => {
+            editor.events.on('beforePaste', (html: string) => {
                 if (copiedVariable.value) {
-                    e.preventDefault();
-                    e.stopPropagation();
                     const variableText = `{{${copiedVariable.value}}}`;
-                    const range = editor.getSelection(true);
-                    if (range) {
-                        editor.insertText(range.index, variableText, 'user');
-                        editor.setSelection(range.index + variableText.length, 'silent');
-                        copiedVariable.value = null;
-                    }
-                    return false;
+                    editor.selection.insertHTML(variableText);
+                    copiedVariable.value = null;
+                    return false; // Prevent default paste
                 }
-            };
-            
-            // Add paste listener with capture to intercept before default handler
-            editorElement.addEventListener('paste', variablePasteHandler, true);
+                return html;
+            });
             
             // Also handle click to insert if variable is copied (for better UX)
-            const clickHandler = () => {
+            editor.events.on('click', () => {
                 if (copiedVariable.value) {
                     setTimeout(() => {
-                        const range = editor.getSelection(true);
-                        if (range) {
-                            const variableText = `{{${copiedVariable.value}}}`;
-                            editor.insertText(range.index, variableText, 'user');
-                            editor.setSelection(range.index + variableText.length, 'silent');
-                            copiedVariable.value = null;
-                        }
+                        const variableText = `{{${copiedVariable.value}}}`;
+                        editor.selection.insertHTML(variableText);
+                        copiedVariable.value = null;
                     }, 100);
                 }
-            };
+            });
             
-            editorElement.addEventListener('click', clickHandler);
-            
-            // Clean existing content when editor is ready
-            const currentContent = editor.root.innerHTML;
-            if (currentContent) {
-                const cleaned = cleanHtmlContent(currentContent);
-                if (cleaned !== currentContent) {
-                    editor.clipboard.dangerouslyPasteHTML(cleaned);
+            // Configure editor to preserve button elements and prevent modifications
+            editor.events.on('afterInit', () => {
+                // Prevent Jodit from modifying button elements
+                const preserveButtons = () => {
+                    const editorArea = editor.editor;
+                    if (!editorArea) return;
+                    
+                    // Find all buttons and table-based buttons (common in email templates)
+                    const buttons = editorArea.querySelectorAll('button, a[role="button"], table[role="presentation"] a, .button, [class*="button"]');
+                    
+                    buttons.forEach((button) => {
+                        const btn = button as HTMLElement;
+                        
+                        // Unwrap if button is wrapped in paragraph
+                        if (btn.parentElement?.tagName === 'P') {
+                            const parent = btn.parentElement;
+                            parent.replaceWith(btn);
+                        }
+                        
+                        // Make button non-editable to preserve structure
+                        btn.setAttribute('contenteditable', 'false');
+                        
+                        // Restore contenteditable on children if needed
+                        const children = btn.querySelectorAll('*');
+                        children.forEach((child) => {
+                            (child as HTMLElement).setAttribute('contenteditable', 'false');
+                        });
+                    });
+                };
+                
+                // Run immediately and on content changes
+                preserveButtons();
+                
+                // Watch for changes and preserve buttons
+                const observer = new MutationObserver(() => {
+                    preserveButtons();
+                });
+                
+                const editorArea = editor.editor;
+                if (editorArea) {
+                    observer.observe(editorArea, {
+                        childList: true,
+                        subtree: true,
+                        attributes: false,
+                    });
                 }
-            }
+            });
         }
-    }
+    });
 };
 
 const addEmail = () => {
@@ -550,7 +663,7 @@ const handleSave = () => {
         timing_unit: email.timingUnit,
         subject: email.subject,
         type: email.type,
-            content: email.content ? cleanHtmlContent(email.content) : '',
+            content: email.content || '',
         status: email.status,
     }));
 
@@ -825,15 +938,11 @@ const handleSave = () => {
                                                     Email Content
                                                 </Label>
                                                 <div class="rounded-md border border-border overflow-hidden">
-                                                    <QuillEditor
-                                                        v-model:content="email.content"
-                                                        content-type="html"
-                                                        :toolbar="quillToolbar"
-                                                        theme="snow"
-                                                        placeholder="Enter email content..."
+                                                    <JoditEditor
+                                                        :ref="(el: any) => { if (el) editorComponentRefs[email.id || `email-${email.number}`] = el; setupEditor(email.id || `email-${email.number}`); }"
+                                                        v-model="email.content"
+                                                        :config="joditConfig"
                                                         class="email-editor"
-                                                        style="min-height: 300px;"
-                                                        @ready="(quill: any) => setupEditor(email.id || `email-${email.number}`, quill)"
                                                     />
                                                 </div>
                                                 <p class="mt-2 text-xs text-muted-foreground">
@@ -1021,351 +1130,131 @@ const handleSave = () => {
 </template>
 
 <style scoped>
-/* Custom styles for Quill editor in dark mode */
-.email-editor :deep(.ql-container) {
+/* Custom styles for Jodit editor in dark mode */
+.email-editor :deep(.jodit-container) {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: inherit;
-}
-
-.email-editor :deep(.ql-container.ql-snow) {
     border: 1px solid hsl(var(--border));
-    border-top: none;
+    border-radius: 0.375rem;
 }
 
-.email-editor :deep(.ql-editor) {
+.email-editor :deep(.jodit-wysiwyg) {
     min-height: 300px;
-    color: hsl(var(--foreground)) !important;
-    background-color: hsl(var(--background));
+    background-color: #ffffff;
+    padding: 12px;
+    /* Preserve original colors from email templates */
 }
 
-/* Ensure all text content in editor is visible */
-.email-editor :deep(.ql-editor p),
-.email-editor :deep(.ql-editor div),
-.email-editor :deep(.ql-editor span),
-.email-editor :deep(.ql-editor li),
-.email-editor :deep(.ql-editor td),
-.email-editor :deep(.ql-editor th) {
-    color: hsl(var(--foreground)) !important;
+/* Preserve all original styles from email templates - no color overrides */
+
+/* Preserve button styles in email templates */
+.email-editor :deep(.jodit-wysiwyg button),
+.email-editor :deep(.jodit-wysiwyg a[role="button"]),
+.email-editor :deep(.jodit-wysiwyg .button),
+.email-editor :deep(.jodit-wysiwyg [class*="button"]),
+.email-editor :deep(.jodit-wysiwyg table[role="presentation"] a),
+.email-editor :deep(.jodit-wysiwyg table[role="presentation"] td) {
+    /* Preserve all original button styles - don't override */
+    pointer-events: auto;
+    cursor: pointer;
+    /* Allow all styles to be preserved */
 }
 
-/* Headings visibility */
-.email-editor :deep(.ql-editor h1),
-.email-editor :deep(.ql-editor h2),
-.email-editor :deep(.ql-editor h3),
-.email-editor :deep(.ql-editor h4),
-.email-editor :deep(.ql-editor h5),
-.email-editor :deep(.ql-editor h6) {
-    color: hsl(var(--foreground)) !important;
+/* Prevent Jodit from modifying button elements */
+.email-editor :deep(.jodit-wysiwyg button *),
+.email-editor :deep(.jodit-wysiwyg a[role="button"] *),
+.email-editor :deep(.jodit-wysiwyg table[role="presentation"] a *) {
+    pointer-events: auto;
 }
 
-/* Links visibility */
-.email-editor :deep(.ql-editor a) {
-    color: hsl(var(--primary)) !important;
+/* Ensure table-based buttons (common in email templates) are preserved */
+.email-editor :deep(.jodit-wysiwyg table[role="presentation"]) {
+    border-collapse: collapse;
+    width: 100%;
 }
 
-.email-editor :deep(.ql-editor a:hover) {
-    color: hsl(var(--primary) / 0.8) !important;
+.email-editor :deep(.jodit-wysiwyg table[role="presentation"] td) {
+    padding: 0;
+    border: 0;
 }
 
-/* Lists visibility */
-.email-editor :deep(.ql-editor ul),
-.email-editor :deep(.ql-editor ol) {
-    color: hsl(var(--foreground)) !important;
-}
-
-.email-editor :deep(.ql-editor.ql-blank::before) {
-    color: hsl(var(--muted-foreground));
-    font-style: normal;
-}
-
-/* Override any inline styles that might cause low contrast - more aggressive */
-.email-editor :deep(.ql-editor [style*="color"]),
-.email-editor :deep(.ql-editor [style*="Color"]),
-.email-editor :deep(.ql-editor [style*="COLOR"]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Remove color from all style attributes */
-.email-editor :deep(.ql-editor [style]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Target specific color values that are problematic in dark mode */
-.email-editor :deep(.ql-editor [style*="rgb(0, 0, 0)"]),
-.email-editor :deep(.ql-editor [style*="rgb(0,0,0)"]),
-.email-editor :deep(.ql-editor [style*="#000"]),
-.email-editor :deep(.ql-editor [style*="#000000"]),
-.email-editor :deep(.ql-editor [style*="black"]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Override font color attribute if present */
-.email-editor :deep(.ql-editor [color]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* More aggressive overrides for pasted content */
-.email-editor :deep(.ql-editor *[style*="rgb"]),
-.email-editor :deep(.ql-editor *[style*="rgba"]),
-.email-editor :deep(.ql-editor *[style*="hsl"]),
-.email-editor :deep(.ql-editor *[style*="hsla"]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Remove color from font tags */
-.email-editor :deep(.ql-editor font[color]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Ensure all text nodes are visible */
-.email-editor :deep(.ql-editor) {
-    --ql-text-color: hsl(var(--foreground));
-}
-
-.email-editor :deep(.ql-editor *) {
-    --ql-text-color: hsl(var(--foreground));
-}
-
-/* Force text color on all elements recursively */
-.email-editor :deep(.ql-editor),
-.email-editor :deep(.ql-editor *:not(script):not(style)) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Specific overrides for common problematic styles */
-.email-editor :deep(.ql-editor [style*="color: rgb(0, 0, 0)"]),
-.email-editor :deep(.ql-editor [style*="color:rgb(0,0,0)"]),
-.email-editor :deep(.ql-editor [style*="color: #000"]),
-.email-editor :deep(.ql-editor [style*="color:#000"]),
-.email-editor :deep(.ql-editor [style*="color: #000000"]),
-.email-editor :deep(.ql-editor [style*="color:#000000"]),
-.email-editor :deep(.ql-editor [style*="color: black"]),
-.email-editor :deep(.ql-editor [style*="color:black"]) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Ensure strong and emphasis tags are visible */
-.email-editor :deep(.ql-editor strong),
-.email-editor :deep(.ql-editor b) {
-    color: hsl(var(--foreground)) !important;
-    font-weight: 600;
-}
-
-.email-editor :deep(.ql-editor em),
-.email-editor :deep(.ql-editor i) {
-    color: hsl(var(--foreground)) !important;
-}
-
-.email-editor :deep(.ql-editor u) {
-    color: hsl(var(--foreground)) !important;
-    text-decoration-color: hsl(var(--foreground));
-}
-
-/* Force all content to use foreground color unless explicitly styled */
-.email-editor :deep(.ql-editor *) {
-    color: inherit;
-}
-
-.email-editor :deep(.ql-editor) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Ensure text selection is visible */
-.email-editor :deep(.ql-editor ::selection) {
-    background-color: hsl(var(--primary) / 0.3);
-    color: hsl(var(--foreground));
-}
-
-/* Override any Quill default styles */
-.email-editor :deep(.ql-editor.ql-snow) {
-    color: hsl(var(--foreground)) !important;
-}
-
-/* Ensure placeholder text is visible */
-.email-editor :deep(.ql-editor.ql-blank::before) {
-    color: hsl(var(--muted-foreground)) !important;
-    opacity: 1;
-}
-
-.email-editor :deep(.ql-toolbar) {
+/* Toolbar styles */
+.email-editor :deep(.jodit-toolbar-editor-collection) {
     background-color: hsl(var(--card));
     border-color: hsl(var(--border));
     border-top-left-radius: 0.375rem;
     border-top-right-radius: 0.375rem;
-    padding: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px;
+    border-bottom: 1px solid hsl(var(--border));
 }
 
-.email-editor :deep(.ql-toolbar.ql-snow) {
-    border: 1px solid hsl(var(--border));
-    border-bottom: none;
-    background-color: hsl(var(--card)) !important;
-}
-
-/* Toolbar buttons - ensure visibility */
-.email-editor :deep(.ql-snow .ql-toolbar button) {
-    width: 28px;
-    height: 28px;
-    padding: 4px;
-    margin: 0;
-    border-radius: 4px;
-    background-color: transparent;
-    border: 1px solid transparent;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button:hover) {
-    background-color: hsl(var(--muted));
-    border-color: hsl(var(--border));
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button.ql-active) {
-    background-color: hsl(var(--muted));
-    border-color: hsl(var(--border));
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button:focus) {
-    outline: 2px solid hsl(var(--ring));
-    outline-offset: 2px;
-}
-
-/* Icon strokes and fills - ensure high contrast */
-.email-editor :deep(.ql-snow .ql-stroke) {
-    stroke: hsl(var(--foreground));
-    stroke-width: 1.5;
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-fill) {
-    fill: hsl(var(--foreground));
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-stroke.ql-thin) {
-    stroke-width: 1;
-}
-
-/* Ensure SVG icons are visible */
-.email-editor :deep(.ql-snow .ql-toolbar button svg) {
-    opacity: 1 !important;
-    display: block;
-    width: 18px;
-    height: 18px;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button:hover svg .ql-stroke) {
-    stroke: hsl(var(--foreground));
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button:hover svg .ql-fill) {
-    fill: hsl(var(--foreground));
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button.ql-active svg .ql-stroke) {
-    stroke: hsl(var(--primary));
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar button.ql-active svg .ql-fill) {
-    fill: hsl(var(--primary));
-    opacity: 1 !important;
-}
-
-/* Picker labels and dropdowns */
-.email-editor :deep(.ql-snow .ql-picker-label) {
+.email-editor :deep(.jodit-toolbar-button) {
     color: hsl(var(--foreground));
-    padding: 4px 8px;
     border-radius: 4px;
-    border: 1px solid transparent;
+    transition: all 0.2s;
 }
 
-.email-editor :deep(.ql-snow .ql-picker-label:hover) {
+.email-editor :deep(.jodit-toolbar-button:hover) {
     background-color: hsl(var(--muted));
-    border-color: hsl(var(--border));
 }
 
-.email-editor :deep(.ql-snow .ql-picker-label.ql-active) {
+.email-editor :deep(.jodit-toolbar-button.jodit-toolbar-button_active) {
     background-color: hsl(var(--muted));
-    border-color: hsl(var(--border));
+    color: hsl(var(--primary));
 }
 
-.email-editor :deep(.ql-snow .ql-picker-options) {
+.email-editor :deep(.jodit-toolbar-button svg) {
+    fill: hsl(var(--foreground));
+    stroke: hsl(var(--foreground));
+}
+
+.email-editor :deep(.jodit-toolbar-button:hover svg) {
+    fill: hsl(var(--foreground));
+    stroke: hsl(var(--foreground));
+}
+
+.email-editor :deep(.jodit-toolbar-button.jodit-toolbar-button_active svg) {
+    fill: hsl(var(--primary));
+    stroke: hsl(var(--primary));
+}
+
+/* Dropdown styles */
+.email-editor :deep(.jodit-dropdown) {
     background-color: hsl(var(--card));
     border-color: hsl(var(--border));
     border-radius: 0.375rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.email-editor :deep(.ql-snow .ql-picker-item) {
+.email-editor :deep(.jodit-dropdown-item) {
     color: hsl(var(--foreground));
     padding: 8px 12px;
 }
 
-.email-editor :deep(.ql-snow .ql-picker-item:hover) {
+.email-editor :deep(.jodit-dropdown-item:hover) {
     background-color: hsl(var(--muted));
     color: hsl(var(--foreground));
 }
 
-.email-editor :deep(.ql-snow .ql-picker-item.ql-selected) {
+.email-editor :deep(.jodit-dropdown-item.jodit-dropdown-item_active) {
     background-color: hsl(var(--primary) / 0.1);
     color: hsl(var(--primary));
 }
 
-/* Ensure separator lines are visible */
-.email-editor :deep(.ql-snow .ql-toolbar .ql-formats) {
-    margin-right: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar .ql-formats:not(:last-child)) {
-    margin-right: 8px;
-    padding-right: 8px;
-    border-right: 1px solid hsl(var(--border));
-}
-
-/* Color picker and background picker */
-.email-editor :deep(.ql-snow .ql-picker.ql-color .ql-picker-label),
-.email-editor :deep(.ql-snow .ql-picker.ql-background .ql-picker-label) {
-    width: 28px;
-    height: 28px;
-}
-
-/* Ensure all toolbar elements have proper spacing */
-.email-editor :deep(.ql-snow .ql-toolbar .ql-formats) {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-}
-
-/* Override any default Quill styles that might hide icons */
-.email-editor :deep(.ql-snow .ql-toolbar .ql-picker) {
+/* Ensure text selection is visible */
+.email-editor :deep(.jodit-wysiwyg ::selection) {
+    background-color: hsl(var(--primary) / 0.3);
     color: hsl(var(--foreground));
 }
 
-.email-editor :deep(.ql-snow .ql-toolbar .ql-picker svg) {
-    opacity: 1 !important;
-}
+/* Preserve all original styles - no overrides for email templates */
 
-.email-editor :deep(.ql-snow .ql-toolbar .ql-picker svg .ql-stroke) {
-    stroke: hsl(var(--foreground));
-    opacity: 1 !important;
-}
-
-.email-editor :deep(.ql-snow .ql-toolbar .ql-picker svg .ql-fill) {
-    fill: hsl(var(--foreground));
-    opacity: 1 !important;
+/* Statusbar */
+.email-editor :deep(.jodit-statusbar) {
+    background-color: hsl(var(--card));
+    border-color: hsl(var(--border));
+    border-top: 1px solid hsl(var(--border));
+    color: hsl(var(--muted-foreground));
 }
 </style>
 

@@ -50,10 +50,11 @@ class SendSequenceTestEmailJob implements ShouldQueue
             $content = $this->replaceVariables($this->emailTemplate->content ?? '');
 
             // Wrap content with email template wrapper
-            $wrapper = new EmailTemplateWrapper;
-            $wrappedContent = $wrapper->wrap($content);
+            // Commented out - now using direct HTML template from editor
+            // $wrapper = new EmailTemplateWrapper;
+            // $wrappedContent = $wrapper->wrap($content);
 
-            Mail::html($wrappedContent, function ($message) use ($subject) {
+            Mail::html($content, function ($message) use ($subject) {
                 $message->to($this->testEmail)
                     ->subject($subject);
 
