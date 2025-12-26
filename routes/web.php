@@ -101,7 +101,7 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
 
 Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
     Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index');
-    
+
     // Features
     Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store');
     Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update');
@@ -299,6 +299,9 @@ Route::prefix('customer-stories')->group(function () {
         return view('website.customer-stories.saudia-airlines');
     });
 });
+
+// Cookie Consent
+Route::post('/cookie-consent', [\App\Http\Controllers\website\CookieConsentController::class, 'store'])->name('cookie-consent.store');
 
 // Auth / Action Routes
 Route::get('/signup', [SignupController::class, 'index'])

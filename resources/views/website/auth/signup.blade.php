@@ -347,7 +347,7 @@
                             class="text-[#7C69EF] font-bold hover:underline">Sign in</a></p>
 
                     <!-- Social Login Section -->
-                    <!-- <div class="mt-6">
+                    <div class="mt-6">
                         <div class="flex items-center my-6">
                             <div class="flex-1 h-px bg-slate-200"></div>
                             <span class="px-4 text-sm text-slate-500">Or continue with</span>
@@ -366,7 +366,7 @@
                                 <span>Google</span>
                             </a>
                             
-                            <a href="{{ route('auth.microsoft') }}" 
+                            <!-- <a href="{{ route('auth.microsoft') }}" 
                                class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-200 rounded-xl bg-white text-slate-900 font-semibold text-sm transition-all duration-200 hover:border-[#7C69EF] hover:bg-[#7C69EF]/5">
                                 <svg width="20" height="20" viewBox="0 0 23 23" fill="none">
                                     <path fill="#F25022" d="M0 0h11v11H0z"/>
@@ -375,9 +375,9 @@
                                     <path fill="#FFB900" d="M12 12h11v11H12z"/>
                                 </svg>
                                 <span>Microsoft</span>
-                            </a>
+                            </a> -->
                         </div>
-                    </div> -->
+                    </div>
                 </form>
                 </div>
 

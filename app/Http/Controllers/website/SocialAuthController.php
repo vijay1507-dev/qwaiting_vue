@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\SignupLead;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -30,7 +29,7 @@ class SocialAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
-            
+
             return $this->handleSocialUser($googleUser, 'google');
         } catch (\Exception $e) {
             Log::error('Google OAuth error', [
@@ -39,8 +38,9 @@ class SocialAuthController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
+
             return redirect()->route('website-login')
-                ->with('error', 'Failed to authenticate with Google: ' . $e->getMessage());
+                ->with('error', 'Failed to authenticate with Google: '.$e->getMessage());
         }
     }
 
@@ -59,10 +59,11 @@ class SocialAuthController extends Controller
     {
         try {
             $microsoftUser = Socialite::driver('microsoft')->user();
-            
+
             return $this->handleSocialUser($microsoftUser, 'microsoft');
         } catch (\Exception $e) {
-            Log::error('Microsoft OAuth error: ' . $e->getMessage());
+            Log::error('Microsoft OAuth error: '.$e->getMessage());
+
             return redirect()->route('website-login')
                 ->with('error', 'Failed to authenticate with Microsoft. Please try again.');
         }
@@ -76,55 +77,149 @@ class SocialAuthController extends Controller
         try {
             $email = $socialUser->getEmail();
             $name = $socialUser->getName();
-            
-            if (!$email) {
+
+            if (! $email) {
                 return redirect()->route('website-login')
-                    ->with('error', 'Unable to retrieve email from ' . ucfirst($provider) . ' account.');
+                    ->with('error', 'Unable to retrieve email from '.ucfirst($provider).' account.');
             }
 
             // Validate email domain (only Gmail and work emails allowed)
-            $domain = substr(strrchr($email, "@"), 1);
+            $domain = substr(strrchr($email, '@'), 1);
             $domain = strtolower($domain);
-            
+
             // Check if it's Gmail
             $isGmail = in_array($domain, ['gmail.com', 'googlemail.com']);
-            
+
             // Check if it's Microsoft (outlook.com, hotmail.com, live.com, etc.)
             $microsoftDomains = ['outlook.com', 'hotmail.com', 'live.com', 'msn.com'];
             $isMicrosoftPersonal = in_array($domain, $microsoftDomains);
-            
+
             // For Microsoft provider, allow work emails (not personal Microsoft emails)
             if ($provider === 'microsoft' && $isMicrosoftPersonal) {
                 return redirect()->route('website-login')
                     ->with('error', 'Please use a work email address or Gmail account. Personal Microsoft email accounts are not allowed.');
             }
-            
+
             // For Google provider, only allow Gmail
-            if ($provider === 'google' && !$isGmail) {
-                return redirect()->route('website-login')
-                    ->with('error', 'Please use a Gmail account or work email address.');
-            }
-            
-            // Check if it's a work email (not in free email providers list)
-            $freeEmailProviders = [
-                'yahoo.com', 'yahoo.co.uk', 'yahoo.fr',
-                'aol.com', 'icloud.com', 'me.com', 'mac.com',
-                'protonmail.com', 'proton.me', 'zoho.com',
-                'mail.com', 'gmx.com', 'gmx.de', 'gmx.net',
+            $domain = substr(strrchr($email, '@'), 1);
+            $domain = strtolower($domain);
+
+            // List of blocked temporary email domains
+            $blockedDomains = [
+                'yopmail.com',
+                'yopmail.fr',
+                'tempmail.com',
+                'tempmail.org',
+                'temp-mail.org',
+                'temp-mail.io',
+                'guerrillamail.com',
+                'guerrillamailblock.com',
+                'mailinator.com',
+                '10minutemail.com',
+                'throwaway.email',
+                'mohmal.com',
+                'fakeinbox.com',
+                'getnada.com',
+                'maildrop.cc',
+                'sharklasers.com',
+                'grr.la',
+                'guerrillamail.info',
+                'guerrillamail.biz',
+                'guerrillamail.de',
+                'pokemail.net',
+                'spam4.me',
+                'bccto.me',
+                'chacuo.net',
+                'dispostable.com',
+                'meltmail.com',
+                'mintemail.com',
+                'mytemp.email',
+                'tempail.com',
+                'tempinbox.co.uk',
+                'tempinbox.com',
+                'trashmail.com',
+                'trashmail.net',
+                'trashmail.org',
+                'trashymail.com',
+                'tyldd.com',
+                'emailondeck.com',
+                'fake-mail.net',
+                'fakemailgenerator.com',
+                'mailcatch.com',
+                'mailmoat.com',
+                'mailsac.com',
+                'mintemail.com',
+                'mytrashmail.com',
+                'nada.email',
+                'nada.ltd',
+                'putthisinyourspamdatabase.com',
+                'spamgourmet.com',
+                'spamhole.com',
+                'throwawaymail.com',
+                'tmpmail.org',
+                'tmpmail.net',
+                'tmpmail.com',
+                'tmpinbox.com',
+                'tmpinbox.net',
+                'tmpinbox.org',
             ];
-            
-            $isWorkEmail = !in_array($domain, $freeEmailProviders) && !$isGmail && !$isMicrosoftPersonal;
-            
-            // Only allow Gmail or work emails
-            if (!$isGmail && !$isWorkEmail) {
+
+            // Check if domain is blocked
+            if (in_array($domain, $blockedDomains)) {
                 return redirect()->route('website-login')
-                    ->with('error', 'Please use a Gmail account or work email address.');
+                    ->with('error', 'Temporary email services are not allowed. Please use a Gmail account or work email address.');
+            }
+
+            // Check if it's Gmail (gmail.com or googlemail.com)
+            $isGmail = in_array($domain, ['gmail.com', 'googlemail.com']);
+
+            // Check if it's a work email (not a common free email provider)
+            $freeEmailProviders = [
+                'yahoo.com',
+                'yahoo.co.uk',
+                'yahoo.fr',
+                'hotmail.com',
+                'hotmail.co.uk',
+                'outlook.com',
+                'live.com',
+                'msn.com',
+                'aol.com',
+                'icloud.com',
+                'me.com',
+                'mac.com',
+                'protonmail.com',
+                'proton.me',
+                'zoho.com',
+                'mail.com',
+                'gmx.com',
+                'gmx.de',
+                'gmx.net',
+                'web.de',
+                't-online.de',
+                'qq.com',
+                '163.com',
+                '126.com',
+                'sina.com',
+                'rediffmail.com',
+                'inbox.com',
+                'yandex.com',
+                'yandex.ru',
+                'mail.ru',
+                'rambler.ru',
+            ];
+
+            $isWorkEmail = ! in_array($domain, $freeEmailProviders) && ! $isGmail;
+
+            // Only allow Gmail or work emails
+            if (! $isGmail && ! $isWorkEmail) {
+                return redirect()->route('website-login')
+                    ->with('error', 'Please use a Gmail account or work email address. Personal email providers are not allowed.');
             }
 
             // Check if a SignupLead already exists with this email (including soft-deleted)
             $lead = SignupLead::withTrashed()->where('email', $email)->first();
 
-            if (!$lead) {
+            if (! $lead) {
                 try {
                     // Create new SignupLead record (step 1 data)
                     $lead = SignupLead::create([
@@ -135,12 +230,12 @@ class SocialAuthController extends Controller
                         'signup_step' => 1,
                         'email_verified_at' => now(), // Social login emails are pre-verified
                     ]);
-                    
+
                     // Verify the record was created
-                    if (!$lead || !$lead->id) {
+                    if (! $lead || ! $lead->id) {
                         throw new \Exception('SignupLead was not created successfully');
                     }
-                    
+
                     Log::info('SignupLead created via social login', [
                         'lead_id' => $lead->id,
                         'email' => $email,
@@ -161,22 +256,22 @@ class SocialAuthController extends Controller
                 // Update existing lead if needed
                 try {
                     $updateData = [];
-                    
-                    if (!$lead->email_verified_at) {
+
+                    if (! $lead->email_verified_at) {
                         $updateData['email_verified_at'] = now();
                     }
-                    
+
                     // Update name if it's different
                     if ($lead->name !== $name && $name) {
                         $updateData['name'] = $name;
                     }
-                    
+
                     // Update signup_step if it's not set or is 0
-                    if (!$lead->signup_step || $lead->signup_step < 1) {
+                    if (! $lead->signup_step || $lead->signup_step < 1) {
                         $updateData['signup_step'] = 1;
                     }
-                    
-                    if (!empty($updateData)) {
+
+                    if (! empty($updateData)) {
                         $lead->update($updateData);
                         $lead->refresh(); // Refresh to get updated data
                         Log::info('SignupLead updated via social login', [
@@ -186,7 +281,7 @@ class SocialAuthController extends Controller
                             'updates' => $updateData,
                         ]);
                     }
-                    
+
                     // If lead was soft-deleted, restore it
                     if ($lead->trashed()) {
                         $lead->restore();
@@ -208,7 +303,7 @@ class SocialAuthController extends Controller
             }
 
             // Verify lead exists and has an ID
-            if (!$lead || !$lead->id) {
+            if (! $lead || ! $lead->id) {
                 Log::error('SignupLead is invalid after creation/update', [
                     'email' => $email,
                     'provider' => $provider,
@@ -220,10 +315,10 @@ class SocialAuthController extends Controller
 
             // Store lead ID in session
             Session::put('signup_lead_id', $lead->id);
-            
+
             // Mark step 1 as completed since email is verified
             $completedSteps = Session::get('completed_steps', []);
-            if (!in_array(1, $completedSteps)) {
+            if (! in_array(1, $completedSteps)) {
                 $completedSteps[] = 1;
                 Session::put('completed_steps', $completedSteps);
             }
@@ -236,7 +331,7 @@ class SocialAuthController extends Controller
 
             // Redirect to step 2 of signup process
             return redirect()->route('signup', ['business_info']);
-            
+
         } catch (\Exception $e) {
             Log::error('Social authentication error', [
                 'message' => $e->getMessage(),
@@ -246,8 +341,9 @@ class SocialAuthController extends Controller
                 'provider' => $provider ?? 'unknown',
                 'email' => $email ?? 'unknown',
             ]);
+
             return redirect()->route('website-login')
-                ->with('error', 'An error occurred during authentication: ' . $e->getMessage());
+                ->with('error', 'An error occurred during authentication: '.$e->getMessage());
         }
     }
 }
