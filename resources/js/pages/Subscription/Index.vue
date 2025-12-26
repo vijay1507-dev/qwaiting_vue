@@ -41,6 +41,7 @@ interface Package {
     annualEnabled: boolean;
     trialDays: number | null;
     creditCardRequired: boolean;
+    displaySequence?: number;
 }
 
 interface Coupon {
@@ -314,6 +315,7 @@ const newPackage = ref({
     enableTrial: false,
     creditCardRequired: true,
     status: 'active',
+    displaySequence: 0,
 });
 
 const packageStatusOptions = ['active', 'inactive'];
@@ -330,6 +332,7 @@ const editPackage = ref({
     enableTrial: false,
     creditCardRequired: true,
     status: 'active',
+    displaySequence: 0,
 });
 
 const handleCreatePackage = () => {
@@ -348,6 +351,7 @@ const handleClosePackageModal = () => {
         enableTrial: false,
         creditCardRequired: true,
         status: 'active',
+        displaySequence: 0,
     };
 };
 
@@ -371,6 +375,7 @@ const handleSubmitPackage = () => {
         trial_days: newPackage.value.enableTrial ? 14 : null,
         credit_card_required: newPackage.value.creditCardRequired,
         status: newPackage.value.status,
+        display_sequence: newPackage.value.displaySequence || 0,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -395,6 +400,7 @@ const handleEditPackage = (packageId: string) => {
             enableTrial: pkg.trialDays ? pkg.trialDays > 0 : false,
             creditCardRequired: pkg.creditCardRequired,
             status: pkg.status,
+            displaySequence: pkg.displaySequence || 0,
         };
         showEditPackageModal.value = true;
     }
@@ -412,6 +418,7 @@ const handleCloseEditPackageModal = () => {
         enableTrial: false,
         creditCardRequired: true,
         status: 'active',
+        displaySequence: 0,
     };
 };
 
@@ -440,6 +447,7 @@ const handleUpdatePackage = () => {
         trial_days: trialDays,
         credit_card_required: editPackage.value.creditCardRequired,
         status: editPackage.value.status,
+        display_sequence: editPackage.value.displaySequence || 0,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -2914,6 +2922,24 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         </p>
                     </div>
 
+                    <!-- Display Sequence -->
+                    <div class="space-y-2">
+                        <Label for="package-display-sequence" class="text-sm font-medium text-foreground">
+                            Display Sequence
+                        </Label>
+                        <Input
+                            id="package-display-sequence"
+                            v-model.number="newPackage.displaySequence"
+                            type="number"
+                            min="0"
+                            placeholder="Enter display sequence (0 = first)"
+                            class="w-full"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Lower numbers appear first on the frontend pricing page. Default is 0.
+                        </p>
+                    </div>
+
                     <!-- Status -->
                     <div class="space-y-2">
                         <Label for="package-status" class="text-sm font-medium text-foreground">
@@ -3071,6 +3097,24 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         </div>
                         <p class="text-xs text-muted-foreground ml-6">
                             When enabled, customers must provide payment information during signup (even for free trials)
+                        </p>
+                    </div>
+
+                    <!-- Display Sequence -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-display-sequence" class="text-sm font-medium text-foreground">
+                            Display Sequence
+                        </Label>
+                        <Input
+                            id="edit-package-display-sequence"
+                            v-model.number="editPackage.displaySequence"
+                            type="number"
+                            min="0"
+                            placeholder="Enter display sequence (0 = first)"
+                            class="w-full"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Lower numbers appear first on the frontend pricing page. Default is 0.
                         </p>
                     </div>
 

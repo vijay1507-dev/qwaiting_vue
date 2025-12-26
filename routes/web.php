@@ -173,9 +173,7 @@ Route::get('/terms-and-condition', function () {
     return view('website.terms-and-condition.index');
 });
 
-Route::get('/pricing', function () {
-    return view('website.pricing.index');
-});
+Route::get('/pricing', [App\Http\Controllers\website\PricingController::class, 'index'])->name('pricing');
 
 Route::get('/roi-calculator-for-queue-system', function () {
     return view('website.roi-calculator.index');

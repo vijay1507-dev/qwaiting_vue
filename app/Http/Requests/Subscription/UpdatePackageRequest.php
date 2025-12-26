@@ -34,6 +34,7 @@ class UpdatePackageRequest extends FormRequest
             'monthly_enabled' => ['nullable', 'boolean'],
             'annual_enabled' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'display_sequence' => ['nullable', 'integer', 'min:0'],
             'is_most_popular' => ['nullable', 'boolean'],
         ];
     }

@@ -27,16 +27,16 @@
         </div>
 
         {{-- Main Pricing Grid --}}
-        <section class="py-20 bg-gray-50">
+        <section class="py-20 bg-gray-50" x-data="{ annual: true }">
             <div class="max-w-7xl mx-auto px-6">
                 <h2 class="text-4xl font-bold text-center mb-4">Pricing Plans</h2>
                 <p class="text-center text-gray-600 mb-12">Choose the plan that fits your organisation</p>
                 {{-- Billing Toggle --}}
-                <div class="mt-10 flex justify-center items-center space-x-4 mb-4" x-data="{ annual: true }">
+                <div class="mt-10 flex justify-center items-center space-x-4 mb-4">
                     <span class="text-base font-medium"
-                        :class="{ 'text-gray-900': !annual, 'text-gray-900': annual }">Monthly</span>
+                        :class="{ 'text-gray-900': !annual, 'text-gray-500': annual }">Monthly</span>
                     <button class="relative rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                        x-data="{ annual: true }" @click="annual = !annual">
+                        @click="annual = !annual">
                         <div class="w-16 h-8 transition bg-primary rounded-full shadow-md outline-none"></div>
                         <div class="absolute inline-flex items-center justify-center w-5 h-5 transition-all duration-200 ease-in-out transform bg-white rounded-full shadow-sm top-1 left-1"
                             :class="{ 'translate-x-8': annual, 'translate-x-0': !annual }"></div>
@@ -49,316 +49,82 @@
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
 
-                    <!-- Starter -->
-                    <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all border border-gray-200">
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800 text-center">Starter</h3>
+                    @foreach($packages as $package)
+                        <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all border border-gray-200 {{ $package['is_most_popular'] ? 'relative border-2 border-purple-500 shadow-xl hover:shadow-2xl' : '' }}">
+                            @if($package['is_most_popular'])
+                                <span class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white text-xs font-semibold py-1 px-4 rounded-full shadow">
+                                    Popular Choice
+                                </span>
+                            @endif
 
-                        <ul class="space-y-4 text-gray-700 mb-8">
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Staff login upto 5</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Email notification</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Unlimited visitors</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Roles and permissions</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Multi-language support</li>
-                        </ul>
+                            <h3 class="text-2xl font-semibold mb-6 text-gray-800 text-center">{{ $package['name'] }}</h3>
 
-                        <a href="/signup"><button
-                            class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
-                            Sign Up
-                        </button></a>
-                        <a href="#compare_plans"><p class="text-sm text-center text-purple-600 mt-3 cursor-pointer hover:underline">or See features ↓
-                        </p></a>
-                    </div>
+                            @if($package['subtitle'])
+                                <p class="text-center text-gray-600 mb-4">{{ $package['subtitle'] }}</p>
+                            @endif
 
-                    <!-- Business -->
-                    <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all border border-gray-200">
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800 text-center">Business</h3>
+                            @if($package['trial_days'] && $package['trial_days'] > 0)
+                                <div class="mb-4 text-center">
+                                    <span class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-semibold border border-green-200">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {{ $package['trial_days'] }} Day{{ $package['trial_days'] > 1 ? 's' : '' }} Free Trial
+                                    </span>
+                                </div>
+                            @endif
 
-                        <ul class="space-y-4 text-gray-700 mb-8">
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Staff login upto 10</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Email notification</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Analytics and reporting</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Message personalization</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Unlimited visitors</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Roles and permissions</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Multi-language support</li>
-                        </ul>
+                            <div class="mb-6 text-center">
+                                @if($package['monthly_price'] || $package['annual_price'])
+                                    <div x-show="!annual" class="text-3xl font-bold text-gray-900">
+                                        @if($package['monthly_price'])
+                                            {{ $currency }} {{ number_format($package['monthly_price'], 2) }}
+                                        @else
+                                            <span class="text-gray-400">N/A</span>
+                                        @endif
+                                    </div>
+                                    <div x-show="annual" class="text-3xl font-bold text-gray-900">
+                                        @if($package['annual_price'])
+                                            {{ $currency }} {{ number_format($package['annual_price'], 2) }}
+                                        @else
+                                            <span class="text-gray-400">N/A</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-3xl font-bold text-gray-900">Contact Us</div>
+                                @endif
+                            </div>
 
-                        <a href="/signup"><button
-                            class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
-                            Sign Up
-                        </button></a>
-                        <a href="#compare_plans"><p class="text-sm text-center text-purple-600 mt-3 cursor-pointer hover:underline">or See features ↓
-                        </p></a>
-                    </div>
+                            <ul class="space-y-4 text-gray-700 mb-8">
+                                @foreach($package['features'] as $feature)
+                                    @if($feature['included'])
+                                        <li class="flex items-center gap-2">
+                                            <span class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
+                                                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </span>
+                                            <span>
+                                                {{ $feature['name'] }}
+                                                @if($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Number' && $feature['limit_value'] > 0)
+                                                    upto {{ $feature['limit_value'] }}
+                                                @endif
+                                            </span>
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
 
-                    <!-- Enterprise (Popular Choice) -->
-                    <div
-                        class="relative bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all border-2 border-purple-500">
-                        <span
-                            class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white text-xs font-semibold py-1 px-4 rounded-full shadow">
-                            Popular Choice
-                        </span>
-
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800 text-center">Enterprise</h3>
-
-                        <ul class="space-y-4 text-gray-700 mb-8">
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Staff login upto 20</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> API access</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Kiosk Android App</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Email notification</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Analytics and reporting</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Message personalization</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Unlimited visitors</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Roles and permissions</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Multi-language support</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Webhooks</li>
-                        </ul>
-
-                        <a href="/signup"><button
-                            class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
-                            Sign Up
-                        </button></a>
-                        <a href="#compare_plans"><p class="text-sm text-center text-purple-600 mt-3 cursor-pointer hover:underline">or See features ↓
-                        </p></a>
-                    </div>
-
-                    <!-- Custom -->
-                    <div class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all border border-gray-200">
-                        <h3 class="text-2xl font-semibold mb-6 text-gray-800 text-center">Custom</h3>
-
-                        <ul class="space-y-4 text-gray-700 mb-8">
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Staff login upto 50</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> API access</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Email notification</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Geo-fencing</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Analytics and reporting</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Message personalization</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Unlimited visitors</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Roles and permissions</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Multi-language support</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Webhooks</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Entertainment & Offers Zone</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Unlimited Locations</li>
-                            <li class="flex items-center gap-2"><span
-                                    class="flex items-center justify-center w-5 h-5 rounded-full bg-primary">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span> Pay-to-Book Feature</li>
-                        </ul>
-
-                        <a href="/signup"><button
-                            class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
-                            Sign Up
-                        </button></a>
-                        <a href="#compare_plans"><p class="text-sm text-center text-purple-600 mt-3 cursor-pointer hover:underline">or See features ↓
-                        </p></a>
-                    </div>
+                            <a href="/signup">
+                                <button class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
+                                    Sign Up
+                                </button>
+                            </a>
+                            <a href="#compare_plans">
+                                <p class="text-sm text-center text-purple-600 mt-3 cursor-pointer hover:underline">or See features ↓</p>
+                            </a>
+                        </div>
+                    @endforeach
 
                 </div>
             </div>
@@ -379,124 +145,66 @@
                     {{-- Plan Headers (Sticky on scroll) --}}
                 <div
                     class="top-20 z-10 bg-white/95 backdrop-blur-sm rounded-2xl p-6 border border-gray-200" style="margin-bottom: 0px;">
-                    <div class="grid grid-cols-5 gap-4 items-center">
-                        <div class="col-span-1">
+                    <div class="grid gap-4 items-center" style="grid-template-columns: 1fr repeat({{ count($packages) }}, 1fr);">
+                        <div>
                             <span class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Plans</span>
                         </div>
 
-                        <div class="text-center">
-                            <div class="inline-block bg-purple-50 rounded-xl px-4 py-3 border-2 border-purple-200">
-                                <h4 class="text-lg font-bold text-purple-900">Starter</h4>
+                        @foreach($packages as $index => $package)
+                            @php
+                                $colors = [
+                                    ['bg-purple-50', 'border-purple-200', 'text-purple-900'],
+                                    ['bg-orange-50', 'border-orange-200', 'text-orange-900'],
+                                    ['bg-purple-100', 'border-purple-300', 'text-purple-900'],
+                                    ['bg-green-50', 'border-green-200', 'text-green-900'],
+                                ];
+                                $colorIndex = $index % count($colors);
+                                $isPopular = $package['is_most_popular'];
+                            @endphp
+                            <div class="text-center">
+                                <div class="inline-block {{ $colors[$colorIndex][0] }} rounded-xl px-4 py-3 border-2 {{ $colors[$colorIndex][1] }} {{ $isPopular ? 'shadow-md' : '' }}">
+                                    <h4 class="text-lg font-bold {{ $colors[$colorIndex][2] }}">{{ $package['name'] }}</h4>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="text-center">
-                            <div class="inline-block bg-orange-50 rounded-xl px-4 py-3 border-2 border-orange-200">
-                                <h4 class="text-lg font-bold text-orange-900">Business</h4>
-                            </div>
-                        </div>
-
-                        <div class="text-center">
-                            <div
-                                class="inline-block bg-purple-100 rounded-xl px-4 py-3 border-2 border-purple-300 shadow-md">
-                                <h4 class="text-lg font-bold text-purple-900">Enterprise</h4>
-                            </div>
-                        </div>
-
-                        <div class="text-center">
-                            <div class="inline-block bg-green-50 rounded-xl px-4 py-3 border-2 border-green-200">
-                                <h4 class="text-lg font-bold text-green-900">Custom</h4>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
-                    @php
-                        $categories = [
-                            'Core Features' => [
-                                ['Staff login upto', '5', '10', '20', '50'],
-                                ['QR Code', true, true, true, true],
-                                ['TV monitor display', true, true, true, true],
-                                ['Unlimited visitors', true, true, true, true],
-                                ['Roles and permissions', true, true, true, true],
-                                ['Multi-language support', true, true, true, true],
-                                ['Chat support', true, true, true, true],
-                                ['Email support', true, true, true, true],
-                                ['Account manager', false, false, true, true],
-                                ['Product training', false, false, true, true],
-                                ['Configuration help', false, false, true, true],
-                                ['Service-level agreement (SLA)', false, false, false, true],
-                                ['Invite team and admins', true, true, true, true],
-                                ['Resource Management', true, true, true, true],
-                                ['Service Management', true, true, true, true],
-                                ['Schedule bookings', true, true, true, true],
-                                ['Invoicing and PO', false, false, true, true],
-                                ['API access', false, false, true, true],
-                                ['Webhooks', false, false, true, true],
-                                ['Zapier integration', false, false, true, true],
-                                ['Staff Keypad app', false, false, true, true],
-                                ['SMS notifications', false, 'Extra', 'Extra', 'Extra'],
-                                ['Audit Logging', false, false, false, true],
-                                ['Daily Backup and Recovery', false, false, true, true],
-                                ['Unlimited Locations', false, false, false, true],
-                                ['Entertainment & Offers Zone', false, false, false, true],
-                                ['Multi-Queue Calling', false, false, false, true],
-                                ['Immediate Admin Notification for Low Rating', false, false, false, true],
-                                ['Cross-Counter Queue Handling', false, false, false, true],
-                                ['Pay-to-Book Feature', false, false, false, true],
-                                ['Data anonymization', false, false, false, true],
-                                ['Data location control', false, false, false, true],
-                                ['SAML and SSO', false, false, false, true],
-                                ['HIPAA and data certification', false, false, false, true],
-                                ['Setup consultation', false, false, true, true],
-                                ['Kiosk Android App', false, false, true, true],
-                                ['Email notification', true, true, true, true],
-                                ['Email and Push notification for staff', false, false, true, true],
-                                ['Email, Push notification and SMS for staff', false, false, true, true],
-                                ['Geo-fencing', false, false, true, true],
-                                ['Push notification', false, false, true, true],
-                                ['Analytics and reporting', false, true, true, true],
-                                ['Customize design', false, false, true, true],
-                                ['Internationalization and localization', false, false, true, true],
-                                ['Message personalization', false, true, true, true],
-                                ['White-label design', false, false, true, true],
-                            ]
-                        ];
-                    @endphp
 
-                    @foreach($categories as $category => $features)
+                    @if(!empty($comparisonData))
                         <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                            
                             <div class="divide-y divide-gray-100">
-                                @foreach($features as $feature)
-                                    <div class="grid grid-cols-5 gap-4 p-4 hover:bg-gray-50 transition-colors">
-                                        <div class="col-span-1 flex items-center">
+                                @foreach($comparisonData as $feature)
+                                    <div class="grid gap-4 p-4 hover:bg-gray-50 transition-colors" style="grid-template-columns: 1fr repeat({{ count($packages) }}, 1fr);">
+                                        <div class="flex items-center">
                                             <span class="text-sm font-medium text-gray-900">{{ $feature[0] }}</span>
                                         </div>
 
-                                        @for($i = 1; $i <= 4; $i++)
+                                        @for($i = 1; $i <= count($packages); $i++)
                                             <div class="flex items-center justify-center">
-                                                @if($feature[$i] === true)
-                                                    <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                                                        <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24"
-                                                            stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                                d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    </div>
-                                                @elseif($feature[$i] === false)
-                                                    <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-                                                        <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24"
-                                                            stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                                                d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </div>
-                                                @elseif($feature[$i] === 'Extra')
-                                                    <span
-                                                        class="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Extra
-                                                        Charges</span>
+                                                @if(isset($feature[$i]))
+                                                    @if($feature[$i] === true)
+                                                        <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                                            <svg class="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </div>
+                                                    @elseif($feature[$i] === false)
+                                                        <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                                                            <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </div>
+                                                    @elseif(is_string($feature[$i]) && is_numeric($feature[$i]))
+                                                        <span class="text-sm font-bold text-purple-600">{{ $feature[$i] }}</span>
+                                                    @else
+                                                        <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">{{ $feature[$i] }}</span>
+                                                    @endif
                                                 @else
-                                                    <span class="text-sm font-bold text-purple-600">{{ $feature[$i] }}</span>
+                                                    <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </div>
                                                 @endif
                                             </div>
                                         @endfor
@@ -504,7 +212,7 @@
                                 @endforeach
                             </div>
                         </div>
-                    @endforeach
+                    @endif
                 </div>
 
             </div>

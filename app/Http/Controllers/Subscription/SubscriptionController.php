@@ -43,7 +43,7 @@ class SubscriptionController extends Controller
             ];
         });
 
-        $packages = SubscriptionPackage::orderBy('sort_order')->orderBy('name')
+        $packages = SubscriptionPackage::orderBy('display_sequence')->orderBy('sort_order')->orderBy('name')
             ->get()
             ->map(function ($package) {
                 return [
@@ -57,6 +57,7 @@ class SubscriptionController extends Controller
                     'annualEnabled' => $package->annual_enabled,
                     'trialDays' => $package->trial_days,
                     'creditCardRequired' => $package->credit_card_required,
+                    'displaySequence' => $package->display_sequence ?? 0,
                 ];
             });
 

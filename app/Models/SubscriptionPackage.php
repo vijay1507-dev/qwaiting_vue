@@ -22,6 +22,7 @@ class SubscriptionPackage extends Model
         'monthly_enabled',
         'annual_enabled',
         'sort_order',
+        'display_sequence',
         'is_most_popular',
     ];
 
@@ -34,6 +35,7 @@ class SubscriptionPackage extends Model
             'is_most_popular' => 'boolean',
             'trial_days' => 'integer',
             'sort_order' => 'integer',
+            'display_sequence' => 'integer',
             'status' => 'string',
         ];
     }
