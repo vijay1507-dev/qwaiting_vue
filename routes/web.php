@@ -35,6 +35,7 @@ Route::get('leads/{id}/edit', function ($id) {
 Route::get('clients', [App\Http\Controllers\Client\ClientsController::class, 'index'])->middleware(['auth', 'verified'])->name('clients.index');
 Route::get('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'show'])->middleware(['auth', 'verified'])->name('clients.show');
 Route::get('clients/{id}/edit', [App\Http\Controllers\Client\ClientsController::class, 'edit'])->middleware(['auth', 'verified'])->name('clients.edit');
+Route::get('clients/{id}/email-logs', [App\Http\Controllers\Client\ClientsController::class, 'emailLogs'])->middleware(['auth', 'verified'])->name('clients.email-logs');
 Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->middleware(['auth', 'verified'])->name('clients.update');
 Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->middleware(['auth', 'verified'])->name('clients.reset-password');
 

@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Http\Controllers\Controller;
+use App\Models\EmailNotificationLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Http\Controllers\Controller;
 
 class ClientsController extends Controller
 {
@@ -52,6 +53,7 @@ class ClientsController extends Controller
                 ->get()
                 ->mapWithKeys(function ($tenant) {
                     $data = json_decode($tenant->data, true);
+
                     return [$tenant->id => $data];
                 });
 
@@ -73,7 +75,7 @@ class ClientsController extends Controller
                     } else {
                         $plan = 'Paid'; // Trial expired, now paid
                     }
-                } elseif ($domain && !$domain->trial_ends_at) {
+                } elseif ($domain && ! $domain->trial_ends_at) {
                     $plan = 'Paid'; // No trial, must be paid
                 }
 
@@ -92,20 +94,21 @@ class ClientsController extends Controller
                     'plan' => $plan,
                 ];
             })
-            ->sortByDesc('created_at_timestamp')
-            ->values()
-            ->map(function ($client, $index) {
-                $client['srNo'] = $index + 1;
-                unset($client['created_at_timestamp']);
-                return $client;
-            });
+                ->sortByDesc('created_at_timestamp')
+                ->values()
+                ->map(function ($client, $index) {
+                    $client['srNo'] = $index + 1;
+                    unset($client['created_at_timestamp']);
+
+                    return $client;
+                });
 
             return Inertia::render('Clients/Index', [
                 'clients' => $clients,
             ]);
         } catch (\Exception $e) {
             // Log error and return empty array
-            Log::error('Error fetching clients from external database: ' . $e->getMessage());
+            Log::error('Error fetching clients from external database: '.$e->getMessage());
 
             return Inertia::render('Clients/Index', [
                 'clients' => [],
@@ -128,7 +131,7 @@ class ClientsController extends Controller
                 ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 abort(404, 'Client not found');
             }
 
@@ -149,7 +152,7 @@ class ClientsController extends Controller
                 } else {
                     $plan = 'Paid'; // Trial expired, now paid
                 }
-            } elseif ($domain && !$domain->trial_ends_at) {
+            } elseif ($domain && ! $domain->trial_ends_at) {
                 $plan = 'Paid'; // No trial, must be paid
             }
 
@@ -166,11 +169,198 @@ class ClientsController extends Controller
                 'plan' => $plan,
             ];
 
+            // Fetch email logs for this client's email with filters
+            $perPage = (int) $request->get('per_page', 20);
+            $query = EmailNotificationLog::forRecipient($user->email);
+
+            // Apply status filter
+            if ($request->has('status') && $request->get('status') !== '') {
+                $query->where('status', $request->get('status'));
+            }
+
+            // Apply notification type filter
+            if ($request->has('notification_type') && $request->get('notification_type') !== '') {
+                $query->where('notification_type', $request->get('notification_type'));
+            }
+
+            // Apply date range filter (created_at)
+            if ($request->has('date_from') && $request->get('date_from') !== '') {
+                $query->whereDate('created_at', '>=', $request->get('date_from'));
+            }
+            if ($request->has('date_to') && $request->get('date_to') !== '') {
+                $query->whereDate('created_at', '<=', $request->get('date_to'));
+            }
+
+            $emailLogs = $query->orderBy('created_at', 'desc')
+                ->paginate($perPage)
+                ->appends($request->query());
+
+            // Get total counts for all records (not just current page) - apply same filters
+            $totalQuery = EmailNotificationLog::forRecipient($user->email);
+            if ($request->has('status') && $request->get('status') !== '') {
+                $totalQuery->where('status', $request->get('status'));
+            }
+            if ($request->has('notification_type') && $request->get('notification_type') !== '') {
+                $totalQuery->where('notification_type', $request->get('notification_type'));
+            }
+            if ($request->has('date_from') && $request->get('date_from') !== '') {
+                $totalQuery->whereDate('created_at', '>=', $request->get('date_from'));
+            }
+            if ($request->has('date_to') && $request->get('date_to') !== '') {
+                $totalQuery->whereDate('created_at', '<=', $request->get('date_to'));
+            }
+
+            $totalSuccessful = (clone $totalQuery)->successful()->count();
+            $totalFailed = (clone $totalQuery)->failed()->count();
+
+            // Get unique notification types for filter dropdown
+            $notificationTypes = EmailNotificationLog::forRecipient($user->email)
+                ->distinct()
+                ->pluck('notification_type')
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
+
             return Inertia::render('Clients/Show', [
                 'client' => $client,
+                'emailLogs' => $emailLogs,
+                'totalSuccessful' => $totalSuccessful,
+                'totalFailed' => $totalFailed,
+                'notificationTypes' => $notificationTypes,
+                'filters' => [
+                    'status' => $request->get('status', ''),
+                    'notification_type' => $request->get('notification_type', ''),
+                    'date_from' => $request->get('date_from', ''),
+                    'date_to' => $request->get('date_to', ''),
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching client for view: ' . $e->getMessage());
+            Log::error('Error fetching client for view: '.$e->getMessage());
+            abort(404, 'Client not found');
+        }
+    }
+
+    /**
+     * Display email notification logs for the specified client.
+     */
+    public function emailLogs(Request $request, string $id): Response
+    {
+        try {
+            // Fetch user from external database
+            $user = DB::connection('mysql_external')
+                ->table('users')
+                ->where('id', $id)
+                ->whereNull('deleted_at')
+                ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
+                ->first();
+
+            if (! $user) {
+                abort(404, 'Client not found');
+            }
+
+            // Fetch domain for this user's team
+            $domain = DB::connection('mysql_external')
+                ->table('domains')
+                ->where('team_id', (string) $user->team_id)
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->first();
+
+            // Determine plan based on trial_ends_at
+            $plan = 'Free'; // Default
+            if ($domain && $domain->trial_ends_at) {
+                $trialEndsAt = strtotime($domain->trial_ends_at);
+                $now = time();
+                if ($trialEndsAt > $now) {
+                    $plan = 'Trial'; // Trial is still active
+                } else {
+                    $plan = 'Paid'; // Trial expired, now paid
+                }
+            } elseif ($domain && ! $domain->trial_ends_at) {
+                $plan = 'Paid'; // No trial, must be paid
+            }
+
+            $client = [
+                'id' => (string) $user->id,
+                'domain' => $domain->domain ?? '',
+                'ownerName' => $user->name ?? '',
+                'ownerEmail' => $user->email ?? '',
+                'ownerPhone' => $user->phone ?? '',
+                'ownerAddress' => $user->address ?? '',
+                'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'status' => $user->is_active ? 'active' : 'inactive',
+                'plan' => $plan,
+            ];
+
+            // Fetch email logs for this client's email with filters
+            $perPage = (int) $request->get('per_page', 20);
+            $query = EmailNotificationLog::forRecipient($user->email);
+
+            // Apply status filter
+            if ($request->has('status') && $request->get('status') !== '') {
+                $query->where('status', $request->get('status'));
+            }
+
+            // Apply notification type filter
+            if ($request->has('notification_type') && $request->get('notification_type') !== '') {
+                $query->where('notification_type', $request->get('notification_type'));
+            }
+
+            // Apply date range filter (created_at)
+            if ($request->has('date_from') && $request->get('date_from') !== '') {
+                $query->whereDate('created_at', '>=', $request->get('date_from'));
+            }
+            if ($request->has('date_to') && $request->get('date_to') !== '') {
+                $query->whereDate('created_at', '<=', $request->get('date_to'));
+            }
+
+            $emailLogs = $query->orderBy('created_at', 'desc')
+                ->paginate($perPage)
+                ->appends($request->query());
+
+            // Get total counts for all records (not just current page) - apply same filters
+            $totalQuery = EmailNotificationLog::forRecipient($user->email);
+            if ($request->has('status') && $request->get('status') !== '') {
+                $totalQuery->where('status', $request->get('status'));
+            }
+            if ($request->has('notification_type') && $request->get('notification_type') !== '') {
+                $totalQuery->where('notification_type', $request->get('notification_type'));
+            }
+            if ($request->has('date_from') && $request->get('date_from') !== '') {
+                $totalQuery->whereDate('created_at', '>=', $request->get('date_from'));
+            }
+            if ($request->has('date_to') && $request->get('date_to') !== '') {
+                $totalQuery->whereDate('created_at', '<=', $request->get('date_to'));
+            }
+
+            $totalSuccessful = (clone $totalQuery)->successful()->count();
+            $totalFailed = (clone $totalQuery)->failed()->count();
+
+            // Get unique notification types for filter dropdown
+            $notificationTypes = EmailNotificationLog::forRecipient($user->email)
+                ->distinct()
+                ->pluck('notification_type')
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            return Inertia::render('Clients/EmailLogs', [
+                'client' => $client,
+                'emailLogs' => $emailLogs,
+                'totalSuccessful' => $totalSuccessful,
+                'totalFailed' => $totalFailed,
+                'notificationTypes' => $notificationTypes,
+                'filters' => [
+                    'status' => $request->get('status', ''),
+                    'notification_type' => $request->get('notification_type', ''),
+                    'date_from' => $request->get('date_from', ''),
+                    'date_to' => $request->get('date_to', ''),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching email logs for client: '.$e->getMessage());
             abort(404, 'Client not found');
         }
     }
@@ -189,7 +379,7 @@ class ClientsController extends Controller
                 ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 abort(404, 'Client not found');
             }
 
@@ -210,7 +400,7 @@ class ClientsController extends Controller
                 } else {
                     $plan = 'Paid'; // Trial expired, now paid
                 }
-            } elseif ($domain && !$domain->trial_ends_at) {
+            } elseif ($domain && ! $domain->trial_ends_at) {
                 $plan = 'Paid'; // No trial, must be paid
             }
 
@@ -231,7 +421,7 @@ class ClientsController extends Controller
                 'client' => $client,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching client for edit: ' . $e->getMessage());
+            Log::error('Error fetching client for edit: '.$e->getMessage());
             abort(404, 'Client not found');
         }
     }
@@ -258,7 +448,7 @@ class ClientsController extends Controller
                 ->whereNull('deleted_at')
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 return redirect()->back()->withErrors(['error' => 'Client not found']);
             }
 
@@ -279,7 +469,8 @@ class ClientsController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error updating client: ' . $e->getMessage());
+            Log::error('Error updating client: '.$e->getMessage());
+
             return redirect()->back()->withErrors(['error' => 'Failed to update client. Please try again.'])->withInput();
         }
     }
@@ -302,7 +493,7 @@ class ClientsController extends Controller
                 ->whereNull('deleted_at')
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 return redirect()->back()->withErrors(['password' => 'Client not found']);
             }
 
@@ -319,9 +510,9 @@ class ClientsController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error resetting client password: ' . $e->getMessage());
+            Log::error('Error resetting client password: '.$e->getMessage());
+
             return redirect()->back()->withErrors(['password' => 'Failed to reset password. Please try again.'])->withInput();
         }
     }
 }
-
