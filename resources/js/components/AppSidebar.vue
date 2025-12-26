@@ -13,13 +13,15 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
+import { index as clientsIndex } from '@/routes/clients';
 import { index as quotesIndex } from '@/routes/quotes';
 import { campaigns as marketingCampaigns } from '@/routes/marketing';
 import { index as financeIndex } from '@/routes/finance';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
+import { index as subscriptionIndex } from '@/routes/subscription';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, Users, Receipt, Mail, DollarSign, ShoppingBag } from 'lucide-vue-next';
+import { LayoutGrid, Users, Briefcase, Receipt, Mail, DollarSign, ShoppingBag, CreditCard } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -32,6 +34,11 @@ const mainNavItems: NavItem[] = [
         title: 'Leads',
         href: leadsIndex(),
         icon: Users,
+    },
+    {
+        title: 'Clients',
+        href: clientsIndex(),
+        icon: Briefcase,
     },
     {
         title: 'Quotes',
@@ -52,6 +59,11 @@ const mainNavItems: NavItem[] = [
         title: 'E-Commerce',
         href: ecommerceIndex(),
         icon: ShoppingBag,
+    },
+    {
+        title: 'Subscription Management',
+        href: subscriptionIndex(),
+        icon: CreditCard,
     },
 ];
 

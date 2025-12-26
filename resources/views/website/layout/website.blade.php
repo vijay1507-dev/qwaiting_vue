@@ -39,7 +39,7 @@
     <!-- Styles / Scripts -->
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    @vite(['resources/js/app.ts'])
+    @vite(['resources/js/app.ts', 'resources/js/cookie-banner.ts'])
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
@@ -64,6 +64,10 @@
         </main>
 
         @include('website.partials.footer')
+
+        <!-- Cookie Banner Container -->
+        <div id="cookie-banner-container"></div>
+
         <script src="{{ asset('website/asset/js/script.js') }}"></script>
         <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
         <script>
@@ -98,5 +102,7 @@
                 }
             });
         </script>
+    </div>
 
+</body>
 </html>

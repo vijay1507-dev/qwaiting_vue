@@ -7,7 +7,8 @@
     <title>Signup - Qwaiting</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    @vite(['resources/css/app.css'])
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Intl-Tel-Input -->
@@ -20,10 +21,93 @@
     <style>
         /* Intl-Tel-Input library styles - cannot be replaced with Tailwind */
         .iti {
-            width: 100%;
+            width: 100% !important;
+            position: relative !important;
         }
         .iti__flag-container {
-            border-radius: 12px 0 0 12px;
+            border-radius: 12px 0 0 12px !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: 2 !important;
+            background-color: white !important;
+            border: 1px solid #e2e8f0 !important;
+            border-right: none !important;
+            height: 100% !important;
+        }
+        .iti__selected-flag {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            z-index: 2 !important;
+            padding: 0 8px 0 12px !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            background: transparent !important;
+        }
+        .iti__selected-flag:hover {
+            background-color: #f8fafc !important;
+        }
+        .iti__selected-flag:focus {
+            outline: none !important;
+        }
+        .iti__arrow {
+            margin-left: 6px !important;
+            border-top: 4px solid #64748b !important;
+        }
+        .iti__country-list {
+            z-index: 99999 !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            position: absolute !important;
+            width: 100% !important;
+            min-width: 400px !important;
+            max-width: 100% !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            border-radius: 12px !important;
+            margin-top: 4px !important;
+            background: white !important;
+            left: 0 !important;
+            right: 0 !important;
+            box-sizing: border-box !important;
+        }
+        /* When dropdown is appended to body, calculate width from the input */
+        body > .iti__country-list {
+            width: var(--iti-dropdown-width, 100%) !important;
+        }
+        /* Style the phone input to match the design */
+        #user_phone {
+            position: relative !important;
+            border-radius: 0 12px 12px 0 !important;
+            border-left: none !important;
+            padding-left: 12px !important;
+            height: 3.5rem !important;
+        }
+        #user_phone:focus {
+            border-left: none !important;
+            border-color: #7C69EF !important;
+        }
+        /* Ensure the iti wrapper matches the input styling */
+        .iti--separate-dial-code #user_phone {
+            padding-left: 12px !important;
+        }
+        /* Make sure the iti wrapper has proper display */
+        .iti {
+            display: flex !important;
+            align-items: stretch !important;
+        }
+        /* Override any overflow hidden that might clip the dropdown */
+        .step.active {
+            overflow: visible !important;
+        }
+        #form-step-1 {
+            overflow: visible !important;
+        }
+        /* Ensure flag container and input are aligned and same height */
+        .iti__flag-container {
+            height: 3.5rem !important;
+            display: flex !important;
+            align-items: center !important;
         }
         
         /* Step animation - using Tailwind animation utilities */
@@ -83,11 +167,11 @@
                     </svg>
                 </div>
 
-                <div id="logo-img" class="mb-8">
+                <div id="logo-img" class="mb-4">
                     <img src="https://qwaiting.com/images/qwaiting-logo.svg" alt="">
                 </div>
                 <h1 id="sidebar-dynamic-title"
-                    class="text-5xl font-bold leading-tight mb-6 transition-all duration-300 mt-10">Try Queue Management
+                    class="text-4xl font-bold leading-tight mb-6 transition-all duration-300">Try Queue Management
                     System for Free</h1>
                 <p id="sidebar-dynamic-subtitle" class="text-lg opacity-90 mb-10 transition-all duration-300">No credit
                     card required. No strings attached.</p>
@@ -97,22 +181,22 @@
                     <div class="grid grid-cols-3 gap-4">
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/apollo_hospoitals.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/ministry_of_hajj_and_umrah.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/frontimg/clients/tatapwer_ddl.jpg" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/Singapore_Polytechnic_logo.png" alt=""
-                                class="w-full h-full"></span>
+                                class="w-full h-full object-contain"></span>
                         <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/nus-logo.png" alt=""
-                                class="w-full h-full"></span>
-                        <span class="bg-white flex rounded-lg text-sm font-medium w-30 h-20"><img
+                                class="w-full h-full object-contain"></span>
+                        <span class="bg-white p-4 rounded-lg text-sm font-medium w-30 h-20"><img
                                 src="https://qwaiting.com/images/clients/skechers-logo.png" alt=""
-                                class="m-auto"></span>
+                                class="w-full h-full object-contain"></span>
                     </div>
                 </div>
             </div>
@@ -124,23 +208,79 @@
                 <!-- Step 1: User Info -->
                 <div id="step-1"
                     class="step active bg-white p-12 rounded-3xl shadow-xl shadow-slate-200/50 w-full max-w-md backdrop-blur-sm">
-                <h2 class="text-3xl font-bold mb-3 text-slate-900">Create 14 days free account</h2>
-                <p class="text-slate-500 mb-8">Get started with your free trial today</p>
+                <div id="step-1-header">
+                    <h2 class="text-3xl font-bold mb-3 text-slate-900">Create 14 days free account</h2>
+                    <p class="text-slate-500 mb-8">Get started with your free trial today</p>
+                </div>
+
+                @if(session('verified'))
+                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm" id="verification-success-message">
+                        {{ session('verified') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <!-- Email Verification Message (shown after form submission) -->
+                <div id="email-verification-section" class="hidden text-center">
+                    <!-- Animated Email Icon -->
+                    <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-[#7C69EF] to-[#9B8AF5] mb-8 shadow-lg shadow-[#7C69EF]/20">
+                        <svg class="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Title -->
+                    <h2 class="text-3xl font-bold text-slate-900 mb-3 tracking-tight">Check Your Email</h2>
+                    
+                    <!-- Message -->
+                    <p class="text-slate-600 mb-2 text-lg">
+                        We've sent a verification link to
+                    </p>
+                    <p id="verification-email-display" class="text-[#7C69EF] font-semibold text-lg mb-8 break-all">
+                        {{ $email ?? 'your email address' }}
+                    </p>
+                    
+                    <!-- Info Box -->
+                    <div class="bg-gradient-to-r from-[#7C69EF]/5 to-[#9B8AF5]/5 border border-[#7C69EF]/10 rounded-2xl p-5 mb-8">
+                        <p class="text-slate-700 text-sm leading-relaxed">
+                            Click the verification link in your email to continue with your signup. 
+                            <span class="font-semibold text-slate-900">The link expires in 60 minutes.</span>
+                        </p>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="resend-email-btn" class="w-full px-6 py-4 bg-gradient-to-r from-[#7C69EF] to-[#9B8AF5] hover:from-[#6B5BDF] hover:to-[#8B7AE5] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-[#7C69EF]/25 hover:shadow-xl hover:shadow-[#7C69EF]/30 transform hover:-translate-y-0.5 mb-4">
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Resend Verification Email
+                        </span>
+                    </button>
+
+                    <!-- Status Message -->
+                    <div id="verification-status-message" class="hidden mt-4 p-4 rounded-xl text-sm font-medium"></div>
+                </div>
 
                 <form id="form-step-1" class="space-y-5">
                     @csrf
                     <div>
                         <label class="block text-sm font-semibold mb-2 text-slate-900 transition-colors duration-200">Full Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name"
+                        <input type="text" name="name" id="signup_name"
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 text-slate-900"
-                            placeholder="Enter your full name" >
+                            placeholder="Enter your full name" value="">
                         <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="name"></div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-2 text-slate-900">Email <span class="text-red-500">*</span></label>
-                        <input type="email" name="email"
+                        <input type="email" name="email" id="signup_email"
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 text-slate-900"
-                            placeholder="Enter your email" >
+                            placeholder="Enter your email" value="{{ $email ?? '' }}">
                         <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="email"></div>
                     </div>
                     <div>
@@ -149,7 +289,7 @@
                         <input type="email" name="email_dummy" autocomplete="off" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" tabindex="-1">
                         <input type="tel" id="user_phone" name="phone_full"
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 text-slate-900"
-                            placeholder="Enter your phone number" autocomplete="tel" readonly onfocus="this.removeAttribute('readonly');">
+                            placeholder="Enter your phone number" autocomplete="tel">
                         <input type="hidden" name="phone_number" id="phone_actual">
                         <input type="hidden" name="country_code" id="country_code_val">
                         <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="phone_number"></div>
@@ -164,7 +304,7 @@
                         <div id="password-requirements" class="hidden mt-3 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5">
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="min">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
@@ -173,7 +313,7 @@
                             </div>
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="upper">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
@@ -182,7 +322,7 @@
                             </div>
                             <div class="requirement-item flex items-center gap-2.5 text-[0.8125rem] text-slate-500 transition-all duration-200 py-1" data-requirement="lower">
                                 <span class="dot w-1.5 h-1.5 bg-slate-300 rounded-full flex-shrink-0"></span>
-                                <svg class="w-4.5 h-4.5 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg class="w-4 h-4 text-green-500 flex-shrink-0 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
@@ -205,6 +345,39 @@
                     </button>
                     <p class="text-center text-sm text-slate-500 mt-6">Already have an account? <a href="/website-login"
                             class="text-[#7C69EF] font-bold hover:underline">Sign in</a></p>
+
+                    <!-- Social Login Section -->
+                    <div class="mt-6">
+                        <div class="flex items-center my-6">
+                            <div class="flex-1 h-px bg-slate-200"></div>
+                            <span class="px-4 text-sm text-slate-500">Or continue with</span>
+                            <div class="flex-1 h-px bg-slate-200"></div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <a href="{{ route('auth.google') }}" 
+                               class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-200 rounded-xl bg-white text-slate-900 font-semibold text-sm transition-all duration-200 hover:border-[#7C69EF] hover:bg-[#7C69EF]/5">
+                                <svg width="20" height="20" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                <span>Google</span>
+                            </a>
+                            
+                            <!-- <a href="{{ route('auth.microsoft') }}" 
+                               class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-200 rounded-xl bg-white text-slate-900 font-semibold text-sm transition-all duration-200 hover:border-[#7C69EF] hover:bg-[#7C69EF]/5">
+                                <svg width="20" height="20" viewBox="0 0 23 23" fill="none">
+                                    <path fill="#F25022" d="M0 0h11v11H0z"/>
+                                    <path fill="#00A4EF" d="M12 0h11v11H12z"/>
+                                    <path fill="#7FBA00" d="M0 12h11v11H0z"/>
+                                    <path fill="#FFB900" d="M12 12h11v11H12z"/>
+                                </svg>
+                                <span>Microsoft</span>
+                            </a> -->
+                        </div>
+                    </div>
                 </form>
                 </div>
 
@@ -575,34 +748,222 @@
     </div>
 
     <script>
+        // Set a flag to identify this as the signup page tab
+        if (typeof(Storage) !== "undefined") {
+            localStorage.setItem('signupPageOpen', 'true');
+            localStorage.setItem('signupPageUrl', window.location.href);
+        }
+        
+        // Note: Cross-tab communication removed - only the tab where verification link is clicked will redirect
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            // Don't clear immediately, wait a bit in case it's just a navigation
+            setTimeout(function() {
+                if (document.visibilityState === 'hidden') {
+                    localStorage.removeItem('signupPageOpen');
+                }
+            }, 100);
+        });
+        
         // Step mapping configuration
         const stepQueryMap = {1: 'basic_info', 2: 'business_info', 3: 'usage_preference', 4: 'industry', 5: 'daily_footfall', 6: 'current_solution'};
         const queryStepMap = Object.fromEntries(Object.entries(stepQueryMap).map(([k, v]) => [v, parseInt(k)]));
 
-        // Initialize on page load
+        // Detect page refresh and clear session - ALWAYS clear on refresh
+        // Run immediately, before DOM is fully ready
+        (function() {
+            // Check if page was reloaded using multiple methods for reliability
+            let isReload = false;
+            
+            // Method 1: Performance Navigation API
+            try {
+                const navigation = performance.getEntriesByType('navigation')[0];
+                if (navigation) {
+                    isReload = navigation.type === 'reload';
+                }
+            } catch(e) {
+                // Method 2: Legacy Performance Navigation API
+                if (performance.navigation) {
+                    isReload = performance.navigation.type === performance.navigation.TYPE_RELOAD;
+                }
+            }
+            
+            // Method 3: Check referrer matches current URL
+            if (!isReload && document.referrer) {
+                try {
+                    const referrerPath = new URL(document.referrer).pathname;
+                    const currentPath = window.location.pathname;
+                    if (referrerPath === currentPath && currentPath === '/signup') {
+                        isReload = true;
+                    }
+                } catch(e) {
+                    // Fallback: simple string comparison
+                    if (document.referrer.indexOf(window.location.pathname) !== -1) {
+                        isReload = true;
+                    }
+                }
+            }
+            
+            // If it's a reload, clear form fields immediately (before DOM ready)
+            if (isReload) {
+                // Use a flag to prevent form population later
+                window.signupPageRefreshed = true;
+                
+                // Clear session via AJAX
+                if (typeof $ !== 'undefined') {
+                    $.ajax({
+                        url: '/signup/clear-session',
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Accept': 'application/json'
+                        }
+                    });
+                }
+            }
+        })();
+        
         $(document).ready(function() {
-            // Initialize phone input
+            // If page was refreshed, clear all form fields
+            if (window.signupPageRefreshed) {
+                $('#signup_name').val('');
+                $('#signup_email').val('');
+                $('#user_phone').val('');
+                // Clear verification message
+                $('#email-verification-section').addClass('hidden');
+                $('#form-step-1').removeClass('hidden');
+                $('#step-1-header').removeClass('hidden');
+                // Clear verification success message if present
+                $('#verification-success-message').remove();
+            }
+            
+            // Initialize phone input (always initialize, even on refresh)
             const $phoneInput = $("#user_phone");
             if ($phoneInput.length) {
-                // Clear any auto-filled value before initializing
-                $phoneInput.val('');
+                // Get saved phone data
+                const savedCountryCode = "{{ $country_code ?? '' }}";
+                const savedPhoneNumber = "{{ $phone_number ?? '' }}";
                 
-                iti = window.intlTelInput($phoneInput[0], {
-                    initialCountry: "in", separateDialCode: true, preferredCountries: ["in", "us", "ae"],
-                    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
-                });
+                // Initialize intlTelInput (always initialize)
+                // Make sure the input is ready and not readonly
+                const phoneInputElement = $phoneInput[0];
+                if (phoneInputElement) {
+                    // Remove readonly attribute if present
+                    phoneInputElement.removeAttribute('readonly');
+                    
+                    // Initialize intlTelInput
+                    iti = window.intlTelInput(phoneInputElement, {
+                        initialCountry: "in", 
+                        separateDialCode: true, 
+                        preferredCountries: ["in", "us", "ae"],
+                        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                        allowDropdown: true, // Explicitly enable dropdown
+                        autoPlaceholder: "polite",
+                    });
+                    
+                    // Debug: Log if initialization was successful
+                    if (typeof iti !== 'undefined' && iti) {
+                        console.log('intlTelInput initialized successfully');
+                        
+                        // Ensure the dropdown is properly initialized and has correct width
+                        setTimeout(function() {
+                            const itiWrapper = phoneInputElement.closest('.iti');
+                            if (itiWrapper) {
+                                const flagContainer = itiWrapper.querySelector('.iti__flag-container');
+                                if (flagContainer) {
+                                    // Remove any inline styles that might block clicks
+                                    flagContainer.style.pointerEvents = 'auto';
+                                    flagContainer.style.cursor = 'pointer';
+                                    
+                                    // Ensure the selected flag is also clickable
+                                    const selectedFlag = itiWrapper.querySelector('.iti__selected-flag');
+                                    if (selectedFlag) {
+                                        selectedFlag.style.pointerEvents = 'auto';
+                                        selectedFlag.style.cursor = 'pointer';
+                                    }
+                                    
+                                    // Set dropdown width to match input width
+                                    const inputWidth = itiWrapper.offsetWidth;
+                                    document.documentElement.style.setProperty('--iti-dropdown-width', inputWidth + 'px');
+                                    
+                                    // Function to update dropdown width
+                                    const updateDropdownWidth = function() {
+                                        setTimeout(function() {
+                                            const dropdown = document.querySelector('.iti__country-list');
+                                            if (dropdown) {
+                                                dropdown.style.width = inputWidth + 'px';
+                                                dropdown.style.minWidth = inputWidth + 'px';
+                                                dropdown.style.maxWidth = inputWidth + 'px';
+                                            }
+                                        }, 10);
+                                    };
+                                    
+                                    // Listen for dropdown opening events
+                                    flagContainer.addEventListener('click', updateDropdownWidth);
+                                    phoneInputElement.addEventListener('click', updateDropdownWidth);
+                                    
+                                    // Also use MutationObserver to catch when dropdown is added to DOM
+                                    const observer = new MutationObserver(function(mutations) {
+                                        mutations.forEach(function(mutation) {
+                                            if (mutation.addedNodes.length) {
+                                                mutation.addedNodes.forEach(function(node) {
+                                                    if (node.classList && node.classList.contains('iti__country-list')) {
+                                                        updateDropdownWidth();
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+                                    observer.observe(document.body, { childList: true, subtree: true });
+                                    
+                                    console.log('Flag container found and made clickable, dropdown width set to:', inputWidth);
+                                } else {
+                                    console.error('Flag container not found');
+                                }
+                            }
+                        }, 200);
+                    } else {
+                        console.error('intlTelInput initialization failed');
+                    }
+                } else {
+                    console.error('Phone input element not found');
+                }
                 
-                // Clear any auto-filled value after initialization (browsers sometimes fill after init)
-                setTimeout(function() {
-                    const currentValue = $phoneInput.val();
-                    // Check if the value looks like an email (contains @)
-                    if (currentValue && currentValue.includes('@')) {
-                        $phoneInput.val('');
-                        if (iti) {
+                // Clear phone input if page was refreshed
+                if (window.signupPageRefreshed) {
+                    setTimeout(function() {
+                        if (typeof iti !== 'undefined' && iti) {
                             iti.setNumber('');
                         }
-                    }
-                }, 100);
+                    }, 100);
+                }
+                
+                // Pre-fill phone number if saved data exists AND page was not refreshed
+                if (savedCountryCode && savedPhoneNumber && !window.signupPageRefreshed) {
+                    setTimeout(function() {
+                        // Set country code first
+                        const dialCode = savedCountryCode.replace('+', '');
+                        const countryData = iti.getCountryData().find(c => c.dialCode === dialCode);
+                        if (countryData) {
+                            iti.setCountry(countryData.iso2);
+                        }
+                        // Set phone number (intlTelInput will handle the country code automatically)
+                        iti.setNumber(savedCountryCode + ' ' + savedPhoneNumber);
+                    }, 200);
+                } else {
+                    // Clear any auto-filled value after initialization (browsers sometimes fill after init)
+                    setTimeout(function() {
+                        const currentValue = $phoneInput.val();
+                        // Check if the value looks like an email (contains @)
+                        if (currentValue && currentValue.includes('@')) {
+                            $phoneInput.val('');
+                            if (iti) {
+                                iti.setNumber('');
+                            }
+                        }
+                    }, 100);
+                }
                 
                 // Also clear on focus if it contains @
                 $phoneInput.on('focus', function() {
@@ -675,7 +1036,14 @@
 
             // Sync step from URL or default to step 1
             const urlParam = window.location.search.substring(1).split('&')[0];
-            goToStep(queryStepMap[urlParam] || 1, !queryStepMap[urlParam]);
+            const initialStep = queryStepMap[urlParam] || 1;
+            goToStep(initialStep, !queryStepMap[urlParam]);
+            
+            // Ensure logos are visible on step 1 (in case of refresh)
+            if (initialStep === 1) {
+                $('#sidebar-logo, #logo-img').removeClass('hidden');
+                $('#svg-icon').addClass('hidden');
+            }
 
             // Auto-sync domain name with company name
             $('#company_name').on('input', function() {
@@ -788,10 +1156,7 @@
                 $('#phone_actual').val(iti.getNumber().replace(dialCode, '').replace(/\D/g, ''));
                 $('#country_code_val').val(dialCode);
             }
-            if (stepNum === 2) {
-                const $domain = $('#domain_name'), val = $domain.val();
-                if (val && !val.endsWith('.qwaiting.com')) $domain.val(val.toLowerCase().replace(/\s+/g, '-') + '.qwaiting.com');
-            }
+             
 
             $form.find('[data-error]').text('').addClass('hidden');
             $btn.prop('disabled', true).find('.spinner').removeClass('hidden');
@@ -805,7 +1170,28 @@
                 headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'), 'Accept': 'application/json'},
                 success: function(data) {
                     if (data.success) {
-                        data.redirect ? window.location.href = data.redirect : goToStep(data.next_step);
+                        // Handle step 1 verification message
+                        if (stepNum === 1 && data.verification_sent) {
+                            // Hide the form and header
+                            $('#form-step-1').addClass('hidden');
+                            $('#step-1-header').addClass('hidden');
+                            // Show verification section
+                            $('#email-verification-section').removeClass('hidden');
+                            // Update email display
+                            if (data.email) {
+                                $('#verification-email-display').text(data.email);
+                            }
+                            // Store lead_id for resend functionality
+                            if (data.lead_id) {
+                                $('#resend-email-btn').data('lead-id', data.lead_id);
+                            }
+                        } else if (data.redirect) {
+                            // Handle redirect (for other cases)
+                            window.location.href = data.redirect;
+                        } else {
+                            // Normal flow - proceed to next step
+                            goToStep(data.next_step);
+                        }
                     } else {
                         Swal.fire('Error', data.message || 'Something went wrong', 'error');
                     }
@@ -813,10 +1199,16 @@
                 error: function(xhr) {
                     const errorData = xhr.responseJSON || {};
                     if (xhr.status === 422) {
+                        // Display field-specific errors below the fields
                         $.each(errorData.errors || {}, (field, messages) => $form.find('[data-error="' + field + '"]').text(messages[0]).removeClass('hidden'));
                     } else if (xhr.status === 403) {
-                        Swal.fire({title: 'Session Expired', text: errorData.message || 'Please start signup again.', icon: 'warning', confirmButtonText: 'OK'})
-                            .then(() => window.location.href = '/signup');
+                        // User tried to access a step they haven't completed
+                        if (errorData.redirect) {
+                            window.location.href = errorData.redirect;
+                        } else {
+                            Swal.fire({title: 'Access Denied', text: errorData.message || 'Please complete previous steps first.', icon: 'warning', confirmButtonText: 'OK'})
+                                .then(() => window.location.href = '{{ route("signup") }}?basic_info');
+                        }
                     } else {
                         Swal.fire('Error', errorData.message || 'HTTP ' + xhr.status, 'error');
                     }
@@ -826,6 +1218,54 @@
         }
 
         $(document).on('submit', 'form[id^="form-step-"]', handleFormSubmit);
+
+        // Email verification now happens automatically when "Start Free Trial" is clicked
+        
+        // Resend verification email handler
+        $(document).on('click', '#resend-email-btn', function() {
+            const $btn = $(this);
+            const $statusMsg = $('#verification-status-message');
+            const email = $('#verification-email-display').text();
+            const leadId = $btn.data('lead-id');
+            
+            $btn.prop('disabled', true);
+            $btn.find('span').html('<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...');
+            $statusMsg.addClass('hidden');
+
+            $.ajax({
+                url: '/signup/resend-verification',
+                method: 'POST',
+                data: {
+                    email: email,
+                    lead_id: leadId
+                },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                success: function(data) {
+                    if (data.success) {
+                        $statusMsg.removeClass('hidden bg-red-50 border-red-200 text-red-700')
+                            .addClass('bg-green-50 border border-green-200 text-green-700')
+                            .html('<div class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Verification email sent successfully! Please check your inbox.</span></div>');
+                    } else {
+                        $statusMsg.removeClass('hidden bg-green-50 border-green-200 text-green-700')
+                            .addClass('bg-red-50 border border-red-200 text-red-700')
+                            .html('<div class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span>' + (data.message || 'Failed to send verification email. Please try again.') + '</span></div>');
+                    }
+                },
+                error: function(xhr) {
+                    const errorData = xhr.responseJSON || {};
+                    $statusMsg.removeClass('hidden bg-green-50 border-green-200 text-green-700')
+                        .addClass('bg-red-50 border border-red-200 text-red-700')
+                        .html('<div class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span>' + (errorData.message || 'Failed to send verification email. Please try again.') + '</span></div>');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                    $btn.find('span').html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Resend Verification Email');
+                }
+            });
+        });
     </script>
 
 </body>

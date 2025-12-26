@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
 
 class SignupLead extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Notifiable;
 
     protected $fillable = [
         'name',
@@ -24,5 +25,37 @@ class SignupLead extends Model
         'footfall',
         'current_solution',
         'signup_step',
+        'email_verified_at',
+        'email_verification_token',
     ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * Check if email is verified
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return !is_null($this->email_verified_at);
+    }
+
+    /**
+     * Mark email as verified
+     */
+    public function markEmailAsVerified(): bool
+    {
+        return $this->forceFill([
+            'email_verified_at' => $this->freshTimestamp(),
+        ])->save();
+    }
+
+    /**
+     * Get the email address that should be used for the notification.
+     */
+    public function routeNotificationForMail($notification)
+    {
+        return $this->email;
+    }
 }

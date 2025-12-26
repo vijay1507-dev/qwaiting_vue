@@ -61,10 +61,10 @@
 
             <!-- CTA Buttons -->
             <div class="hidden lg:flex items-center space-x-4">
-                <a href="/signup"
+                <a href="{{ route('signup') }}"
                     class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 text-sm">Sign
                     Up/Sign In</a>
-                <a href="/request-demo"
+                <a href="{{ route('request-demo') }}"
                     class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 text-sm">
                     Request Demo
                 </a>
@@ -610,10 +610,10 @@
             </div>
 
             <div class="border-t border-gray-100 my-2"></div>
-            <a href="/signup?basic_info"
+            <a href="{{ route('signup') }}?basic_info"
                 class="block px-3 py-3 text-base font-medium text-text-dark hover:bg-gray-50 rounded-md">Sign Up/Sign
                 In</a>
-            <a href="/request-demo"
+            <a href="{{ route('request-demo') }}"
                 class="block px-3 py-3 text-base font-medium text-white bg-primary hover:bg-primary-dark rounded-md text-center">Request
                 Demo</a>
         </div>

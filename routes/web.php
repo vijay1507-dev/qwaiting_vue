@@ -32,6 +32,12 @@ Route::get('leads/{id}/edit', function ($id) {
     return Inertia::render('Leads/Create', ['id' => $id]);
 })->middleware(['auth', 'verified'])->name('leads.edit');
 
+Route::get('clients', [App\Http\Controllers\Client\ClientsController::class, 'index'])->middleware(['auth', 'verified'])->name('clients.index');
+Route::get('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'show'])->middleware(['auth', 'verified'])->name('clients.show');
+Route::get('clients/{id}/edit', [App\Http\Controllers\Client\ClientsController::class, 'edit'])->middleware(['auth', 'verified'])->name('clients.edit');
+Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->middleware(['auth', 'verified'])->name('clients.update');
+Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->middleware(['auth', 'verified'])->name('clients.reset-password');
+
 Route::get('quotes', function () {
     return Inertia::render('Quotes/Index');
 })->middleware(['auth', 'verified'])->name('quotes.index');
@@ -91,6 +97,39 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
     Route::get('/cart', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'cart'])->name('cart');
     Route::get('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orders'])->name('orders');
     Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index');
+
+    // Features
+    Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store');
+    Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update');
+    Route::delete('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyFeature'])->name('features.destroy');
+
+    // Packages
+    Route::post('/packages', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePackage'])->name('packages.store');
+    Route::put('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackage'])->name('packages.update');
+    Route::delete('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPackage'])->name('packages.destroy');
+
+    // Package Configuration
+    Route::get('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackageConfiguration'])->name('packages.configuration.get');
+    Route::put('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackageConfiguration'])->name('packages.configuration.update');
+
+    // Pricing
+    Route::get('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackagePricing'])->name('packages.pricing.get');
+    Route::post('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePricing'])->name('packages.pricing.store');
+    Route::put('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePricing'])->name('packages.pricing.update');
+    Route::delete('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPricing'])->name('packages.pricing.destroy');
+
+    // Coupons
+    Route::post('/coupons', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeCoupon'])->name('coupons.store');
+    Route::put('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateCoupon'])->name('coupons.update');
+    Route::delete('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyCoupon'])->name('coupons.destroy');
+    Route::get('/coupons/{coupon}/usage', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getCouponUsage'])->name('coupons.usage');
+
+    // Preview
+    Route::get('/preview', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPreviewData'])->name('preview');
 });
 
 require __DIR__.'/settings.php';
@@ -261,19 +300,37 @@ Route::prefix('customer-stories')->group(function () {
     });
 });
 
+// Cookie Consent
+Route::post('/cookie-consent', [\App\Http\Controllers\website\CookieConsentController::class, 'store'])->name('cookie-consent.store');
+
 // Auth / Action Routes
-Route::get('/signup', [SignupController::class, 'index'])->name('signup');
+Route::get('/signup', [SignupController::class, 'index'])
+    ->middleware(\App\Http\Middleware\ValidateSignupStep::class)
+    ->name('signup');
 Route::post('/signup/step{step}', [SignupController::class, 'storeStep'])
     ->where('step', '[1-6]')
+    ->middleware(\App\Http\Middleware\ValidateSignupStepPost::class)
     ->name('signup.step');
+Route::post('/signup/send-verification', [SignupController::class, 'sendVerificationEmail'])->name('signup.send-verification');
+Route::get('/signup/verify/{id}/{hash}', [SignupController::class, 'verifyEmail'])->name('signup.verify');
+Route::get('/signup/verify-redirect', [SignupController::class, 'verifyRedirect'])->name('signup.verify-redirect');
+Route::get('/signup/verify-email-sent', [SignupController::class, 'showVerifyEmailSent'])->name('signup.verify-email-sent');
+Route::post('/signup/resend-verification', [SignupController::class, 'resendVerificationEmail'])->name('signup.resend-verification');
+Route::post('/signup/clear-session', [SignupController::class, 'clearSession'])->name('signup.clear-session');
 
 Route::get('/website-login', function () {
     return view('website.auth.login');
 })->name('website-login');
 
+// Social Authentication Routes
+Route::get('/auth/google', [\App\Http\Controllers\website\SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [\App\Http\Controllers\website\SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/auth/microsoft', [\App\Http\Controllers\website\SocialAuthController::class, 'redirectToMicrosoft'])->name('auth.microsoft');
+Route::get('/auth/microsoft/callback', [\App\Http\Controllers\website\SocialAuthController::class, 'handleMicrosoftCallback'])->name('auth.microsoft.callback');
+
 Route::get('/request-demo', function () {
     return view('website.auth.request-demo');
-});
+})->name('request-demo');
 
 // Products Routes Group
 Route::prefix('products')->group(function () {

@@ -56,6 +56,12 @@ class SendSequenceTestEmailJob implements ShouldQueue
             Mail::html($wrappedContent, function ($message) use ($subject) {
                 $message->to($this->testEmail)
                     ->subject($subject);
+
+                // CC admin emails if configured
+                $adminCcEmails = $this->getAdminCcEmails();
+                if (! empty($adminCcEmails)) {
+                    $message->cc($adminCcEmails);
+                }
             });
 
             Log::info('Test email sent successfully', [
@@ -119,9 +125,9 @@ class SendSequenceTestEmailJob implements ShouldQueue
             'full_name' => 'John Doe',
             'email' => $this->testEmail,
             'company_name' => 'Test Company',
-            'dashboard_url' => config('app.url').'/dashboard',
-            'unsubscribe_url' => config('app.url').'/unsubscribe',
-            'preferences_url' => config('app.url').'/preferences',
+            'dashboard_url' => rtrim(config('app.url'), '/').'/dashboard',
+            'unsubscribe_url' => rtrim(config('app.url'), '/').'/unsubscribe',
+            'preferences_url' => rtrim(config('app.url'), '/').'/preferences',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
         ], $this->testVariables);
@@ -131,5 +137,25 @@ class SendSequenceTestEmailJob implements ShouldQueue
         }
 
         return $text;
+    }
+
+    /**
+     * Get admin CC emails from configuration.
+     */
+    private function getAdminCcEmails(): array
+    {
+        $ccEmails = config('mail.admin_cc_emails', '');
+
+        if (empty($ccEmails)) {
+            return [];
+        }
+
+        // Split by comma and trim each email
+        $emails = array_map('trim', explode(',', $ccEmails));
+
+        // Filter out empty values and validate email format
+        return array_filter($emails, function ($email) {
+            return ! empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
     }
 }

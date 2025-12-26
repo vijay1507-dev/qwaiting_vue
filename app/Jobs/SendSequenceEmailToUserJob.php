@@ -69,6 +69,12 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             Mail::html($wrappedContent, function ($message) use ($subject) {
                 $message->to($this->userEmail)
                     ->subject($subject);
+
+                // CC admin emails if configured
+                $adminCcEmails = $this->getAdminCcEmails();
+                if (! empty($adminCcEmails)) {
+                    $message->cc($adminCcEmails);
+                }
             });
 
             // Mark as sent
@@ -160,8 +166,8 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             'email' => $this->userEmail,
             'company_name' => $this->userData['company_name'] ?? 'Your Company',
             'dashboard_url' => $dashboardUrl,
-            'unsubscribe_url' => $dashboardUrl.'/unsubscribe',
-            'preferences_url' => $dashboardUrl.'/preferences',
+            'unsubscribe_url' => rtrim($dashboardUrl, '/').'/unsubscribe',
+            'preferences_url' => rtrim($dashboardUrl, '/').'/preferences',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
             'phone' => $this->userData['phone'] ?? '',
@@ -184,7 +190,7 @@ class SendSequenceEmailToUserJob implements ShouldQueue
     {
         // If domain is empty, fallback to app URL
         if (empty($domain)) {
-            return config('app.url').'/dashboard';
+            return rtrim(config('app.url'), '/').'/dashboard';
         }
 
         // Check if domain already includes protocol
@@ -196,5 +202,25 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         $protocol = config('app.env') === 'local' ? 'http://' : 'https://';
 
         return $protocol.rtrim($domain, '/').'/dashboard';
+    }
+
+    /**
+     * Get admin CC emails from configuration.
+     */
+    private function getAdminCcEmails(): array
+    {
+        $ccEmails = config('mail.admin_cc_emails', '');
+
+        if (empty($ccEmails)) {
+            return [];
+        }
+
+        // Split by comma and trim each email
+        $emails = array_map('trim', explode(',', $ccEmails));
+
+        // Filter out empty values and validate email format
+        return array_filter($emails, function ($email) {
+            return ! empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+        });
     }
 }

@@ -160,4 +160,16 @@ return [
 
     'website_url' => env('WEBSITE_URL', 'https://www.qwaiting.com'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin CC Emails
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated list of admin email addresses to CC on all sequence emails
+    | sent to users. Leave empty to disable CC functionality.
+    |
+    */
+
+    'admin_cc_emails' => env('MAIL_ADMIN_CC_EMAILS', ''),
+
 ];

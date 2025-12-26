@@ -39,64 +39,75 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Run when visible
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            startCounting();
-            observer.disconnect();
-        }
-    });
+    const counterElement = document.querySelector(".counter");
+    if (counterElement) {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                startCounting();
+                observer.disconnect();
+            }
+        });
 
-    observer.observe(document.querySelector(".counter"));
+        observer.observe(counterElement);
+    }
 });
 
 
 
 
+// Flow map SVG - only initialize if element exists
 const svg = document.getElementById("flow-map");
-const width = svg.clientWidth;
-const height = svg.clientHeight;
+if (svg) {
+    const width = svg.clientWidth;
+    const height = svg.clientHeight;
 
-const centerX = width / 2;
-const centerY = height - 80; // Qwaiting position
+    const centerX = width / 2;
+    const centerY = height - 80; // Qwaiting position
 
-const items = ["Zm", "Tm", "Go", "Ou", "Sl", "Sf", "Jr"];
-const topY = 100;
+    const items = ["Zm", "Tm", "Go", "Ou", "Sl", "Sf", "Jr"];
+    const topY = 100;
 
-// spread curve end points (the trick!)
-const endSpread = 6; // how wide the bottom fan spreads
+    // spread curve end points (the trick!)
+    const endSpread = 6; // how wide the bottom fan spreads
 
-svg.innerHTML = "";
+    svg.innerHTML = "";
 
-items.forEach((label, i) => {
+    items.forEach((label, i) => {
 
-    const x = ((i + 1) / (items.length + 1)) * width;
+        const x = ((i + 1) / (items.length + 1)) * width;
 
-    // Slight offset so lines don't merge
-    const targetX = centerX + (i - Math.floor(items.length / 2)) * endSpread;
+        // Slight offset so lines don't merge
+        const targetX = centerX + (i - Math.floor(items.length / 2)) * endSpread;
 
-    const d = `
-                        M ${x},${topY}
-                        C ${x},${centerY - 200}
-                        ${targetX},${centerY - 120}
-                        ${targetX},${centerY}
-                    `;
+        const d = `
+                            M ${x},${topY}
+                            C ${x},${centerY - 200}
+                            ${targetX},${centerY - 120}
+                            ${targetX},${centerY}
+                        `;
 
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", d);
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke", "#3C3CFF");
-    path.setAttribute("stroke-width", "2");
-    path.setAttribute("stroke-linecap", "round");
-    svg.appendChild(path);
-});
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#3C3CFF");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        svg.appendChild(path);
+    });
+}
 
 
 
 // Simple Mobile Menu Toggle
-document.getElementById('mobile-menu-btn').addEventListener('click', function () {
-    const menu = document.getElementById('mobile-menu');
-    menu.classList.toggle('hidden');
-});
+const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', function () {
+        const menu = document.getElementById('mobile-menu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    });
+}
 
 
 function toggleFaq(id) {
