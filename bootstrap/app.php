@@ -23,12 +23,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
-        // Schedule sequence emails to run daily at 8:00 PM
+        $schedule->command('queue:work --stop-when-empty --tries=3')
+        ->everyMinute()
+        ->withoutOverlapping();
+        // Schedule sequence emails to run daily at 9:00 AM
         $schedule->command('sequences:send-emails')
             ->daily()
-            ->at('20:00')
+            ->at('09:00')
             ->withoutOverlapping()
             ->runInBackground();
+
+	 // Mark old pending email logs as failed (runs every 5 minutes)
+        $schedule->command('emails:mark-pending-failed')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

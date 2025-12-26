@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\EmailNotificationLog;
 use App\Models\EmailNotificationTemplate;
 use App\Models\EmailSend;
 use App\Services\EmailTemplateWrapper;
@@ -78,7 +79,7 @@ class SendSequenceEmailToUserJob implements ShouldQueue
                 }
             });
 
-            // Mark as sent
+            // Mark as sent in email_sends table (for sequence tracking)
             EmailSend::updateOrCreate(
                 [
                     'email_template_id' => $this->emailTemplate->id,
@@ -92,6 +93,22 @@ class SendSequenceEmailToUserJob implements ShouldQueue
                     'sent_at' => now(),
                 ]
             );
+
+            // Also log to email_notification_logs (for comprehensive logging)
+            EmailNotificationLog::create([
+                'notification_type' => 'sequence_email',
+                'recipient_email' => $this->userEmail,
+                'subject' => $subject,
+                'status' => 'success',
+                'mailer' => config('mail.default'),
+                'metadata' => [
+                    'sequence_id' => $this->emailTemplate->sequence_id,
+                    'email_template_id' => $this->emailTemplate->id,
+                    'external_user_id' => $this->externalUserId,
+                    'days_after_registration' => $this->daysAfterRegistration,
+                ],
+                'sent_at' => now(),
+            ]);
 
             Log::info('Sequence email sent successfully', [
                 'email_template_id' => $this->emailTemplate->id,
@@ -108,7 +125,7 @@ class SendSequenceEmailToUserJob implements ShouldQueue
                 'attempt' => $this->attempts(),
             ]);
 
-            // Update email_send record with error
+            // Update email_send record with error (for sequence tracking)
             EmailSend::updateOrCreate(
                 [
                     'email_template_id' => $this->emailTemplate->id,
@@ -122,6 +139,23 @@ class SendSequenceEmailToUserJob implements ShouldQueue
                     'error_message' => $e->getMessage(),
                 ]
             );
+
+            // Also log to email_notification_logs (for comprehensive logging)
+            EmailNotificationLog::create([
+                'notification_type' => 'sequence_email',
+                'recipient_email' => $this->userEmail,
+                'subject' => $this->replaceVariables($this->emailTemplate->subject ?? 'Sequence Email'),
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'mailer' => config('mail.default'),
+                'metadata' => [
+                    'sequence_id' => $this->emailTemplate->sequence_id,
+                    'email_template_id' => $this->emailTemplate->id,
+                    'external_user_id' => $this->externalUserId,
+                    'days_after_registration' => $this->daysAfterRegistration,
+                ],
+            ]);
 
             // If it's a rate limit error, release with longer delay
             if (str_contains($e->getMessage(), 'Too many emails') ||
