@@ -234,6 +234,7 @@ const handleEdit = (featureId: string) => {
             status: feature.status || 'active',
         };
         showEditFeatureModal.value = true;
+
     }
 };
 
@@ -2586,7 +2587,7 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         <Checkbox
                             id="edit-is-metered"
                             :checked="editFeature.isMetered"
-                            @click="onMeteredToggle"
+                            @click="onMeteredToggle" v-model="editFeature.isMetered" 
                         />
                         <Label
                             for="edit-is-metered"
@@ -2862,7 +2863,8 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                             <div class="flex items-center space-x-2">
                                 <Checkbox
                                     id="edit-billing-monthly"
-                                    v-model:checked="editPackage.monthlyEnabled"
+                                    :checked="editPackage.monthlyEnabled"
+                                    v-model="editPackage.monthlyEnabled"
                                 />
                                 <Label
                                     for="edit-billing-monthly"
@@ -2874,7 +2876,8 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                             <div class="flex items-center space-x-2">
                                 <Checkbox
                                     id="edit-billing-annual"
-                                    v-model:checked="editPackage.annualEnabled"
+                                    :checked="editPackage.annualEnabled"
+                                    v-model="editPackage.annualEnabled"
                                 />
                                 <Label
                                     for="edit-billing-annual"
@@ -2893,7 +2896,8 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                     <div class="flex items-center space-x-2">
                         <Checkbox
                             id="edit-enable-trial"
-                            v-model:checked="editPackage.enableTrial"
+                            :checked="editPackage.enableTrial"
+                            v-model="editPackage.enableTrial"
                         />
                         <Label
                             for="edit-enable-trial"
@@ -2908,7 +2912,8 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         <div class="flex items-center space-x-2">
                             <Checkbox
                                 id="edit-credit-card-required"
-                                v-model:checked="editPackage.creditCardRequired"
+                                :checked="editPackage.creditCardRequired"
+                                v-model="editPackage.creditCardRequired"
                             />
                             <Label
                                 for="edit-credit-card-required"
