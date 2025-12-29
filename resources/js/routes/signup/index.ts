@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\website\SignupController::step
  * @see app/Http/Controllers/website/SignupController.php:136
@@ -52,6 +52,27 @@ step.post = (args: { step: string | number } | [step: string | number ] | string
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::step
+ * @see app/Http/Controllers/website/SignupController.php:136
+ * @route '/signup/step{step}'
+ */
+    const stepForm = (args: { step: string | number } | [step: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: step.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::step
+ * @see app/Http/Controllers/website/SignupController.php:136
+ * @route '/signup/step{step}'
+ */
+        stepForm.post = (args: { step: string | number } | [step: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: step.url(args, options),
+            method: 'post',
+        })
+    
+    step.form = stepForm
 /**
 * @see \App\Http\Controllers\website\SignupController::sendVerification
  * @see app/Http/Controllers/website/SignupController.php:431
@@ -86,6 +107,27 @@ sendVerification.post = (options?: RouteQueryOptions): RouteDefinition<'post'> =
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::sendVerification
+ * @see app/Http/Controllers/website/SignupController.php:431
+ * @route '/signup/send-verification'
+ */
+    const sendVerificationForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: sendVerification.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::sendVerification
+ * @see app/Http/Controllers/website/SignupController.php:431
+ * @route '/signup/send-verification'
+ */
+        sendVerificationForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: sendVerification.url(options),
+            method: 'post',
+        })
+    
+    sendVerification.form = sendVerificationForm
 /**
 * @see \App\Http\Controllers\website\SignupController::verify
  * @see app/Http/Controllers/website/SignupController.php:535
@@ -146,6 +188,41 @@ verify.head = (args: { id: string | number, hash: string | number } | [id: strin
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::verify
+ * @see app/Http/Controllers/website/SignupController.php:535
+ * @route '/signup/verify/{id}/{hash}'
+ */
+    const verifyForm = (args: { id: string | number, hash: string | number } | [id: string | number, hash: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: verify.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::verify
+ * @see app/Http/Controllers/website/SignupController.php:535
+ * @route '/signup/verify/{id}/{hash}'
+ */
+        verifyForm.get = (args: { id: string | number, hash: string | number } | [id: string | number, hash: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verify.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\website\SignupController::verify
+ * @see app/Http/Controllers/website/SignupController.php:535
+ * @route '/signup/verify/{id}/{hash}'
+ */
+        verifyForm.head = (args: { id: string | number, hash: string | number } | [id: string | number, hash: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verify.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    verify.form = verifyForm
 /**
 * @see \App\Http\Controllers\website\SignupController::verifyRedirect
  * @see app/Http/Controllers/website/SignupController.php:588
@@ -189,6 +266,41 @@ verifyRedirect.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::verifyRedirect
+ * @see app/Http/Controllers/website/SignupController.php:588
+ * @route '/signup/verify-redirect'
+ */
+    const verifyRedirectForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: verifyRedirect.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::verifyRedirect
+ * @see app/Http/Controllers/website/SignupController.php:588
+ * @route '/signup/verify-redirect'
+ */
+        verifyRedirectForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verifyRedirect.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\website\SignupController::verifyRedirect
+ * @see app/Http/Controllers/website/SignupController.php:588
+ * @route '/signup/verify-redirect'
+ */
+        verifyRedirectForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verifyRedirect.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    verifyRedirect.form = verifyRedirectForm
 /**
 * @see \App\Http\Controllers\website\SignupController::verifyEmailSent
  * @see app/Http/Controllers/website/SignupController.php:596
@@ -232,6 +344,41 @@ verifyEmailSent.head = (options?: RouteQueryOptions): RouteDefinition<'head'> =>
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::verifyEmailSent
+ * @see app/Http/Controllers/website/SignupController.php:596
+ * @route '/signup/verify-email-sent'
+ */
+    const verifyEmailSentForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: verifyEmailSent.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::verifyEmailSent
+ * @see app/Http/Controllers/website/SignupController.php:596
+ * @route '/signup/verify-email-sent'
+ */
+        verifyEmailSentForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verifyEmailSent.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\website\SignupController::verifyEmailSent
+ * @see app/Http/Controllers/website/SignupController.php:596
+ * @route '/signup/verify-email-sent'
+ */
+        verifyEmailSentForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: verifyEmailSent.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    verifyEmailSent.form = verifyEmailSentForm
 /**
 * @see \App\Http\Controllers\website\SignupController::resendVerification
  * @see app/Http/Controllers/website/SignupController.php:610
@@ -266,6 +413,27 @@ resendVerification.post = (options?: RouteQueryOptions): RouteDefinition<'post'>
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\website\SignupController::resendVerification
+ * @see app/Http/Controllers/website/SignupController.php:610
+ * @route '/signup/resend-verification'
+ */
+    const resendVerificationForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: resendVerification.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::resendVerification
+ * @see app/Http/Controllers/website/SignupController.php:610
+ * @route '/signup/resend-verification'
+ */
+        resendVerificationForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: resendVerification.url(options),
+            method: 'post',
+        })
+    
+    resendVerification.form = resendVerificationForm
 /**
 * @see \App\Http\Controllers\website\SignupController::clearSession
  * @see app/Http/Controllers/website/SignupController.php:127
@@ -299,6 +467,28 @@ clearSession.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: clearSession.url(options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\website\SignupController::clearSession
+ * @see app/Http/Controllers/website/SignupController.php:127
+ * @route '/signup/clear-session'
+ */
+    const clearSessionForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: clearSession.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\website\SignupController::clearSession
+ * @see app/Http/Controllers/website/SignupController.php:127
+ * @route '/signup/clear-session'
+ */
+        clearSessionForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: clearSession.url(options),
+            method: 'post',
+        })
+    
+    clearSession.form = clearSessionForm
 const signup = {
     step: Object.assign(step, step),
 sendVerification: Object.assign(sendVerification, sendVerification),

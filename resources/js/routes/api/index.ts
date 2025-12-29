@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\TemplateVariableController::templateVariables
  * @see app/Http/Controllers/TemplateVariableController.php:38
@@ -41,6 +41,42 @@ templateVariables.head = (options?: RouteQueryOptions): RouteDefinition<'head'> 
     url: templateVariables.url(options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\TemplateVariableController::templateVariables
+ * @see app/Http/Controllers/TemplateVariableController.php:38
+ * @route '/api/template-variables'
+ */
+    const templateVariablesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: templateVariables.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\TemplateVariableController::templateVariables
+ * @see app/Http/Controllers/TemplateVariableController.php:38
+ * @route '/api/template-variables'
+ */
+        templateVariablesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: templateVariables.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\TemplateVariableController::templateVariables
+ * @see app/Http/Controllers/TemplateVariableController.php:38
+ * @route '/api/template-variables'
+ */
+        templateVariablesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: templateVariables.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    templateVariables.form = templateVariablesForm
 const api = {
     templateVariables: Object.assign(templateVariables, templateVariables),
 }

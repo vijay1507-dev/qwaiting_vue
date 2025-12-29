@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::view
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
@@ -60,6 +60,42 @@ view.head = (args: { id: string | number } | [id: string | number ] | string | n
     url: view.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+    const viewForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: view.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+        viewForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: view.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+        viewForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: view.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    view.form = viewForm
 const orders = {
     view: Object.assign(view, view),
 }

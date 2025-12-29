@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 import products237d17 from './products'
 import bundles15d926 from './bundles'
 import ordersB47e5f from './orders'
@@ -45,6 +45,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::index
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:10
+ * @route '/ecommerce'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::index
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:10
+ * @route '/ecommerce'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::index
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:10
+ * @route '/ecommerce'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::products
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:50
@@ -88,6 +123,41 @@ products.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::products
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:50
+ * @route '/ecommerce/products'
+ */
+    const productsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: products.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::products
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:50
+ * @route '/ecommerce/products'
+ */
+        productsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: products.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::products
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:50
+ * @route '/ecommerce/products'
+ */
+        productsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: products.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    products.form = productsForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::bundles
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:228
@@ -131,6 +201,41 @@ bundles.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::bundles
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:228
+ * @route '/ecommerce/bundles'
+ */
+    const bundlesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: bundles.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::bundles
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:228
+ * @route '/ecommerce/bundles'
+ */
+        bundlesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: bundles.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::bundles
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:228
+ * @route '/ecommerce/bundles'
+ */
+        bundlesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: bundles.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    bundles.form = bundlesForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::cart
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:269
@@ -174,6 +279,41 @@ cart.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::cart
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:269
+ * @route '/ecommerce/cart'
+ */
+    const cartForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: cart.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::cart
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:269
+ * @route '/ecommerce/cart'
+ */
+        cartForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: cart.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::cart
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:269
+ * @route '/ecommerce/cart'
+ */
+        cartForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: cart.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    cart.form = cartForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::orders
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:303
@@ -216,6 +356,42 @@ orders.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: orders.url(options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::orders
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:303
+ * @route '/ecommerce/orders'
+ */
+    const ordersForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: orders.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::orders
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:303
+ * @route '/ecommerce/orders'
+ */
+        ordersForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: orders.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::orders
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:303
+ * @route '/ecommerce/orders'
+ */
+        ordersForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: orders.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    orders.form = ordersForm
 const ecommerce = {
     index: Object.assign(index, index),
 products: Object.assign(products, products237d17),

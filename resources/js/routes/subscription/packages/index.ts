@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 import configuration from './configuration'
 import pricing from './pricing'
 /**
@@ -35,6 +35,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::store
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:145
+ * @route '/subscription/packages'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::store
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:145
+ * @route '/subscription/packages'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Subscription\SubscriptionController::update
  * @see app/Http/Controllers/Subscription/SubscriptionController.php:155
@@ -88,6 +109,37 @@ update.put = (args: { package: string | number } | [packageParam: string | numbe
     method: 'put',
 })
 
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::update
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:155
+ * @route '/subscription/packages/{package}'
+ */
+    const updateForm = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::update
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:155
+ * @route '/subscription/packages/{package}'
+ */
+        updateForm.put = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Subscription\SubscriptionController::destroy
  * @see app/Http/Controllers/Subscription/SubscriptionController.php:166
@@ -140,6 +192,38 @@ destroy.delete = (args: { package: string | number } | [packageParam: string | n
     url: destroy.url(args, options),
     method: 'delete',
 })
+
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::destroy
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:166
+ * @route '/subscription/packages/{package}'
+ */
+    const destroyForm = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::destroy
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:166
+ * @route '/subscription/packages/{package}'
+ */
+        destroyForm.delete = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 const packages = {
     store: Object.assign(store, store),
 update: Object.assign(update, update),

@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::create
  * @see app/Http/Controllers/Marketing/MarketingController.php:403
@@ -42,6 +42,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::store
  * @see app/Http/Controllers/Marketing/MarketingController.php:521
@@ -76,6 +111,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::store
+ * @see app/Http/Controllers/Marketing/MarketingController.php:521
+ * @route '/marketing/sequences'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::store
+ * @see app/Http/Controllers/Marketing/MarketingController.php:521
+ * @route '/marketing/sequences'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::edit
  * @see app/Http/Controllers/Marketing/MarketingController.php:403
@@ -138,6 +194,41 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:403
+ * @route '/marketing/sequences/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::update
  * @see app/Http/Controllers/Marketing/MarketingController.php:550
@@ -191,6 +282,37 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     method: 'put',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::update
+ * @see app/Http/Controllers/Marketing/MarketingController.php:550
+ * @route '/marketing/sequences/{id}'
+ */
+    const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::update
+ * @see app/Http/Controllers/Marketing/MarketingController.php:550
+ * @route '/marketing/sequences/{id}'
+ */
+        updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::destroy
  * @see app/Http/Controllers/Marketing/MarketingController.php:585
@@ -244,6 +366,37 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::destroy
+ * @see app/Http/Controllers/Marketing/MarketingController.php:585
+ * @route '/marketing/sequences/{id}'
+ */
+    const destroyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::destroy
+ * @see app/Http/Controllers/Marketing/MarketingController.php:585
+ * @route '/marketing/sequences/{id}'
+ */
+        destroyForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::testBatch
  * @see app/Http/Controllers/Marketing/MarketingController.php:480
@@ -296,6 +449,28 @@ testBatch.post = (args: { id: string | number } | [id: string | number ] | strin
     url: testBatch.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::testBatch
+ * @see app/Http/Controllers/Marketing/MarketingController.php:480
+ * @route '/marketing/sequences/{id}/test-batch'
+ */
+    const testBatchForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: testBatch.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::testBatch
+ * @see app/Http/Controllers/Marketing/MarketingController.php:480
+ * @route '/marketing/sequences/{id}/test-batch'
+ */
+        testBatchForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: testBatch.url(args, options),
+            method: 'post',
+        })
+    
+    testBatch.form = testBatchForm
 const sequences = {
     create: Object.assign(create, create),
 store: Object.assign(store, store),

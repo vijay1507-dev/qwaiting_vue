@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::create
  * @see app/Http/Controllers/Marketing/MarketingController.php:601
@@ -42,6 +42,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::create
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::edit
  * @see app/Http/Controllers/Marketing/MarketingController.php:601
@@ -103,6 +138,42 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     url: edit.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::edit
+ * @see app/Http/Controllers/Marketing/MarketingController.php:601
+ * @route '/marketing/workflows/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 const workflows = {
     create: Object.assign(create, create),
 edit: Object.assign(edit, edit),

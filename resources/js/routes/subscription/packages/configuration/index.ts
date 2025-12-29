@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Subscription\SubscriptionController::get
  * @see app/Http/Controllers/Subscription/SubscriptionController.php:179
@@ -61,6 +61,41 @@ get.head = (args: { package: string | number } | [packageParam: string | number 
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::get
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:179
+ * @route '/subscription/packages/{package}/configuration'
+ */
+    const getForm = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: get.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::get
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:179
+ * @route '/subscription/packages/{package}/configuration'
+ */
+        getForm.get = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: get.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::get
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:179
+ * @route '/subscription/packages/{package}/configuration'
+ */
+        getForm.head = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: get.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    get.form = getForm
 /**
 * @see \App\Http\Controllers\Subscription\SubscriptionController::update
  * @see app/Http/Controllers/Subscription/SubscriptionController.php:210
@@ -113,6 +148,38 @@ update.put = (args: { package: string | number } | [packageParam: string | numbe
     url: update.url(args, options),
     method: 'put',
 })
+
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::update
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:210
+ * @route '/subscription/packages/{package}/configuration'
+ */
+    const updateForm = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::update
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:210
+ * @route '/subscription/packages/{package}/configuration'
+ */
+        updateForm.put = (args: { package: string | number } | [packageParam: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 const configuration = {
     get: Object.assign(get, get),
 update: Object.assign(update, update),
