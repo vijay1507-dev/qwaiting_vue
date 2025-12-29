@@ -487,8 +487,9 @@ const selectedPackage = ref<string>('');
 const configurationData = ref<Array<{
     feature_id: string;
     feature_name: string;
+    data_type: string;
     limit_type: string;
-    limit_value: number;
+    limit_value: string | number;
 }>>([]);
 const loadingConfiguration = ref(false);
 const selectedPackageName = ref<string>('');
@@ -510,8 +511,9 @@ watch(selectedPackage, async (packageId) => {
         configurationData.value = data.configuration.map((item: any) => ({
             feature_id: item.feature_id,
             feature_name: item.feature_name,
+            data_type: item.data_type || 'Number',
             limit_type: item.limit_type || 'disabled',
-            limit_value: item.limit_value || 0,
+            limit_value: item.limit_value ?? (item.data_type === 'Text' ? '' : 0),
         }));
         selectedPackageName.value = data.package.name;
     } catch (error) {
@@ -527,18 +529,18 @@ watch(selectedPackage, async (packageId) => {
 watch(() => configurationData.value, () => {
     configurationData.value.forEach((item) => {
         if (item.limit_type !== 'limited') {
-            // Set to 0 when unlimited or disabled
-            item.limit_value = 0;
+            // Set to empty string for Text type, 0 for Number/Boolean when unlimited or disabled
+            item.limit_value = item.data_type === 'Text' ? '' : 0;
         } else if (item.limit_type === 'limited' && (item.limit_value === null || item.limit_value === undefined)) {
-            // Default to 0 for limited if not set
-            item.limit_value = 0;
+            // Default to empty string for Text type, 0 for Number/Boolean if not set
+            item.limit_value = item.data_type === 'Text' ? '' : 0;
         }
     });
 }, { deep: true });
 
-const getLimitTypeDisplay = (limitType: string, limitValue: number): string => {
+const getLimitTypeDisplay = (limitType: string, limitValue: string | number): string => {
     if (limitType === 'limited') {
-        return `Limited (${limitValue ?? 0})`;
+        return `Limited (${limitValue ?? (typeof limitValue === 'string' ? '' : 0)})`;
     } else if (limitType === 'unlimited') {
         return 'Unlimited';
     } else {
@@ -2032,12 +2034,14 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                                         </td>
                                         <td class="px-4 py-3 align-middle">
                                             <Input
-                                                v-model.number="item.limit_value"
-                                                type="number"
+                                                v-model="item.limit_value"
+                                                :type="item.data_type === 'Text' ? 'text' : 'number'"
                                                 :disabled="item.limit_type !== 'limited'"
-                                                class="w-24"
-                                                :class="{ 'opacity-50 cursor-not-allowed': item.limit_type !== 'limited' }"
-                                                min="0"
+                                                :class="[
+                                                    item.data_type === 'Text' ? 'w-full' : 'w-24',
+                                                    { 'opacity-50 cursor-not-allowed': item.limit_type !== 'limited' }
+                                                ]"
+                                                :min="item.data_type === 'Text' ? undefined : '0'"
                                             />
                                         </td>
                                     </tr>

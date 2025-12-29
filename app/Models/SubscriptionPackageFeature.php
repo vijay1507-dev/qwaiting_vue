@@ -22,7 +22,7 @@ class SubscriptionPackageFeature extends Model
         return [
             'package_id' => 'integer',
             'feature_id' => 'integer',
-            'limit_value' => 'integer',
+            'limit_value' => 'string',
             'limit_type' => 'string',
         ];
     }

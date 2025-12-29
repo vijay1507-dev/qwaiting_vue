@@ -106,8 +106,10 @@
                                             </span>
                                             <span>
                                                 {{ $feature['name'] }}
-                                                @if($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Number' && $feature['limit_value'] > 0)
+                                                @if($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Number' && is_numeric($feature['limit_value']) && $feature['limit_value'] > 0)
                                                     upto {{ $feature['limit_value'] }}
+                                                @elseif($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Text' && !empty($feature['limit_value']))
+                                                    {{ $feature['limit_value'] }}
                                                 @endif
                                             </span>
                                         </li>

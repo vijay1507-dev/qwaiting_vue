@@ -42,8 +42,8 @@ class PricingController extends Controller
                         ->first();
 
                     $limitType = $packageFeature?->limit_type ?? 'disabled';
-                    $limitValue = $packageFeature?->limit_value ?? 0;
-                    $isNumeric = $feature->data_type === 'Number' && $limitType === 'limited' && $limitValue > 0;
+                    $limitValue = $packageFeature?->limit_value ?? ($feature->data_type === 'Text' ? '' : 0);
+                    $isNumeric = $feature->data_type === 'Number' && $limitType === 'limited' && is_numeric($limitValue) && (float) $limitValue > 0;
 
                     return [
                         'id' => $feature->id,
@@ -63,6 +63,7 @@ class PricingController extends Controller
                     if ($a['is_numeric'] !== $b['is_numeric']) {
                         return $b['is_numeric'] <=> $a['is_numeric']; // true (1) comes before false (0)
                     }
+
                     // Second priority: sort alphabetically by feature name
                     return strcmp($a['name'], $b['name']);
                 });
@@ -97,12 +98,12 @@ class PricingController extends Controller
         // Build comparison data structure
         $comparisonData = [];
         $packagesArray = $packages->toArray();
-        
+
         foreach ($allFeatures as $feature) {
             $row = [$feature->name];
             $checkmarkCount = 0; // Count how many packages have this feature enabled
             $hasNumericValue = false; // Track if this feature has numeric values
-            
+
             foreach ($packagesArray as $package) {
                 $packageFeature = SubscriptionPackageFeature::where('package_id', $package['id'])
                     ->where('feature_id', $feature->id)
@@ -121,6 +122,10 @@ class PricingController extends Controller
                             $row[] = (string) $packageFeature->limit_value;
                             $checkmarkCount++; // Numeric values count as checkmarks
                             $hasNumericValue = true; // Mark as numeric feature
+                        } elseif ($feature->data_type === 'Text') {
+                            // For text features, show the text value
+                            $row[] = (string) $packageFeature->limit_value;
+                            $checkmarkCount++;
                         } else {
                             $row[] = true;
                             $checkmarkCount++;
@@ -132,29 +137,29 @@ class PricingController extends Controller
                     $row[] = false;
                 }
             }
-            
+
             // Store metadata for sorting
             $row['_checkmark_count'] = $checkmarkCount;
             $row['_has_numeric'] = $hasNumericValue;
             $comparisonData[] = $row;
         }
-        
+
         // Sort comparison data: numeric features first, then by checkmark count, then alphabetically
         usort($comparisonData, function ($a, $b) {
             // First priority: numeric features come first
             if ($a['_has_numeric'] !== $b['_has_numeric']) {
                 return $b['_has_numeric'] <=> $a['_has_numeric']; // true (1) comes before false (0)
             }
-            
+
             // Second priority: sort by checkmark count (descending - more checkmarks first)
             if ($a['_checkmark_count'] !== $b['_checkmark_count']) {
                 return $b['_checkmark_count'] <=> $a['_checkmark_count'];
             }
-            
+
             // Third priority: sort alphabetically by feature name
             return strcmp($a[0], $b[0]);
         });
-        
+
         // Remove the sort keys from each row
         foreach ($comparisonData as &$row) {
             unset($row['_checkmark_count']);
@@ -169,4 +174,3 @@ class PricingController extends Controller
         ]);
     }
 }
-

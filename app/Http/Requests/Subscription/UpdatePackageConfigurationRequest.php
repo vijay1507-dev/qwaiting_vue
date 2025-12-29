@@ -25,7 +25,7 @@ class UpdatePackageConfigurationRequest extends FormRequest
             'features' => ['required', 'array'],
             'features.*.feature_id' => ['required', 'integer', 'exists:subscription_features,id'],
             'features.*.limit_type' => ['required', 'in:limited,unlimited,disabled'],
-            'features.*.limit_value' => ['nullable', 'integer', 'min:0', 'required_if:features.*.limit_type,limited'],
+            'features.*.limit_value' => ['nullable', 'string', 'required_if:features.*.limit_type,limited'],
         ];
     }
 }

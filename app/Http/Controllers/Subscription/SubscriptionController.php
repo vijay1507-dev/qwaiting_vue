@@ -188,8 +188,9 @@ class SubscriptionController extends Controller
             return [
                 'feature_id' => (string) $feature->id,
                 'feature_name' => $feature->name,
+                'data_type' => $feature->data_type,
                 'limit_type' => $packageFeature?->limit_type ?? 'disabled',
-                'limit_value' => $packageFeature?->limit_value ?? 0,
+                'limit_value' => $packageFeature?->limit_value ?? ($feature->data_type === 'Text' ? '' : 0),
             ];
         });
 
@@ -453,7 +454,7 @@ class SubscriptionController extends Controller
                         'name' => $feature->name,
                         'included' => $limitType !== 'disabled',
                         'limit_type' => $limitType,
-                        'limit_value' => $packageFeature->limit_value ?? 0,
+                        'limit_value' => $packageFeature->limit_value ?? ($feature->data_type === 'Text' ? '' : 0),
                     ];
                 });
 
