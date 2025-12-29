@@ -1,0 +1,67 @@
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+/**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+export const view = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: view.url(args, options),
+    method: 'get',
+})
+
+view.definition = {
+    methods: ["get","head"],
+    url: '/ecommerce/orders/{id}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+view.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { id: args }
+    }
+
+    
+    if (Array.isArray(args)) {
+        args = {
+                    id: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        id: args.id,
+                }
+
+    return view.definition.url
+            .replace('{id}', parsedArgs.id.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+view.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: view.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:395
+ * @route '/ecommerce/orders/{id}'
+ */
+view.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: view.url(args, options),
+    method: 'head',
+})
+const orders = {
+    view: Object.assign(view, view),
+}
+
+export default orders
