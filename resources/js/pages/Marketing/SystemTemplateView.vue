@@ -186,7 +186,8 @@ onMounted(() => {
                                         </Label>
                                         <Input
                                             id="name"
-                                            :value="template.name"
+                                            :default-value="template?.name || ''"
+                                            :model-value="template?.name || ''"
                                             type="text"
                                             disabled
                                             class="w-full bg-muted"
@@ -202,7 +203,8 @@ onMounted(() => {
                                         </Label>
                                         <Input
                                             id="key"
-                                            :value="template.key"
+                                            :default-value="template?.key || ''"
+                                            :model-value="template?.key || ''"
                                             type="text"
                                             disabled
                                             class="w-full bg-muted"
