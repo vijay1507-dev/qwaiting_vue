@@ -177,6 +177,17 @@ watch(() => sequence.value.target_user_type, (newType, oldType) => {
                         email.timingValue = 1;
                     }
                 }
+                
+                // If email type is NOT "Signup Nudge", ensure no event-based timing units
+                if (email.type !== 'signup_nudge') {
+                    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+                    if (eventBasedUnits.includes(email.timingUnit)) {
+                        email.timingUnit = 'days';
+                        if (email.timingValue === 0) {
+                            email.timingValue = 1;
+                        }
+                    }
+                }
             });
         }
     }
@@ -202,7 +213,7 @@ const allEmailTypes = [
     { value: 'trial_reminder', label: 'Trial Reminder' },
     { value: 'sales_outreach', label: 'Sales Outreach' },
     { value: 'offer', label: 'Offer' },
-    { value: 'completion_reminder', label: 'Completion Reminder' },
+    { value: 'completion_reminder', label: 'Registration Complete' },
     { value: 'signup_nudge', label: 'Signup Nudge' },
     { value: 'upsell', label: 'Upsell' },
     { value: 'renewal_reminder', label: 'Renewal Reminder' },
@@ -248,7 +259,50 @@ const allTimingUnits = [
     { value: 'after_verification', label: 'After Verification (Event)' },
 ];
 
-// Filter timing units based on target user type
+// Get timing units for a specific email based on target user type and email type
+const getTimingUnitsForEmail = (email: EmailTemplate) => {
+    const targetType = sequence.value.target_user_type || 'trial_users';
+    let filteredUnits = [...allTimingUnits];
+    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+    
+    // Show event-based options ONLY when email type is "Signup Nudge" (signup_nudge)
+    const shouldShowEventBased = email.type === 'signup_nudge';
+    
+    // For incomplete_signups, show event-based timing units and exclude expiry-based
+    if (targetType === 'incomplete_signups') {
+        filteredUnits = filteredUnits.filter(unit => 
+            !['days_before_expiry', 'on_expired'].includes(unit.value)
+        );
+        
+        // Hide event-based options unless email type is signup_nudge
+        if (!shouldShowEventBased) {
+            filteredUnits = filteredUnits.filter(unit => 
+                !eventBasedUnits.includes(unit.value)
+            );
+        }
+    }
+    
+    // For paid_users, exclude expiry-based and event-based timing units
+    if (targetType === 'paid_users') {
+        filteredUnits = filteredUnits.filter(unit => 
+            !['days_before_expiry', 'on_expired', ...eventBasedUnits].includes(unit.value)
+        );
+    }
+    
+    // trial_users and all_users can use time-based timing units
+    if (targetType === 'trial_users' || targetType === 'all_users') {
+        // Hide event-based options unless email type is signup_nudge
+        if (!shouldShowEventBased) {
+            filteredUnits = filteredUnits.filter(unit => 
+                !eventBasedUnits.includes(unit.value)
+            );
+        }
+    }
+    
+    return filteredUnits;
+};
+
+// Filter timing units based on target user type (for backward compatibility)
 const timingUnits = computed(() => {
     const targetType = sequence.value.target_user_type || 'trial_users';
     
@@ -630,6 +684,17 @@ const getTimingRecommendation = (emailType: string): { unit: string; value: numb
 
 // Watch email type changes to suggest timing
 const handleEmailTypeChange = (email: EmailTemplate) => {
+    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+    
+    // Reset event-based timing units if email type is NOT "Signup Nudge"
+    if (email.type !== 'signup_nudge' && eventBasedUnits.includes(email.timingUnit)) {
+        // Reset to a valid timing unit (default to 'days')
+        email.timingUnit = 'days';
+        if (email.timingValue === 0) {
+            email.timingValue = 1;
+        }
+    }
+    
     const recommendation = getTimingRecommendation(email.type);
     // Only auto-suggest if timing hasn't been customized (value is 0 or immediate)
     if (email.timingValue === 0 && email.timingUnit === 'immediate') {
@@ -750,7 +815,33 @@ const sendTestEmail = async () => {
     }
 };
 
+const validationErrors = ref<Record<string, string | string[]>>({});
+
 const handleSave = () => {
+    // Clear previous errors
+    validationErrors.value = {};
+
+    // Validate required fields
+    if (!sequence.value.name.trim()) {
+        validationErrors.value.name = 'Sequence name is required';
+        return;
+    }
+
+    // Validate emails
+    if (!sequence.value.emails || sequence.value.emails.length === 0) {
+        validationErrors.value.emails = 'At least one email is required';
+        return;
+    }
+
+    // Validate each email
+    for (let i = 0; i < sequence.value.emails.length; i++) {
+        const email = sequence.value.emails[i];
+        if (!email.subject || !email.subject.trim()) {
+            validationErrors.value[`emails.${i}.subject`] = 'Subject is required';
+            return;
+        }
+    }
+
     // Prepare email data for submission
     const emails = sequence.value.emails.map((email, index) => ({
         sequence_number: email.number || index + 1,
@@ -758,7 +849,7 @@ const handleSave = () => {
         timing_unit: email.timingUnit,
         subject: email.subject,
         type: email.type,
-            content: email.content || '',
+        content: email.content || '',
         status: email.status,
     }));
 
@@ -777,12 +868,30 @@ const handleSave = () => {
             onSuccess: () => {
                 router.visit(sequences().url);
             },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                validationErrors.value = errors;
+                // Show alert for user visibility
+                const errorMessages = Object.values(errors).flat().join(', ');
+                if (errorMessages) {
+                    alert('Validation errors: ' + errorMessages);
+                }
+            },
         });
     } else {
         router.post('/marketing/sequences', formData, {
             preserveScroll: true,
             onSuccess: () => {
                 router.visit(sequences().url);
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                validationErrors.value = errors;
+                // Show alert for user visibility
+                const errorMessages = Object.values(errors).flat().join(', ');
+                if (errorMessages) {
+                    alert('Validation errors: ' + errorMessages);
+                }
             },
         });
     }
@@ -1029,7 +1138,7 @@ const handleSave = () => {
                                                         @change="handleTimingUnitChange(email)"
                                                         class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                                     >
-                                                        <option v-for="unit in timingUnits" :key="unit.value" :value="unit.value">
+                                                        <option v-for="unit in getTimingUnitsForEmail(email)" :key="unit.value" :value="unit.value">
                                                             {{ unit.label }}
                                                         </option>
                                                     </select>

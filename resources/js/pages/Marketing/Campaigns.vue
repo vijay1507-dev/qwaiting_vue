@@ -2,7 +2,9 @@
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { campaigns, sequences, workflows, tracking, systemTemplates } from '@/routes/marketing';
+import { campaigns, sequences, workflows, tracking } from '@/routes/marketing';
+import marketingRoutes from '@/routes/marketing';
+const { systemTemplates } = marketingRoutes;
 import { create as campaignsCreate, edit as campaignsEdit } from '@/routes/marketing/campaigns';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';

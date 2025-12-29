@@ -4,8 +4,6 @@ import sequences883570 from './sequences'
 import emailTemplates from './email-templates'
 import workflowsC7a9dd from './workflows'
 import systemTemplates from './system-templates'
-
-export { default as systemTemplates } from './system-templates'
 /**
  * @see routes/web.php:55
  * @route '/marketing'

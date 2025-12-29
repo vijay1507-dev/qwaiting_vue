@@ -9,6 +9,7 @@ use App\Models\Sequence;
 use App\Models\SignupLead;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SendSequenceEmailsCommand extends Command
 {
@@ -82,6 +83,10 @@ class SendSequenceEmailsCommand extends Command
                 if ($isPreview) {
                     $this->line("  ┌─ User: {$user['name']} ({$user['email']})");
                     $this->line("  │  ID: {$user['id']}");
+                    if (isset($user['source'])) {
+                        $sourceLabel = $user['source'] === 'signup_leads' ? 'Signup Leads Table' : 'External Database';
+                        $this->line("  │  Source: {$sourceLabel}");
+                    }
                     if (isset($user['company_name']) && $user['company_name']) {
                         $this->line("  │  Company: {$user['company_name']}");
                     }
@@ -91,6 +96,10 @@ class SendSequenceEmailsCommand extends Command
                     $this->line("  │  Registered: {$user['created_at']} ({$daysSinceRegistration} days ago)");
                     if (isset($user['signup_step'])) {
                         $this->line("  │  Signup Step: {$user['signup_step']}/6");
+                    }
+                    if (isset($user['email_verified_at'])) {
+                        $verifiedStatus = is_null($user['email_verified_at']) ? 'Not Verified' : 'Verified';
+                        $this->line("  │  Email Status: {$verifiedStatus}");
                     }
                     $this->line('  │');
                 }
@@ -110,30 +119,45 @@ class SendSequenceEmailsCommand extends Command
                         // Only process for incomplete_signups target type
                         if ($sequence->target_user_type === 'incomplete_signups') {
                             // Check if user is not verified
-                            if (isset($user['signup_step'])) {
+                            $isUnverified = false;
+                            
+                            // Check email_verified_at from user array (set in getIncompleteSignups)
+                            if (isset($user['email_verified_at']) && is_null($user['email_verified_at'])) {
+                                $isUnverified = true;
+                            } elseif (isset($user['source']) && $user['source'] === 'signup_leads') {
                                 // For SignupLead, check if email_verified_at is null
                                 $signupLead = SignupLead::find($user['id']);
                                 if ($signupLead && ! $signupLead->hasVerifiedEmail()) {
-                                    // User is not verified, send the email
-                                    $userEmailCount++;
-                                    if ($isPreview) {
-                                        $this->line("  │  ✓ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
-                                        $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event)");
-                                    } else {
-                                        $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (If Not Verified)");
-                                        SendSequenceEmailToUserJob::dispatch(
-                                            $emailTemplate,
-                                            $user['id'],
-                                            $user['email'],
-                                            $user,
-                                            $daysSinceRegistration
-                                        )->delay(now()->addSeconds($totalSent * 5));
-                                    }
-                                    $totalSent++;
-                                } elseif ($isPreview) {
-                                    $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
-                                    $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event) - User already verified");
+                                    $isUnverified = true;
                                 }
+                            } elseif (isset($user['source']) && $user['source'] === 'external_db') {
+                                // For external users, they're already filtered to be unverified
+                                $isUnverified = true;
+                            }
+
+                            if ($isUnverified) {
+                                // User is not verified, send the email
+                                $userEmailCount++;
+                                if ($isPreview) {
+                                    $this->line("  │  ✓ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                    $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event)");
+                                    if (isset($user['source'])) {
+                                        $this->line("  │    Source: {$user['source']}");
+                                    }
+                                } else {
+                                    $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (If Not Verified)");
+                                    SendSequenceEmailToUserJob::dispatch(
+                                        $emailTemplate,
+                                        $user['id'],
+                                        $user['email'],
+                                        $user,
+                                        $daysSinceRegistration
+                                    )->delay(now()->addSeconds($totalSent * 5));
+                                }
+                                $totalSent++;
+                            } elseif ($isPreview) {
+                                $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event) - User already verified");
                             }
                         }
 
@@ -449,17 +473,18 @@ class SendSequenceEmailsCommand extends Command
 
     /**
      * Get incomplete signups (signup leads who haven't completed signup).
+     * Checks both signup_leads table and external database for incomplete/unverified users.
      */
     private function getIncompleteSignups(): \Illuminate\Support\Collection
     {
-        // Get signup leads who haven't completed all steps (signup_step < 6)
-        // Assuming step 6 is the final step
-        // Include both verified and unverified incomplete signups
+        $users = collect();
+
+        // 1. Get incomplete signups from signup_leads table (signup_step < 6)
         $signupLeads = SignupLead::where('signup_step', '<', 6)
             ->get();
 
         // Map signup leads to match expected user array structure
-        return $signupLeads->map(function ($lead) {
+        $signupLeadUsers = $signupLeads->map(function ($lead) {
             return [
                 'id' => $lead->id,
                 'name' => $lead->name ?? '',
@@ -474,8 +499,89 @@ class SendSequenceEmailsCommand extends Command
                 'days_until_expiry' => null,
                 'trial_ends_at' => null,
                 'signup_step' => $lead->signup_step ?? 0,
+                'email_verified_at' => $lead->email_verified_at,
+                'source' => 'signup_leads', // Track source
             ];
         });
+
+        $users = $users->merge($signupLeadUsers);
+
+        // 2. Get unverified users from external database (email_verified_at is NULL)
+        try {
+            $externalUsers = DB::connection('mysql_external')
+                ->table('users')
+                ->whereNull('email_verified_at')
+                ->whereNull('deleted_at')
+                ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+                ->get();
+
+            // Get tenant/domain information for external users
+            $teamIds = $externalUsers->pluck('team_id')->filter()->unique()->toArray();
+            $tenants = collect();
+            $domains = collect();
+
+            if (!empty($teamIds)) {
+                $tenants = DB::connection('mysql_external')
+                    ->table('tenants')
+                    ->whereIn('id', $teamIds)
+                    ->select('id', 'data')
+                    ->get()
+                    ->mapWithKeys(function ($tenant) {
+                        $data = json_decode($tenant->data, true);
+                        $companyName = $data['name'] ?? '';
+
+                        return [$tenant->id => $companyName];
+                    });
+
+                $domains = DB::connection('mysql_external')
+                    ->table('domains')
+                    ->whereIn('team_id', $teamIds)
+                    ->select('team_id', 'domain')
+                    ->get()
+                    ->mapWithKeys(function ($domain) {
+                        return [$domain->team_id => $domain->domain];
+                    });
+            }
+
+            // Map external users to match expected user array structure
+            $externalUserMapped = $externalUsers->map(function ($user) use ($tenants, $domains) {
+                $companyName = $tenants->get($user->team_id, '');
+                $domain = $domains->get($user->team_id, '');
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name ?? '',
+                    'email' => $user->email ?? '',
+                    'phone' => $user->phone ?? '',
+                    'team_id' => $user->team_id,
+                    'is_active' => $user->is_active ?? 1,
+                    'created_at' => $user->created_at,
+                    'domain' => $domain,
+                    'company_name' => $companyName,
+                    'plan_expiry' => null,
+                    'days_until_expiry' => null,
+                    'trial_ends_at' => null,
+                    'signup_step' => null, // External users don't have signup_step
+                    'email_verified_at' => null, // They're unverified (that's why we selected them)
+                    'source' => 'external_db', // Track source
+                ];
+            });
+
+            // Merge external users, avoiding duplicates by email
+            $existingEmails = $users->pluck('email')->filter()->toArray();
+            $externalUserMapped = $externalUserMapped->reject(function ($user) use ($existingEmails) {
+                return in_array($user['email'], $existingEmails);
+            });
+
+            $users = $users->merge($externalUserMapped);
+        } catch (\Exception $e) {
+            // Log error but continue with signup_leads only
+            Log::warning('Failed to fetch incomplete signups from external database', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $users;
     }
 
     /**

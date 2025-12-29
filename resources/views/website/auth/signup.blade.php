@@ -412,8 +412,8 @@
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 appearance-none bg-no-repeat bg-[right_1rem_center] text-slate-900"
                             style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22%2F%3E%3C%2Fsvg%3E');"
                             >
-                            <option value="">Select your role</option>
-                            <option value="owner">Owner</option>
+                            <option value="" disabled selected>Select your role</option>
+                            <option value="owner" selected>Owner</option>
                             <option value="manager">Manager</option>
                             <option value="staff">Staff</option>
                             <option value="admin">IT Admin</option>
@@ -1193,7 +1193,7 @@
                             goToStep(data.next_step);
                         }
                     } else {
-                        Swal.fire('Error', data.message || 'Something went wrong', 'error');
+                        // Swal.fire('Error', data.message || 'Something went wrong', 'error');
                     }
                 },
                 error: function(xhr) {
@@ -1210,7 +1210,7 @@
                                 .then(() => window.location.href = '{{ route("signup") }}?basic_info');
                         }
                     } else {
-                        Swal.fire('Error', errorData.message || 'HTTP ' + xhr.status, 'error');
+                        // Swal.fire('Error', errorData.message || 'HTTP ' + xhr.status, 'error');
                     }
                 },
                 complete: () => $btn.prop('disabled', false).find('.spinner').addClass('hidden')

@@ -2,7 +2,9 @@
 import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { campaigns, systemTemplates } from '@/routes/marketing';
+import { campaigns } from '@/routes/marketing';
+import marketingRoutes from '@/routes/marketing';
+const { systemTemplates } = marketingRoutes;
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
