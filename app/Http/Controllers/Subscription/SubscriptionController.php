@@ -58,6 +58,7 @@ class SubscriptionController extends Controller
                     'trialDays' => $package->trial_days,
                     'creditCardRequired' => $package->credit_card_required,
                     'displaySequence' => $package->display_sequence ?? 0,
+                    'featuresDisplayLimit' => $package->features_display_limit ?? null,
                 ];
             });
 

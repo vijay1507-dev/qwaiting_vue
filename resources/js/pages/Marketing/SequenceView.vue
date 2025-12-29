@@ -39,6 +39,8 @@ interface SequenceData {
     name: string;
     description: string;
     status: string;
+    target_user_type?: string;
+    signup_users_days_window?: number | null;
     emails: EmailTemplate[];
 }
 
@@ -95,6 +97,8 @@ const sequence = ref<SequenceData>({
     name: props.sequence?.name || '',
     description: props.sequence?.description || '',
     status: props.sequence?.status || 'draft',
+    target_user_type: props.sequence?.target_user_type || 'trial_users',
+    signup_users_days_window: props.sequence?.signup_users_days_window ?? null,
     emails: props.sequence?.emails && props.sequence.emails.length > 0
         ? props.sequence.emails.map((email, index) => ({
             id: email.id,
@@ -127,6 +131,8 @@ watch(() => props.sequence, (newSequence) => {
             name: newSequence.name,
             description: newSequence.description || '',
             status: newSequence.status,
+            target_user_type: newSequence.target_user_type || 'trial_users',
+            signup_users_days_window: newSequence.signup_users_days_window ?? null,
             emails: newSequence.emails.map((email, index) => ({
                 id: email.id,
                 number: email.number || index + 1,
@@ -156,6 +162,26 @@ watch(() => props.sequence, (newSequence) => {
 const isEditMode = computed(() => !!props.id);
 const expandedEmail = ref<string | null>(null);
 
+// Watch target_user_type changes and reset invalid timing units
+watch(() => sequence.value.target_user_type, (newType, oldType) => {
+    if (newType !== oldType && oldType) {
+        const invalidTimingUnits = ['days_before_expiry', 'on_expired'];
+        const targetType = newType || 'trial_users';
+        
+        // If switching to incomplete_signups or paid_users, reset expiry-based timing units
+        if (targetType === 'incomplete_signups' || targetType === 'paid_users') {
+            sequence.value.emails.forEach((email) => {
+                if (invalidTimingUnits.includes(email.timingUnit)) {
+                    email.timingUnit = 'days';
+                    if (email.timingValue === 0) {
+                        email.timingValue = 1;
+                    }
+                }
+            });
+        }
+    }
+});
+
 // Group template variables by module
 const groupedVariables = computed(() => {
     const groups: Record<string, TemplateVariable[]> = {};
@@ -169,16 +195,46 @@ const groupedVariables = computed(() => {
     return groups;
 });
 
-const emailTypes = [
+const allEmailTypes = [
     { value: 'welcome', label: 'Welcome' },
     { value: 'feature_highlight', label: 'Feature Highlight' },
     { value: 'social_proof', label: 'Social Proof' },
     { value: 'trial_reminder', label: 'Trial Reminder' },
     { value: 'sales_outreach', label: 'Sales Outreach' },
     { value: 'offer', label: 'Offer' },
+    { value: 'completion_reminder', label: 'Completion Reminder' },
+    { value: 'signup_nudge', label: 'Signup Nudge' },
+    { value: 'upsell', label: 'Upsell' },
+    { value: 'renewal_reminder', label: 'Renewal Reminder' },
+    { value: 'feature_update', label: 'Feature Update' },
+    { value: 'feedback_request', label: 'Feedback Request' },
+    { value: 'loyalty_reward', label: 'Loyalty Reward' },
 ];
 
-const timingUnits = [
+// Filter email types based on target user type
+const emailTypes = computed(() => {
+    const targetType = sequence.value.target_user_type || 'trial_users';
+    
+    switch (targetType) {
+        case 'incomplete_signups':
+            return allEmailTypes.filter(type => 
+                ['welcome', 'completion_reminder', 'signup_nudge', 'feature_highlight', 'social_proof'].includes(type.value)
+            );
+        case 'trial_users':
+            return allEmailTypes.filter(type => 
+                ['welcome', 'feature_highlight', 'social_proof', 'trial_reminder', 'offer', 'sales_outreach'].includes(type.value)
+            );
+        case 'paid_users':
+            return allEmailTypes.filter(type => 
+                ['welcome', 'upsell', 'renewal_reminder', 'feature_update', 'feedback_request', 'loyalty_reward', 'offer'].includes(type.value)
+            );
+        case 'all_users':
+        default:
+            return allEmailTypes;
+    }
+});
+
+const allTimingUnits = [
     { value: 'immediate', label: 'Immediate' },
     { value: 'minutes', label: 'Minutes' },
     { value: 'hours', label: 'Hours' },
@@ -186,7 +242,35 @@ const timingUnits = [
     { value: 'weeks', label: 'Weeks' },
     { value: 'days_before_expiry', label: 'Days Before Expiry' },
     { value: 'on_expired', label: 'On Expired' },
+    { value: 'on_signup', label: 'On Signup (Event)' },
+    { value: 'on_verification', label: 'On Verification (Event)' },
+    { value: 'if_not_verified', label: 'If Not Verified (Event)' },
+    { value: 'after_verification', label: 'After Verification (Event)' },
 ];
+
+// Filter timing units based on target user type
+const timingUnits = computed(() => {
+    const targetType = sequence.value.target_user_type || 'trial_users';
+    
+    // For incomplete_signups, show event-based timing units and exclude expiry-based
+    if (targetType === 'incomplete_signups') {
+        return allTimingUnits.filter(unit => 
+            !['days_before_expiry', 'on_expired'].includes(unit.value)
+        );
+    }
+    
+    // For paid_users, exclude expiry-based and event-based timing units
+    if (targetType === 'paid_users') {
+        return allTimingUnits.filter(unit => 
+            !['days_before_expiry', 'on_expired', 'on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(unit.value)
+        );
+    }
+    
+    // trial_users and all_users can use time-based timing units (exclude event-based)
+    return allTimingUnits.filter(unit => 
+        !['on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(unit.value)
+    );
+});
 
 // Jodit editor configuration for email template design
 const joditConfig = {
@@ -496,6 +580,10 @@ const handleTimingUnitChange = (email: EmailTemplate) => {
     if (email.timingUnit === 'immediate') {
         email.timingValue = 0;
     }
+    // Event-based timing units don't need timing values
+    if (['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'on_expired'].includes(email.timingUnit)) {
+        email.timingValue = 0;
+    }
 };
 
 // Get timing recommendations based on email type
@@ -558,6 +646,13 @@ const getEmailTypeColor = (type: string): string => {
         trial_reminder: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
         sales_outreach: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
         offer: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+        completion_reminder: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400',
+        signup_nudge: 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400',
+        upsell: 'bg-teal-100 text-teal-800 dark:bg-teal-900/20 dark:text-teal-400',
+        renewal_reminder: 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400',
+        feature_update: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400',
+        feedback_request: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400',
+        loyalty_reward: 'bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-400',
     };
     return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
 };
@@ -671,6 +766,8 @@ const handleSave = () => {
         name: sequence.value.name,
         description: sequence.value.description || '',
         status: sequence.value.status,
+        target_user_type: sequence.value.target_user_type || 'trial_users',
+        signup_users_days_window: null,
         emails: emails,
     };
 
@@ -791,6 +888,26 @@ const handleSave = () => {
                                             <option value="paused">Paused</option>
                                         </select>
                                     </div>
+
+                                    <div>
+                                        <Label for="target_user_type" class="mb-1 block text-sm font-medium text-foreground">
+                                            Target User Type <span class="text-red-500">*</span>
+                                        </Label>
+                                        <select
+                                            id="target_user_type"
+                                            v-model="sequence.target_user_type"
+                                            class="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                        >
+                                            <option value="trial_users">Trial Users</option>
+                                            <option value="all_users">All Users</option>
+                                            <option value="paid_users">Paid Users</option>
+                                            <option value="incomplete_signups">Incomplete Signups</option>
+                                        </select>
+                                        <p class="mt-1 text-xs text-muted-foreground">
+                                            Select which user segment this sequence should target
+                                        </p>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -828,13 +945,13 @@ const handleSave = () => {
                                                                 getEmailTypeColor(email.type),
                                                             ]"
                                                         >
-                                                            {{ emailTypes.find(t => t.value === email.type)?.label || email.type }}
+                                                            {{ allEmailTypes.find(t => t.value === email.type)?.label || email.type }}
                                                         </span>
                                                     </div>
                                                     <div class="flex items-center gap-2 text-xs text-muted-foreground">
                                                         <Clock class="size-3" />
                                                         <span>
-                                                            <template v-if="email.timingUnit === 'immediate' || (email.timingValue === 0 && email.timingUnit !== 'days_before_expiry' && email.timingUnit !== 'on_expired')">
+                                                            <template v-if="email.timingUnit === 'immediate' || (email.timingValue === 0 && email.timingUnit !== 'days_before_expiry' && email.timingUnit !== 'on_expired' && !['on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(email.timingUnit))">
                                                                 Immediate
                                                             </template>
                                                             <template v-else-if="email.timingUnit === 'days_before_expiry'">
@@ -842,6 +959,18 @@ const handleSave = () => {
                                                             </template>
                                                             <template v-else-if="email.timingUnit === 'on_expired'">
                                                                 On Expired
+                                                            </template>
+                                                            <template v-else-if="email.timingUnit === 'on_signup'">
+                                                                On Signup (Event)
+                                                            </template>
+                                                            <template v-else-if="email.timingUnit === 'on_verification'">
+                                                                On Verification (Event)
+                                                            </template>
+                                                            <template v-else-if="email.timingUnit === 'if_not_verified'">
+                                                                If Not Verified (Event)
+                                                            </template>
+                                                            <template v-else-if="email.timingUnit === 'after_verification'">
+                                                                After Verification (Event)
                                                             </template>
                                                             <template v-else>
                                                                 {{ email.timingValue }} {{ email.timingUnit }}
@@ -887,7 +1016,7 @@ const handleSave = () => {
                                                         v-model.number="email.timingValue"
                                                         type="number"
                                                         min="0"
-                                                        :disabled="email.timingUnit === 'immediate'"
+                                                        :disabled="email.timingUnit === 'immediate' || ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'on_expired'].includes(email.timingUnit)"
                                                         class="w-full"
                                                     />
                                                 </div>

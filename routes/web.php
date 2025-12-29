@@ -70,6 +70,11 @@ Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')
     Route::get('/workflows/create', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.create');
     Route::get('/workflows/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.edit');
     Route::get('/tracking', [App\Http\Controllers\Marketing\MarketingController::class, 'tracking'])->name('tracking');
+    
+    // System Templates
+    Route::get('/system-templates', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'index'])->name('system-templates.index');
+    Route::get('/system-templates/{id}/edit', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'edit'])->name('system-templates.edit');
+    Route::put('/system-templates/{id}', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'update'])->name('system-templates.update');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {

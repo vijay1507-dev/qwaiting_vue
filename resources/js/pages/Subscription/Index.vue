@@ -42,6 +42,7 @@ interface Package {
     trialDays: number | null;
     creditCardRequired: boolean;
     displaySequence?: number;
+    featuresDisplayLimit?: number | null;
 }
 
 interface Coupon {
@@ -316,6 +317,7 @@ const newPackage = ref({
     creditCardRequired: true,
     status: 'active',
     displaySequence: 0,
+    featuresDisplayLimit: null,
 });
 
 const packageStatusOptions = ['active', 'inactive'];
@@ -333,6 +335,7 @@ const editPackage = ref({
     creditCardRequired: true,
     status: 'active',
     displaySequence: 0,
+    featuresDisplayLimit: null,
 });
 
 const handleCreatePackage = () => {
@@ -352,6 +355,7 @@ const handleClosePackageModal = () => {
         creditCardRequired: true,
         status: 'active',
         displaySequence: 0,
+        featuresDisplayLimit: null,
     };
 };
 
@@ -376,6 +380,7 @@ const handleSubmitPackage = () => {
         credit_card_required: newPackage.value.creditCardRequired,
         status: newPackage.value.status,
         display_sequence: newPackage.value.displaySequence || 0,
+        features_display_limit: newPackage.value.featuresDisplayLimit || null,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -401,6 +406,7 @@ const handleEditPackage = (packageId: string) => {
             creditCardRequired: pkg.creditCardRequired,
             status: pkg.status,
             displaySequence: pkg.displaySequence || 0,
+            featuresDisplayLimit: pkg.featuresDisplayLimit ?? null,
         };
         showEditPackageModal.value = true;
     }
@@ -419,6 +425,7 @@ const handleCloseEditPackageModal = () => {
         creditCardRequired: true,
         status: 'active',
         displaySequence: 0,
+        featuresDisplayLimit: null,
     };
 };
 
@@ -448,6 +455,7 @@ const handleUpdatePackage = () => {
         credit_card_required: editPackage.value.creditCardRequired,
         status: editPackage.value.status,
         display_sequence: editPackage.value.displaySequence || 0,
+        features_display_limit: editPackage.value.featuresDisplayLimit || null,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -2944,6 +2952,24 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         </p>
                     </div>
 
+                    <!-- Features Display Limit -->
+                    <div class="space-y-2">
+                        <Label for="package-features-display-limit" class="text-sm font-medium text-foreground">
+                            Features Display Limit
+                        </Label>
+                        <Input
+                            id="package-features-display-limit"
+                            v-model.number="newPackage.featuresDisplayLimit"
+                            type="number"
+                            min="0"
+                            placeholder="Leave empty to show all features"
+                            class="w-full"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Maximum number of features to display in pricing cards. Leave empty to show all features.
+                        </p>
+                    </div>
+
                     <!-- Status -->
                     <div class="space-y-2">
                         <Label for="package-status" class="text-sm font-medium text-foreground">
@@ -3119,6 +3145,24 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         />
                         <p class="text-xs text-muted-foreground">
                             Lower numbers appear first on the frontend pricing page. Default is 0.
+                        </p>
+                    </div>
+
+                    <!-- Features Display Limit -->
+                    <div class="space-y-2">
+                        <Label for="edit-package-features-display-limit" class="text-sm font-medium text-foreground">
+                            Features Display Limit
+                        </Label>
+                        <Input
+                            id="edit-package-features-display-limit"
+                            v-model.number="editPackage.featuresDisplayLimit"
+                            type="number"
+                            min="0"
+                            placeholder="Leave empty to show all features"
+                            class="w-full"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Maximum number of features to display in pricing cards. Leave empty to show all features.
                         </p>
                     </div>
 

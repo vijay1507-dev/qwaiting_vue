@@ -23,6 +23,7 @@ class SubscriptionPackage extends Model
         'annual_enabled',
         'sort_order',
         'display_sequence',
+        'features_display_limit',
         'is_most_popular',
     ];
 
@@ -36,6 +37,7 @@ class SubscriptionPackage extends Model
             'trial_days' => 'integer',
             'sort_order' => 'integer',
             'display_sequence' => 'integer',
+            'features_display_limit' => 'integer',
             'status' => 'string',
         ];
     }

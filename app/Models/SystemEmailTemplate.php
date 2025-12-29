@@ -4,30 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Sequence extends Model
+class SystemEmailTemplate extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'key',
         'name',
+        'subject',
+        'content',
         'description',
-        'status',
-        'target_user_type',
-        'signup_users_days_window',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => 'string',
+            'is_active' => 'boolean',
         ];
     }
 
-    public function emailTemplates(): HasMany
+    /**
+     * Get template by key.
+     */
+    public static function getByKey(string $key): ?self
     {
-        return $this->hasMany(EmailNotificationTemplate::class, 'sequence_id');
+        return static::where('key', $key)
+            ->where('is_active', true)
+            ->first();
     }
 }

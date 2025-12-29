@@ -35,6 +35,7 @@ class UpdatePackageRequest extends FormRequest
             'annual_enabled' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'display_sequence' => ['nullable', 'integer', 'min:0'],
+            'features_display_limit' => ['nullable', 'integer', 'min:0'],
             'is_most_popular' => ['nullable', 'boolean'],
         ];
     }

@@ -36,7 +36,7 @@ class PricingController extends Controller
                 $annualPricing = $package->pricings->firstWhere('billing_cycle', 'annual');
 
                 // Get all features with their limit types and values
-                $features = $package->features->map(function ($feature) use ($package) {
+                $allFeatures = $package->features->map(function ($feature) use ($package) {
                     $packageFeature = SubscriptionPackageFeature::where('package_id', $package->id)
                         ->where('feature_id', $feature->id)
                         ->first();
@@ -57,6 +57,14 @@ class PricingController extends Controller
                     ];
                 })->toArray();
 
+                // Filter to only included features first
+                $features = array_filter($allFeatures, function ($feature) {
+                    return $feature['included'] === true;
+                });
+
+                // Re-index array after filtering
+                $features = array_values($features);
+
                 // Sort features: numeric features first, then alphabetically
                 usort($features, function ($a, $b) {
                     // First priority: numeric features come first
@@ -73,6 +81,11 @@ class PricingController extends Controller
                     unset($feature['is_numeric']);
                 }
                 unset($feature);
+
+                // Limit features based on features_display_limit if set (only count included features)
+                if ($package->features_display_limit !== null && $package->features_display_limit > 0) {
+                    $features = array_slice($features, 0, $package->features_display_limit);
+                }
 
                 return [
                     'id' => $package->id,

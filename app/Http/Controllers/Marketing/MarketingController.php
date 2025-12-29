@@ -413,6 +413,8 @@ class MarketingController extends Controller
                 'name' => $sequence->name,
                 'description' => $sequence->description,
                 'status' => $sequence->status,
+                'target_user_type' => $sequence->target_user_type ?? 'trial_users',
+                'signup_users_days_window' => $sequence->signup_users_days_window ?? null,
                 'emails' => $sequence->emailTemplates->map(function ($template) {
                     return [
                         'id' => (string) $template->id,
@@ -522,6 +524,8 @@ class MarketingController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'status' => $request->status,
+            'target_user_type' => $request->target_user_type,
+            'signup_users_days_window' => null,
         ]);
 
         foreach ($request->emails as $emailData) {
@@ -551,9 +555,11 @@ class MarketingController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'status' => $request->status,
+            'target_user_type' => $request->target_user_type,
+            'signup_users_days_window' => null,
         ]);
 
-        // Delete existing email templates
+        // Soft delete existing email templates
         $sequence->emailTemplates()->delete();
 
         // Create new email templates
@@ -579,7 +585,12 @@ class MarketingController extends Controller
     public function destroySequence(string $id): RedirectResponse
     {
         $sequence = Sequence::findOrFail($id);
+
+        // Soft delete the sequence (this will also soft delete related email templates via cascade if configured)
         $sequence->delete();
+
+        // Also soft delete all related email templates
+        $sequence->emailTemplates()->delete();
 
         return redirect()->route('marketing.sequences')->with('success', 'Sequence deleted successfully.');
     }

@@ -7,12 +7,13 @@ use App\Http\Requests\SignupStepRequest;
 use App\Models\SignupLead;
 use App\Models\User;
 use App\Notifications\SignupLeadVerifyEmail;
+use App\Services\SequenceEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
@@ -23,22 +24,22 @@ class SignupController extends Controller
     {
         // Check if this is from verification redirect
         $isFromVerification = Session::get('from_verification_redirect', false);
-        
+
         // Check if it's a refresh by comparing referrer
         $referrer = request()->header('referer');
         $currentPath = request()->path();
         $isRefresh = false;
-        
+
         if ($referrer) {
             $referrerPath = parse_url($referrer, PHP_URL_PATH);
             // If referrer path matches current path, it's a refresh
-            if ($referrerPath === '/' . $currentPath || $referrerPath === $currentPath) {
+            if ($referrerPath === '/'.$currentPath || $referrerPath === $currentPath) {
                 $isRefresh = true;
             }
         }
-        
+
         // Always clear session on refresh, unless it's from verification redirect
-        if ($isRefresh && !$isFromVerification) {
+        if ($isRefresh && ! $isFromVerification) {
             Session::forget('signup_form_data');
             // Don't clear signup_lead_id on refresh if email is verified
             // This allows user to continue from where they left off
@@ -46,7 +47,7 @@ class SignupController extends Controller
             if ($leadId) {
                 $lead = SignupLead::find($leadId);
                 // If lead doesn't exist or email is not verified, clear the session
-                if (!$lead || !$lead->hasVerifiedEmail()) {
+                if (! $lead || ! $lead->hasVerifiedEmail()) {
                     Session::forget('signup_lead_id');
                     Session::forget('completed_steps');
                 } else {
@@ -58,7 +59,7 @@ class SignupController extends Controller
                 Session::forget('completed_steps');
             }
         }
-        
+
         // Clear the verification redirect flag after using it
         if ($isFromVerification) {
             Session::forget('from_verification_redirect');
@@ -66,7 +67,7 @@ class SignupController extends Controller
 
         // Get data from session (stored before verification)
         $sessionData = Session::get('signup_form_data', []);
-        
+
         $leadData = [
             'name' => $sessionData['name'] ?? null,
             'email' => $sessionData['email'] ?? null,
@@ -85,19 +86,19 @@ class SignupController extends Controller
                 if ($lead->email) {
                     $leadData['email'] = $lead->email;
                 }
-                
+
                 // Restore completed steps from database
                 // signup_step in database represents the last completed step
                 // Important: Step 1 is only considered completed if email is verified
                 // So if signup_step is 2, it means steps 1 and 2 are completed (email must be verified)
                 $completedSteps = Session::get('completed_steps', []);
                 $dbSignupStep = $lead->signup_step ?? 0;
-                
+
                 // Step 1 is always completed if email is verified (email verification is part of step 1)
-                if (!in_array(1, $completedSteps)) {
+                if (! in_array(1, $completedSteps)) {
                     $completedSteps[] = 1;
                 }
-                
+
                 // Restore all completed steps up to the signup_step in database
                 // signup_step = 1 means step 1 is completed (email verified)
                 // signup_step = 2 means steps 1 and 2 are completed (email verified + step 2 submitted)
@@ -107,12 +108,12 @@ class SignupController extends Controller
                 if ($dbSignupStep >= 1) {
                     // Step 1 is already added above, now add steps 2-6 if they exist
                     for ($step = 2; $step <= $dbSignupStep && $step <= 6; $step++) {
-                        if (!in_array($step, $completedSteps)) {
+                        if (! in_array($step, $completedSteps)) {
                             $completedSteps[] = $step;
                         }
                     }
                 }
-                
+
                 Session::put('completed_steps', $completedSteps);
             }
         }
@@ -137,10 +138,10 @@ class SignupController extends Controller
         // Validate step access - user must complete previous steps
         if ($step > 1) {
             $completedSteps = Session::get('completed_steps', []);
-            
+
             // Check if all previous steps are completed
             for ($i = 1; $i < $step; $i++) {
-                if (!in_array($i, $completedSteps)) {
+                if (! in_array($i, $completedSteps)) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please complete previous steps first.',
@@ -148,20 +149,20 @@ class SignupController extends Controller
                     ], 403);
                 }
             }
-            
+
             // Special check for step 2: email must be verified
             if ($step === 2) {
                 $leadId = Session::get('signup_lead_id');
-                if (!$leadId) {
+                if (! $leadId) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please complete step 1 and verify your email first.',
                         'redirect' => route('signup', ['basic_info']),
                     ], 403);
                 }
-                
+
                 $lead = SignupLead::find($leadId);
-                if (!$lead || !$lead->hasVerifiedEmail()) {
+                if (! $lead || ! $lead->hasVerifiedEmail()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please verify your email first.',
@@ -170,7 +171,7 @@ class SignupController extends Controller
                 }
             }
         }
-        
+
         $validated = $request->validated();
 
         if ($step === 1) {
@@ -208,9 +209,9 @@ class SignupController extends Controller
 
             // Send verification email if not already verified
             $verificationSent = false;
-            if (!$lead->hasVerifiedEmail()) {
+            if (! $lead->hasVerifiedEmail()) {
                 try {
-                    $lead->notify(new SignupLeadVerifyEmail());
+                    $lead->notify(new SignupLeadVerifyEmail);
                     $verificationSent = true;
                     Log::info('Verification email sent after step 1 submission', [
                         'lead_id' => $lead->id,
@@ -222,6 +223,17 @@ class SignupController extends Controller
                         'error' => $e->getMessage(),
                     ]);
                 }
+            }
+
+            // Send "on_signup" event-based sequence emails
+            try {
+                $sequenceService = new SequenceEmailService;
+                $sequenceService->sendEventBasedEmails('on_signup', $lead);
+            } catch (\Exception $e) {
+                Log::error('Failed to send on_signup sequence emails', [
+                    'lead_id' => $lead->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             // If email is already verified, proceed to step 2
@@ -255,37 +267,37 @@ class SignupController extends Controller
         // Check domain availability on step 2
         if ($step === 2) {
             $domainName = $validated['domain_name'] ?? '';
-            
+
             if ($domainName) {
                 // Check if domain exists in signup_leads table (excluding current lead)
                 $domainExistsInLeads = SignupLead::where('domain_name', $domainName)
                     ->where('id', '!=', $lead->id ?? 0)
                     ->exists();
-                
+
                 if ($domainExistsInLeads) {
                     return response()->json([
                         'success' => false,
                         'message' => 'This domain is already taken. Please choose a different domain name.',
                         'errors' => [
-                            'domain_name' => ['This domain is already taken. Please choose a different domain name.']
-                        ]
+                            'domain_name' => ['This domain is already taken. Please choose a different domain name.'],
+                        ],
                     ], 422);
                 }
-                
+
                 // Also check if domain exists in external database
                 try {
                     $domainExistsInExternal = DB::connection('mysql_external')
                         ->table('domains')
                         ->where('domain', $domainName)
                         ->exists();
-                    
+
                     if ($domainExistsInExternal) {
                         return response()->json([
                             'success' => false,
                             'message' => 'This domain is already taken. Please choose a different domain name.',
                             'errors' => [
-                                'domain_name' => ['This domain is already taken. Please choose a different domain name.']
-                            ]
+                                'domain_name' => ['This domain is already taken. Please choose a different domain name.'],
+                            ],
                         ], 422);
                     }
                 } catch (\Exception $e) {
@@ -295,7 +307,7 @@ class SignupController extends Controller
                         'error' => $e->getMessage(),
                         'lead_id' => $lead->id ?? null,
                     ]);
-                    
+
                     // Continue with normal flow - API will validate at step 6
                 }
             }
@@ -304,10 +316,10 @@ class SignupController extends Controller
         if ($step === 6) {
             return DB::transaction(function () use ($lead, $validated) {
                 $lead->update(array_merge($validated, ['signup_step' => 6]));
-                
+
                 // Mark step 6 as completed
                 $completedSteps = Session::get('completed_steps', []);
-                if (!in_array(6, $completedSteps)) {
+                if (! in_array(6, $completedSteps)) {
                     $completedSteps[] = 6;
                     Session::put('completed_steps', $completedSteps);
                 }
@@ -318,9 +330,9 @@ class SignupController extends Controller
                 $phoneParts = explode(' ', $phoneNumber, 2);
                 $phoneCode = $phoneParts[0] ?? '';
                 $phone = isset($phoneParts[1]) ? trim($phoneParts[1]) : '';
-                
+
                 // Fallback: if no space found, try to extract code from start
-                if (empty($phone) && !empty($phoneNumber)) {
+                if (empty($phone) && ! empty($phoneNumber)) {
                     // Try to match country code pattern (e.g., +1, +44, etc.)
                     if (preg_match('/^(\+\d{1,4})\s*(.+)$/', $phoneNumber, $matches)) {
                         $phoneCode = $matches[1];
@@ -340,14 +352,14 @@ class SignupController extends Controller
                     'phone' => $phone,
                     'phone_code' => $phoneCode,
                     'additional_info' => [
-                                            'role'             => $lead->role,
-                                            'website'          => $lead->website,
-                                            'usage_preference' => $lead->usage_preference,
-                                            'industry'         => $lead->industry,
-                                            'footfall'         => $lead->footfall,
-                                            'current_solution' => $lead->current_solution,
-                                            'signup_step'      => $lead->signup_step,
-                                        ],
+                        'role' => $lead->role,
+                        'website' => $lead->website,
+                        'usage_preference' => $lead->usage_preference,
+                        'industry' => $lead->industry,
+                        'footfall' => $lead->footfall,
+                        'current_solution' => $lead->current_solution,
+                        'signup_step' => $lead->signup_step,
+                    ],
                 ];
 
                 // Call external API
@@ -365,7 +377,7 @@ class SignupController extends Controller
                         // ]);
 
                         // Auth::login($user);
-                        
+
                         // Destroy all signup-related session data
                         Session::forget('signup_lead_id');
                         Session::forget('signup_form_data');
@@ -405,7 +417,7 @@ class SignupController extends Controller
 
         // Mark step as completed
         $completedSteps = Session::get('completed_steps', []);
-        if (!in_array($step, $completedSteps)) {
+        if (! in_array($step, $completedSteps)) {
             $completedSteps[] = $step;
             Session::put('completed_steps', $completedSteps);
         }
@@ -423,8 +435,8 @@ class SignupController extends Controller
         $name = $request->input('name');
         $phoneNumber = $request->input('phone_number');
         $countryCode = $request->input('country_code');
-        
-        if (!$email) {
+
+        if (! $email) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email is required.',
@@ -448,10 +460,10 @@ class SignupController extends Controller
         }
 
         // Create or get lead record only for email verification (minimal data)
-        if (!$lead || $lead->email !== $email) {
+        if (! $lead || $lead->email !== $email) {
             // Check if email already exists
             $existingLead = SignupLead::where('email', $email)->first();
-            
+
             if ($existingLead) {
                 $lead = $existingLead;
                 Session::put('signup_lead_id', $lead->id);
@@ -475,13 +487,13 @@ class SignupController extends Controller
         try {
             // Verify mail configuration
             $mailDriver = config('mail.default');
-            
+
             if ($mailDriver === 'log') {
                 Log::warning('Mail driver is set to log - emails will not be sent', [
                     'lead_id' => $lead->id,
                     'email' => $lead->email,
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Mail is configured to log only. Please set MAIL_MAILER=smtp in your .env file and run: php artisan config:clear',
@@ -489,7 +501,7 @@ class SignupController extends Controller
             }
 
             // Send verification email immediately (not queued)
-            $lead->notify(new SignupLeadVerifyEmail());
+            $lead->notify(new SignupLeadVerifyEmail);
 
             Log::info('Verification email sent', [
                 'lead_id' => $lead->id,
@@ -512,7 +524,7 @@ class SignupController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send verification email: ' . $e->getMessage() . '. Please check your mail configuration in .env file.',
+                'message' => 'Failed to send verification email: '.$e->getMessage().'. Please check your mail configuration in .env file.',
             ], 500);
         }
     }
@@ -526,14 +538,14 @@ class SignupController extends Controller
 
         if ($lead->hasVerifiedEmail()) {
             Session::put('signup_lead_id', $lead->id);
-            
+
             // Mark step 1 as completed
             $completedSteps = Session::get('completed_steps', []);
-            if (!in_array(1, $completedSteps)) {
+            if (! in_array(1, $completedSteps)) {
                 $completedSteps[] = 1;
                 Session::put('completed_steps', $completedSteps);
             }
-            
+
             // Redirect directly to step 2
             return redirect()->route('signup', ['business_info'])->with('verified', 'Email is already verified.');
         }
@@ -544,14 +556,28 @@ class SignupController extends Controller
 
         $lead->markEmailAsVerified();
         Session::put('signup_lead_id', $lead->id);
-        
+
+        // Send event-based sequence emails for verification
+        try {
+            $sequenceService = new SequenceEmailService;
+            // Send "on_verification" emails (sent immediately when verified)
+            $sequenceService->sendEventBasedEmails('on_verification', $lead);
+            // Send "after_verification" emails (sent after verification)
+            $sequenceService->sendEventBasedEmails('after_verification', $lead);
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification sequence emails', [
+                'lead_id' => $lead->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Mark step 1 as completed (email verification is part of step 1 completion)
         $completedSteps = Session::get('completed_steps', []);
-        if (!in_array(1, $completedSteps)) {
+        if (! in_array(1, $completedSteps)) {
             $completedSteps[] = 1;
             Session::put('completed_steps', $completedSteps);
         }
-        
+
         // Redirect directly to step 2 (only this tab redirects, existing tab stays on step 1)
         return redirect()->route('signup', ['business_info'])->with('verified', 'Email verified successfully! You can continue with the signup process.');
     }
@@ -571,7 +597,7 @@ class SignupController extends Controller
     {
         $email = request()->query('email');
         $leadId = request()->query('lead_id');
-        
+
         return view('website.auth.verify-email-sent', [
             'email' => $email,
             'leadId' => $leadId,
@@ -586,7 +612,7 @@ class SignupController extends Controller
         $email = request()->input('email');
         $leadId = request()->input('lead_id');
 
-        if (!$email && !$leadId) {
+        if (! $email && ! $leadId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email or lead ID is required.',
@@ -600,7 +626,7 @@ class SignupController extends Controller
             $lead = SignupLead::where('email', $email)->first();
         }
 
-        if (!$lead) {
+        if (! $lead) {
             return response()->json([
                 'success' => false,
                 'message' => 'Lead not found.',
@@ -615,7 +641,7 @@ class SignupController extends Controller
         }
 
         try {
-            $lead->notify(new SignupLeadVerifyEmail());
+            $lead->notify(new SignupLeadVerifyEmail);
             Log::info('Verification email resent', [
                 'lead_id' => $lead->id,
                 'email' => $lead->email,
@@ -633,7 +659,7 @@ class SignupController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send verification email: ' . $e->getMessage(),
+                'message' => 'Failed to send verification email: '.$e->getMessage(),
             ], 500);
         }
     }

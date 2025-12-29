@@ -6,6 +6,7 @@ use App\Jobs\SendSequenceEmailToUserJob;
 use App\Models\EmailNotificationTemplate;
 use App\Models\EmailSend;
 use App\Models\Sequence;
+use App\Models\SignupLead;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +17,7 @@ class SendSequenceEmailsCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'sequences:send-emails {--sequence-id= : Specific sequence ID to process}';
+    protected $signature = 'sequences:send-emails {--sequence-id= : Specific sequence ID to process} {--preview : Preview which users will receive emails without sending}';
 
     /**
      * The console command description.
@@ -30,7 +31,14 @@ class SendSequenceEmailsCommand extends Command
      */
     public function handle(): int
     {
-        $this->info('Starting sequence email sending process...');
+        $isPreview = $this->option('preview');
+
+        if ($isPreview) {
+            $this->info('=== PREVIEW MODE: No emails will be sent ===');
+            $this->newLine();
+        } else {
+            $this->info('Starting sequence email sending process...');
+        }
 
         // Get active sequences
         $sequenceQuery = Sequence::where('status', 'active');
@@ -51,57 +59,161 @@ class SendSequenceEmailsCommand extends Command
 
         foreach ($sequences as $sequence) {
             $this->info("Processing sequence: {$sequence->name}");
+            $this->info("  Target User Type: {$sequence->target_user_type}");
+            $this->newLine();
 
             // Get users whose plan expires within 14 days (or customize this logic)
             $users = $this->getUsersForSequence($sequence);
 
             if ($users->isEmpty()) {
                 $this->warn("  No users found for sequence: {$sequence->name}");
+                $this->newLine();
 
                 continue;
             }
 
-            $this->info("  Found {$users->count()} user(s)");
+            $this->info("  Found {$users->count()} user(s) matching criteria");
+            $this->newLine();
 
             // Process each user
             foreach ($users as $user) {
                 $daysSinceRegistration = $this->calculateDaysSinceRegistration($user['created_at']);
 
+                if ($isPreview) {
+                    $this->line("  ┌─ User: {$user['name']} ({$user['email']})");
+                    $this->line("  │  ID: {$user['id']}");
+                    if (isset($user['company_name']) && $user['company_name']) {
+                        $this->line("  │  Company: {$user['company_name']}");
+                    }
+                    if (isset($user['domain']) && $user['domain']) {
+                        $this->line("  │  Domain: {$user['domain']}");
+                    }
+                    $this->line("  │  Registered: {$user['created_at']} ({$daysSinceRegistration} days ago)");
+                    if (isset($user['signup_step'])) {
+                        $this->line("  │  Signup Step: {$user['signup_step']}/6");
+                    }
+                    $this->line('  │');
+                }
+
+                $userEmailCount = 0;
+
                 // Process each email template in the sequence
                 foreach ($sequence->emailTemplates->where('status', 'active') as $emailTemplate) {
+                    // Skip most event-based emails in scheduled runs (they're handled by events)
+                    // But handle "if_not_verified" in scheduled runs for incomplete signups
+                    if (in_array($emailTemplate->timing_unit, ['on_signup', 'on_verification', 'after_verification'])) {
+                        continue;
+                    }
+
+                    // Handle "if_not_verified" emails for incomplete signups
+                    if ($emailTemplate->timing_unit === 'if_not_verified') {
+                        // Only process for incomplete_signups target type
+                        if ($sequence->target_user_type === 'incomplete_signups') {
+                            // Check if user is not verified
+                            if (isset($user['signup_step'])) {
+                                // For SignupLead, check if email_verified_at is null
+                                $signupLead = SignupLead::find($user['id']);
+                                if ($signupLead && ! $signupLead->hasVerifiedEmail()) {
+                                    // User is not verified, send the email
+                                    $userEmailCount++;
+                                    if ($isPreview) {
+                                        $this->line("  │  ✓ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                        $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event)");
+                                    } else {
+                                        $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (If Not Verified)");
+                                        SendSequenceEmailToUserJob::dispatch(
+                                            $emailTemplate,
+                                            $user['id'],
+                                            $user['email'],
+                                            $user,
+                                            $daysSinceRegistration
+                                        )->delay(now()->addSeconds($totalSent * 5));
+                                    }
+                                    $totalSent++;
+                                } elseif ($isPreview) {
+                                    $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                    $this->line("  │    Type: {$emailTemplate->type} | If Not Verified (Event) - User already verified");
+                                }
+                            }
+                        }
+
+                        continue;
+                    }
+
                     $shouldSend = $this->shouldSendEmail($emailTemplate, $daysSinceRegistration, $user['id'], $user);
 
                     if ($shouldSend) {
-                        $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (Day {$daysSinceRegistration})");
+                        $userEmailCount++;
 
-                        // Add delay to prevent rate limiting (stagger emails by 5 seconds each)
-                        SendSequenceEmailToUserJob::dispatch(
-                            $emailTemplate,
-                            $user['id'],
-                            $user['email'],
-                            $user,
-                            $daysSinceRegistration
-                        )->delay(now()->addSeconds($totalSent * 5)); // 5 second delay between each email
+                        if ($isPreview) {
+                            $timingInfo = $this->getTimingInfo($emailTemplate, $daysSinceRegistration);
+                            $this->line("  │  ✓ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                            $this->line("  │    Type: {$emailTemplate->type} | {$timingInfo}");
+                        } else {
+                            $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (Day {$daysSinceRegistration})");
+
+                            // Add delay to prevent rate limiting (stagger emails by 5 seconds each)
+                            SendSequenceEmailToUserJob::dispatch(
+                                $emailTemplate,
+                                $user['id'],
+                                $user['email'],
+                                $user,
+                                $daysSinceRegistration
+                            )->delay(now()->addSeconds($totalSent * 5)); // 5 second delay between each email
+                        }
 
                         $totalSent++;
+                    } elseif ($isPreview) {
+                        $timingInfo = $this->getTimingInfo($emailTemplate, $daysSinceRegistration, false);
+                        $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                        $this->line("  │    Type: {$emailTemplate->type} | {$timingInfo}");
                     }
+                }
+
+                if ($isPreview) {
+                    if ($userEmailCount > 0) {
+                        $this->line("  │  → Total emails for this user: {$userEmailCount}");
+                    } else {
+                        $this->line('  │  → No emails will be sent to this user');
+                    }
+                    $this->line('  └─');
+                    $this->newLine();
                 }
             }
         }
 
-        $this->info("Total emails queued: {$totalSent}");
+        if ($isPreview) {
+            $this->info('=== PREVIEW SUMMARY ===');
+            $this->info("Total emails that would be queued: {$totalSent}");
+        } else {
+            $this->info("Total emails queued: {$totalSent}");
+        }
 
         return Command::SUCCESS;
     }
 
     /**
-     * Get users for a sequence (customize this based on your criteria).
+     * Get users for a sequence based on target_user_type.
      */
     private function getUsersForSequence(Sequence $sequence): \Illuminate\Support\Collection
     {
-        // Get ALL trial users (those with trial_ends_at not null)
-        // This ensures all trial users receive registration-based emails (1 day, 2 days, etc.)
-        // and expiry-based emails (days_before_expiry, on_expired) are handled separately
+        $targetUserType = $sequence->target_user_type ?? 'trial_users'; // Default to trial_users for backward compatibility
+
+        return match ($targetUserType) {
+            'trial_users' => $this->getTrialUsers(),
+            'all_users' => $this->getAllUsers(),
+            'paid_users' => $this->getPaidUsers(),
+            'signup_users' => $this->getSignupUsers($sequence->signup_users_days_window ?? 7),
+            'incomplete_signups' => $this->getIncompleteSignups(),
+            default => $this->getTrialUsers(), // Fallback to current behavior
+        };
+    }
+
+    /**
+     * Get trial users (those with trial_ends_at not null).
+     */
+    private function getTrialUsers(): \Illuminate\Support\Collection
+    {
         $trialDomains = DB::connection('mysql_external')
             ->table('domains')
             ->whereNotNull('trial_ends_at')
@@ -157,6 +269,216 @@ class SendSequenceEmailsCommand extends Command
     }
 
     /**
+     * Get all active users regardless of trial status.
+     */
+    private function getAllUsers(): \Illuminate\Support\Collection
+    {
+        $domains = DB::connection('mysql_external')
+            ->table('domains')
+            ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
+            ->get();
+
+        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+
+        if (empty($teamIds)) {
+            return collect([]);
+        }
+
+        $users = DB::connection('mysql_external')
+            ->table('users')
+            ->whereIn('team_id', $teamIds)
+            ->whereNull('deleted_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->get();
+
+        // Fetch tenant data to get company names
+        $tenants = DB::connection('mysql_external')
+            ->table('tenants')
+            ->whereIn('id', $teamIds)
+            ->select('id', 'data')
+            ->get()
+            ->mapWithKeys(function ($tenant) {
+                $data = json_decode($tenant->data, true);
+                $companyName = $data['name'] ?? '';
+
+                return [$tenant->id => $companyName];
+            });
+
+        // Enrich user data with domain and tenant information
+        return $users->map(function ($user) use ($domains, $tenants) {
+            $domain = $domains->firstWhere('team_id', (string) $user->team_id);
+            $companyName = $tenants->get($user->team_id, '');
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? '',
+                'team_id' => $user->team_id,
+                'is_active' => $user->is_active,
+                'created_at' => $user->created_at,
+                'domain' => $domain->domain ?? '',
+                'company_name' => $companyName,
+                'plan_expiry' => $domain->trial_ends_at ?? '',
+                'days_until_expiry' => $domain->days_left ?? '',
+                'trial_ends_at' => $domain->trial_ends_at ?? null,
+            ];
+        });
+    }
+
+    /**
+     * Get paid users (users without active trials: trial_ends_at is NULL or expired).
+     */
+    private function getPaidUsers(): \Illuminate\Support\Collection
+    {
+        $domains = DB::connection('mysql_external')
+            ->table('domains')
+            ->where(function ($query) {
+                $query->whereNull('trial_ends_at')
+                    ->orWhere('trial_ends_at', '<', now());
+            })
+            ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
+            ->get();
+
+        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+
+        if (empty($teamIds)) {
+            return collect([]);
+        }
+
+        $users = DB::connection('mysql_external')
+            ->table('users')
+            ->whereIn('team_id', $teamIds)
+            ->whereNull('deleted_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->get();
+
+        // Fetch tenant data to get company names
+        $tenants = DB::connection('mysql_external')
+            ->table('tenants')
+            ->whereIn('id', $teamIds)
+            ->select('id', 'data')
+            ->get()
+            ->mapWithKeys(function ($tenant) {
+                $data = json_decode($tenant->data, true);
+                $companyName = $data['name'] ?? '';
+
+                return [$tenant->id => $companyName];
+            });
+
+        // Enrich user data with domain and tenant information
+        return $users->map(function ($user) use ($domains, $tenants) {
+            $domain = $domains->firstWhere('team_id', (string) $user->team_id);
+            $companyName = $tenants->get($user->team_id, '');
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? '',
+                'team_id' => $user->team_id,
+                'is_active' => $user->is_active,
+                'created_at' => $user->created_at,
+                'domain' => $domain->domain ?? '',
+                'company_name' => $companyName,
+                'plan_expiry' => $domain->trial_ends_at ?? '',
+                'days_until_expiry' => $domain->days_left ?? '',
+                'trial_ends_at' => $domain->trial_ends_at ?? null,
+            ];
+        });
+    }
+
+    /**
+     * Get recently registered users (within specified days window).
+     */
+    private function getSignupUsers(int $daysWindow): \Illuminate\Support\Collection
+    {
+        $domains = DB::connection('mysql_external')
+            ->table('domains')
+            ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
+            ->get();
+
+        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+
+        if (empty($teamIds)) {
+            return collect([]);
+        }
+
+        $users = DB::connection('mysql_external')
+            ->table('users')
+            ->whereIn('team_id', $teamIds)
+            ->whereNull('deleted_at')
+            ->where('created_at', '>=', now()->subDays($daysWindow))
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->get();
+
+        // Fetch tenant data to get company names
+        $tenants = DB::connection('mysql_external')
+            ->table('tenants')
+            ->whereIn('id', $teamIds)
+            ->select('id', 'data')
+            ->get()
+            ->mapWithKeys(function ($tenant) {
+                $data = json_decode($tenant->data, true);
+                $companyName = $data['name'] ?? '';
+
+                return [$tenant->id => $companyName];
+            });
+
+        // Enrich user data with domain and tenant information
+        return $users->map(function ($user) use ($domains, $tenants) {
+            $domain = $domains->firstWhere('team_id', (string) $user->team_id);
+            $companyName = $tenants->get($user->team_id, '');
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? '',
+                'team_id' => $user->team_id,
+                'is_active' => $user->is_active,
+                'created_at' => $user->created_at,
+                'domain' => $domain->domain ?? '',
+                'company_name' => $companyName,
+                'plan_expiry' => $domain->trial_ends_at ?? '',
+                'days_until_expiry' => $domain->days_left ?? '',
+                'trial_ends_at' => $domain->trial_ends_at ?? null,
+            ];
+        });
+    }
+
+    /**
+     * Get incomplete signups (signup leads who haven't completed signup).
+     */
+    private function getIncompleteSignups(): \Illuminate\Support\Collection
+    {
+        // Get signup leads who haven't completed all steps (signup_step < 6)
+        // Assuming step 6 is the final step
+        // Include both verified and unverified incomplete signups
+        $signupLeads = SignupLead::where('signup_step', '<', 6)
+            ->get();
+
+        // Map signup leads to match expected user array structure
+        return $signupLeads->map(function ($lead) {
+            return [
+                'id' => $lead->id,
+                'name' => $lead->name ?? '',
+                'email' => $lead->email ?? '',
+                'phone' => $lead->phone_number ?? '',
+                'team_id' => null, // Doesn't exist for incomplete signups
+                'is_active' => 1, // Assume active
+                'created_at' => $lead->created_at,
+                'domain' => $lead->domain_name ?? '',
+                'company_name' => $lead->company_name ?? '',
+                'plan_expiry' => null,
+                'days_until_expiry' => null,
+                'trial_ends_at' => null,
+                'signup_step' => $lead->signup_step ?? 0,
+            ];
+        });
+    }
+
+    /**
      * Calculate days since user registration.
      * Returns: 0 = registration day, 1 = first day after, 2 = second day after, etc.
      */
@@ -188,7 +510,13 @@ class SendSequenceEmailsCommand extends Command
         }
 
         // Handle expiry-based emails separately
+        // Skip expiry-based emails for user types that don't have trial_ends_at
         if ($emailTemplate->timing_unit === 'days_before_expiry' || $emailTemplate->timing_unit === 'on_expired') {
+            // Only process expiry-based emails if user has trial_ends_at
+            if (empty($user['trial_ends_at'])) {
+                return false;
+            }
+
             return $this->shouldSendExpiryBasedEmail($emailTemplate, $user);
         }
 
@@ -262,5 +590,40 @@ class SendSequenceEmailsCommand extends Command
         }
 
         return false;
+    }
+
+    /**
+     * Get human-readable timing information for preview mode.
+     */
+    private function getTimingInfo(EmailNotificationTemplate $emailTemplate, int $daysSinceRegistration, bool $willSend = true): string
+    {
+        if ($emailTemplate->timing_unit === 'days_before_expiry' || $emailTemplate->timing_unit === 'on_expired') {
+            if ($willSend) {
+                return "Expiry-based: {$emailTemplate->timing_value} {$emailTemplate->timing_unit}";
+            }
+
+            return 'Expiry-based: Not applicable (user has no trial expiry)';
+        }
+
+        $targetDay = $this->calculateTargetDay($emailTemplate, $daysSinceRegistration);
+        $daysPastTarget = $daysSinceRegistration - $targetDay;
+
+        if ($willSend) {
+            if ($daysPastTarget === 0) {
+                return "Scheduled for day {$targetDay} (today)";
+            }
+
+            return "Scheduled for day {$targetDay} ({$daysPastTarget} days past target)";
+        }
+
+        if ($daysSinceRegistration < $targetDay) {
+            return "Will send on day {$targetDay} (in ".($targetDay - $daysSinceRegistration).' days)';
+        }
+
+        if ($daysPastTarget > 30) {
+            return "Target day {$targetDay} passed ({$daysPastTarget} days ago - too old, skipped)";
+        }
+
+        return 'Already sent or conditions not met';
     }
 }
