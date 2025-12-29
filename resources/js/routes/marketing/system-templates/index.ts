@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Marketing\SystemTemplateController::index
  * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
+ * @route '/marketing/system-templates'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
+ * @route '/marketing/system-templates'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
+ * @route '/marketing/system-templates'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Marketing\SystemTemplateController::edit
  * @see app/Http/Controllers/Marketing/SystemTemplateController.php:42
@@ -104,6 +139,41 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::edit
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:42
+ * @route '/marketing/system-templates/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::edit
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:42
+ * @route '/marketing/system-templates/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::edit
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:42
+ * @route '/marketing/system-templates/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\Marketing\SystemTemplateController::update
  * @see app/Http/Controllers/Marketing/SystemTemplateController.php:78
@@ -156,6 +226,38 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     url: update.url(args, options),
     method: 'put',
 })
+
+    /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::update
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:78
+ * @route '/marketing/system-templates/{id}'
+ */
+    const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\SystemTemplateController::update
+ * @see app/Http/Controllers/Marketing/SystemTemplateController.php:78
+ * @route '/marketing/system-templates/{id}'
+ */
+        updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 const systemTemplates = {
     index: Object.assign(index, index),
 edit: Object.assign(edit, edit),

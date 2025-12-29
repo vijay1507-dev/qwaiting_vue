@@ -1,4 +1,5 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\Client\ClientsController::index
  * @see app/Http/Controllers/Client/ClientsController.php:21
@@ -42,6 +43,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::index
+ * @see app/Http/Controllers/Client/ClientsController.php:21
+ * @route '/clients'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::index
+ * @see app/Http/Controllers/Client/ClientsController.php:21
+ * @route '/clients'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::index
+ * @see app/Http/Controllers/Client/ClientsController.php:21
+ * @route '/clients'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Client\ClientsController::show
  * @see app/Http/Controllers/Client/ClientsController.php:123
@@ -104,6 +140,41 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::show
+ * @see app/Http/Controllers/Client/ClientsController.php:123
+ * @route '/clients/{id}'
+ */
+    const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::show
+ * @see app/Http/Controllers/Client/ClientsController.php:123
+ * @route '/clients/{id}'
+ */
+        showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::show
+ * @see app/Http/Controllers/Client/ClientsController.php:123
+ * @route '/clients/{id}'
+ */
+        showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\Client\ClientsController::edit
  * @see app/Http/Controllers/Client/ClientsController.php:371
@@ -166,6 +237,41 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::edit
+ * @see app/Http/Controllers/Client/ClientsController.php:371
+ * @route '/clients/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::edit
+ * @see app/Http/Controllers/Client/ClientsController.php:371
+ * @route '/clients/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::edit
+ * @see app/Http/Controllers/Client/ClientsController.php:371
+ * @route '/clients/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\Client\ClientsController::emailLogs
  * @see app/Http/Controllers/Client/ClientsController.php:247
@@ -228,6 +334,41 @@ emailLogs.head = (args: { id: string | number } | [id: string | number ] | strin
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::emailLogs
+ * @see app/Http/Controllers/Client/ClientsController.php:247
+ * @route '/clients/{id}/email-logs'
+ */
+    const emailLogsForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: emailLogs.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::emailLogs
+ * @see app/Http/Controllers/Client/ClientsController.php:247
+ * @route '/clients/{id}/email-logs'
+ */
+        emailLogsForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: emailLogs.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::emailLogs
+ * @see app/Http/Controllers/Client/ClientsController.php:247
+ * @route '/clients/{id}/email-logs'
+ */
+        emailLogsForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: emailLogs.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    emailLogs.form = emailLogsForm
 /**
 * @see \App\Http\Controllers\Client\ClientsController::update
  * @see app/Http/Controllers/Client/ClientsController.php:432
@@ -281,6 +422,37 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     method: 'put',
 })
 
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::update
+ * @see app/Http/Controllers/Client/ClientsController.php:432
+ * @route '/clients/{id}'
+ */
+    const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::update
+ * @see app/Http/Controllers/Client/ClientsController.php:432
+ * @route '/clients/{id}'
+ */
+        updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Client\ClientsController::resetPassword
  * @see app/Http/Controllers/Client/ClientsController.php:481
@@ -333,6 +505,28 @@ resetPassword.post = (args: { id: string | number } | [id: string | number ] | s
     url: resetPassword.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Client\ClientsController::resetPassword
+ * @see app/Http/Controllers/Client/ClientsController.php:481
+ * @route '/clients/{id}/reset-password'
+ */
+    const resetPasswordForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: resetPassword.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Client\ClientsController::resetPassword
+ * @see app/Http/Controllers/Client/ClientsController.php:481
+ * @route '/clients/{id}/reset-password'
+ */
+        resetPasswordForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: resetPassword.url(args, options),
+            method: 'post',
+        })
+    
+    resetPassword.form = resetPasswordForm
 const clients = {
     index: Object.assign(index, index),
 show: Object.assign(show, show),

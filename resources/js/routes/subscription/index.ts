@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 import features from './features'
 import packages from './packages'
 import coupons from './coupons'
@@ -45,6 +45,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::index
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:32
+ * @route '/subscription'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::index
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:32
+ * @route '/subscription'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::index
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:32
+ * @route '/subscription'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Subscription\SubscriptionController::preview
  * @see app/Http/Controllers/Subscription/SubscriptionController.php:430
@@ -87,6 +122,42 @@ preview.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: preview.url(options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::preview
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:430
+ * @route '/subscription/preview'
+ */
+    const previewForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: preview.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::preview
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:430
+ * @route '/subscription/preview'
+ */
+        previewForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: preview.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Subscription\SubscriptionController::preview
+ * @see app/Http/Controllers/Subscription/SubscriptionController.php:430
+ * @route '/subscription/preview'
+ */
+        previewForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: preview.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    preview.form = previewForm
 const subscription = {
     index: Object.assign(index, index),
 features: Object.assign(features, features),

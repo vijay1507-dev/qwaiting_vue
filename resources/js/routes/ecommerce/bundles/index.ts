@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::create
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
@@ -42,6 +42,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
@@ -103,6 +138,42 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     url: edit.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:490
+ * @route '/ecommerce/bundles/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 const bundles = {
     create: Object.assign(create, create),
 edit: Object.assign(edit, edit),

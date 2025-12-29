@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::test
  * @see app/Http/Controllers/Marketing/MarketingController.php:458
@@ -51,6 +51,28 @@ test.post = (args: { id: string | number } | [id: string | number ] | string | n
     url: test.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::test
+ * @see app/Http/Controllers/Marketing/MarketingController.php:458
+ * @route '/marketing/email-templates/{id}/test'
+ */
+    const testForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: test.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::test
+ * @see app/Http/Controllers/Marketing/MarketingController.php:458
+ * @route '/marketing/email-templates/{id}/test'
+ */
+        testForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: test.url(args, options),
+            method: 'post',
+        })
+    
+    test.form = testForm
 const emailTemplates = {
     test: Object.assign(test, test),
 }

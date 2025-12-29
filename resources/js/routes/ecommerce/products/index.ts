@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::create
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
@@ -42,6 +42,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::create
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
@@ -104,6 +139,41 @@ edit.head = (args: { id: string | number } | [id: string | number ] | string | n
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/{id}/edit'
+ */
+    const editForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/{id}/edit'
+ */
+        editForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::edit
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:430
+ * @route '/ecommerce/products/{id}/edit'
+ */
+        editForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\Ecommerce\EcommerceController::view
  * @see app/Http/Controllers/Ecommerce/EcommerceController.php:172
@@ -165,6 +235,42 @@ view.head = (args: { id: string | number } | [id: string | number ] | string | n
     url: view.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:172
+ * @route '/ecommerce/products/{id}'
+ */
+    const viewForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: view.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:172
+ * @route '/ecommerce/products/{id}'
+ */
+        viewForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: view.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Ecommerce\EcommerceController::view
+ * @see app/Http/Controllers/Ecommerce/EcommerceController.php:172
+ * @route '/ecommerce/products/{id}'
+ */
+        viewForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: view.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    view.form = viewForm
 const products = {
     create: Object.assign(create, create),
 edit: Object.assign(edit, edit),

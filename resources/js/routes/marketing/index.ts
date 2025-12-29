@@ -1,9 +1,11 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
 import campaignsF10cdd from './campaigns'
 import sequences883570 from './sequences'
 import emailTemplates from './email-templates'
 import workflowsC7a9dd from './workflows'
-import systemTemplatesF10cdd from './system-templates'
+import systemTemplates from './system-templates'
+
+export { default as systemTemplates } from './system-templates'
 /**
  * @see routes/web.php:55
  * @route '/marketing'
@@ -43,6 +45,38 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+ * @see routes/web.php:55
+ * @route '/marketing'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+ * @see routes/web.php:55
+ * @route '/marketing'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+ * @see routes/web.php:55
+ * @route '/marketing'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::campaigns
  * @see app/Http/Controllers/Marketing/MarketingController.php:76
@@ -86,6 +120,41 @@ campaigns.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::campaigns
+ * @see app/Http/Controllers/Marketing/MarketingController.php:76
+ * @route '/marketing/campaigns'
+ */
+    const campaignsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: campaigns.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::campaigns
+ * @see app/Http/Controllers/Marketing/MarketingController.php:76
+ * @route '/marketing/campaigns'
+ */
+        campaignsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: campaigns.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::campaigns
+ * @see app/Http/Controllers/Marketing/MarketingController.php:76
+ * @route '/marketing/campaigns'
+ */
+        campaignsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: campaigns.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    campaigns.form = campaignsForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::sequences
  * @see app/Http/Controllers/Marketing/MarketingController.php:184
@@ -129,6 +198,41 @@ sequences.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::sequences
+ * @see app/Http/Controllers/Marketing/MarketingController.php:184
+ * @route '/marketing/sequences'
+ */
+    const sequencesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: sequences.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::sequences
+ * @see app/Http/Controllers/Marketing/MarketingController.php:184
+ * @route '/marketing/sequences'
+ */
+        sequencesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: sequences.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::sequences
+ * @see app/Http/Controllers/Marketing/MarketingController.php:184
+ * @route '/marketing/sequences'
+ */
+        sequencesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: sequences.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    sequences.form = sequencesForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::workflows
  * @see app/Http/Controllers/Marketing/MarketingController.php:226
@@ -172,6 +276,41 @@ workflows.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::workflows
+ * @see app/Http/Controllers/Marketing/MarketingController.php:226
+ * @route '/marketing/workflows'
+ */
+    const workflowsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: workflows.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::workflows
+ * @see app/Http/Controllers/Marketing/MarketingController.php:226
+ * @route '/marketing/workflows'
+ */
+        workflowsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: workflows.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::workflows
+ * @see app/Http/Controllers/Marketing/MarketingController.php:226
+ * @route '/marketing/workflows'
+ */
+        workflowsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: workflows.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    workflows.form = workflowsForm
 /**
 * @see \App\Http\Controllers\Marketing\MarketingController::tracking
  * @see app/Http/Controllers/Marketing/MarketingController.php:303
@@ -214,48 +353,42 @@ tracking.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: tracking.url(options),
     method: 'head',
 })
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
- */
-export const systemTemplates = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: systemTemplates.url(options),
-    method: 'get',
-})
 
-systemTemplates.definition = {
-    methods: ["get","head"],
-    url: '/marketing/system-templates',
-} satisfies RouteDefinition<["get","head"]>
+    /**
+* @see \App\Http\Controllers\Marketing\MarketingController::tracking
+ * @see app/Http/Controllers/Marketing/MarketingController.php:303
+ * @route '/marketing/tracking'
+ */
+    const trackingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: tracking.url(options),
+        method: 'get',
+    })
 
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::tracking
+ * @see app/Http/Controllers/Marketing/MarketingController.php:303
+ * @route '/marketing/tracking'
  */
-systemTemplates.url = (options?: RouteQueryOptions) => {
-    return systemTemplates.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
+        trackingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: tracking.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\Marketing\MarketingController::tracking
+ * @see app/Http/Controllers/Marketing/MarketingController.php:303
+ * @route '/marketing/tracking'
  */
-systemTemplates.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: systemTemplates.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http\Controllers\Marketing\SystemTemplateController.php:18
- * @route '/marketing/system-templates'
- */
-systemTemplates.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: systemTemplates.url(options),
-    method: 'head',
-})
+        trackingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: tracking.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    tracking.form = trackingForm
 const marketing = {
     index: Object.assign(index, index),
 campaigns: Object.assign(campaigns, campaignsF10cdd),
@@ -263,7 +396,7 @@ sequences: Object.assign(sequences, sequences883570),
 emailTemplates: Object.assign(emailTemplates, emailTemplates),
 workflows: Object.assign(workflows, workflowsC7a9dd),
 tracking: Object.assign(tracking, tracking),
-systemTemplates: Object.assign(systemTemplates, systemTemplatesF10cdd),
+systemTemplates: Object.assign(systemTemplates, systemTemplates),
 }
 
 export default marketing
