@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 import confirmD7e05f from './confirm'
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::request
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:22
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:24
  * @route '/crm/forgot-password'
  */
 export const request = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ request.definition = {
 
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::request
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:22
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:24
  * @route '/crm/forgot-password'
  */
 request.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ request.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::request
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:22
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:24
  * @route '/crm/forgot-password'
  */
 request.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ request.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::request
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:22
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:24
  * @route '/crm/forgot-password'
  */
 request.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -107,7 +107,7 @@ reset.head = (args: { token: string | number } | [token: string | number ] | str
 
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::email
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:30
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:35
  * @route '/crm/forgot-password'
  */
 export const email = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -122,7 +122,7 @@ email.definition = {
 
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::email
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:30
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:35
  * @route '/crm/forgot-password'
  */
 email.url = (options?: RouteQueryOptions) => {
@@ -131,7 +131,7 @@ email.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \Laravel\Fortify\Http\Controllers\PasswordResetLinkController::email
- * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:30
+ * @see vendor/laravel/fortify/src/Http/Controllers/PasswordResetLinkController.php:35
  * @route '/crm/forgot-password'
  */
 email.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

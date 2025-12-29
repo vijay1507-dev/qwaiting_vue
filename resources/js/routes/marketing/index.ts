@@ -3,7 +3,7 @@ import campaignsF10cdd from './campaigns'
 import sequences883570 from './sequences'
 import emailTemplates from './email-templates'
 import workflowsC7a9dd from './workflows'
-import systemTemplatesF10cdd from './system-templates'
+import systemTemplates from './system-templates'
 /**
  * @see routes/web.php:55
  * @route '/marketing'
@@ -214,48 +214,13 @@ tracking.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: tracking.url(options),
     method: 'head',
 })
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
- */
-export const systemTemplates = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: systemTemplates.url(options),
-    method: 'get',
-})
-
-systemTemplates.definition = {
-    methods: ["get","head"],
-    url: '/marketing/system-templates',
-} satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
+ * System Templates routes
+ * @see routes/web.php:74
  */
-systemTemplates.url = (options?: RouteQueryOptions) => {
-    return systemTemplates.definition.url + queryParams(options)
-}
+export { systemTemplates }
 
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http/Controllers/Marketing/SystemTemplateController.php:18
- * @route '/marketing/system-templates'
- */
-systemTemplates.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: systemTemplates.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\Marketing\SystemTemplateController::index
- * @see app/Http\Controllers\Marketing\SystemTemplateController.php:18
- * @route '/marketing/system-templates'
- */
-systemTemplates.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: systemTemplates.url(options),
-    method: 'head',
-})
 const marketing = {
     index: Object.assign(index, index),
 campaigns: Object.assign(campaigns, campaignsF10cdd),
@@ -263,7 +228,7 @@ sequences: Object.assign(sequences, sequences883570),
 emailTemplates: Object.assign(emailTemplates, emailTemplates),
 workflows: Object.assign(workflows, workflowsC7a9dd),
 tracking: Object.assign(tracking, tracking),
-systemTemplates: Object.assign(systemTemplates, systemTemplatesF10cdd),
+systemTemplates: Object.assign(systemTemplates, systemTemplates),
 }
 
 export default marketing
