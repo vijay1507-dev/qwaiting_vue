@@ -461,7 +461,7 @@ onUnmounted(() => {
 
                 <!-- Navigation Tabs -->
                 <div class="flex gap-0 border-b border-border">
-                    <Link
+                    <!-- <Link
                         :href="'/marketing/campaigns'"
                         :class="[
                             'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
@@ -469,7 +469,7 @@ onUnmounted(() => {
                         ]"
                     >
                         Campaigns
-                    </Link>
+                    </Link> -->
                     <Link
                         :href="sequences().url"
                         class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"

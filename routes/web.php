@@ -53,7 +53,7 @@ Route::get('quotes/{id}/edit', function ($id) {
 
 Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
     Route::get('/', function () {
-        return redirect()->route('marketing.campaigns');
+        return redirect()->route('marketing.sequences');
     })->name('index');
     Route::get('/campaigns', [App\Http\Controllers\Marketing\MarketingController::class, 'campaigns'])->name('campaigns');
     Route::get('/campaigns/create', [App\Http\Controllers\Marketing\MarketingController::class, 'campaignView'])->name('campaigns.create');

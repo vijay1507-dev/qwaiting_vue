@@ -15,7 +15,7 @@ import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
 import { index as clientsIndex } from '@/routes/clients';
 import { index as quotesIndex } from '@/routes/quotes';
-import { campaigns as marketingCampaigns } from '@/routes/marketing';
+import { sequences as marketingSequences } from '@/routes/marketing';
 import { index as financeIndex } from '@/routes/finance';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
 import { index as subscriptionIndex } from '@/routes/subscription';
@@ -30,31 +30,31 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
-    {
+    /* {
         title: 'Leads',
         href: leadsIndex(),
         icon: Users,
-    },
+    }, */
     {
         title: 'Clients',
         href: clientsIndex(),
         icon: Briefcase,
     },
-    {
+    /*{
         title: 'Quotes',
         href: quotesIndex(),
         icon: Receipt,
-    },
+    }, */
     {
         title: 'Marketing',
-        href: marketingCampaigns(),
+        href: marketingSequences(),
         icon: Mail,
     },
-    {
+    /* {
         title: 'Finance & Analytics',
         href: financeIndex(),
         icon: DollarSign,
-    },
+    }, */
     {
         title: 'E-Commerce',
         href: ecommerceIndex(),
