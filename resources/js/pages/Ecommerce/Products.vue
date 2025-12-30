@@ -4,10 +4,11 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, bundles, cart, orders } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, ShoppingCart, Eye, Package, Plus, Edit } from 'lucide-vue-next';
+import { Search, ShoppingCart, Eye, Package, Plus, Edit, Loader2 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 interface Product {
     id: string;
@@ -90,6 +91,45 @@ const getStockColor = (stock: number): string => {
         return 'text-yellow-600 dark:text-yellow-400';
     }
     return 'text-green-600 dark:text-green-400';
+};
+
+const { success, error: showError } = useToast();
+const loadingProductId = ref<string | null>(null);
+
+const addToCart = async (productId: string) => {
+    if (loadingProductId.value === productId) return;
+    
+    loadingProductId.value = productId;
+    
+    try {
+        const response = await fetch('/api/ecommerce/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 1,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            success('Product added to cart successfully!');
+            router.reload({ only: [] });
+        } else {
+            throw new Error(data.message || 'Failed to add product to cart');
+        }
+    } catch (err) {
+        console.error('Error adding product to cart:', err);
+        showError(err instanceof Error ? err.message : 'Failed to add product to cart. Please try again.');
+    } finally {
+        loadingProductId.value = null;
+    }
 };
 </script>
 
@@ -215,8 +255,14 @@ const getStockColor = (stock: number): string => {
                             >
                                 <td class="px-4 py-3 align-middle">
                                     <div class="flex items-center gap-3">
-                                        <div class="flex size-10 items-center justify-center rounded-md bg-muted">
-                                            <Package class="size-5 text-muted-foreground" />
+                                        <div class="flex size-10 items-center justify-center rounded-md bg-muted overflow-hidden shrink-0">
+                                            <img
+                                                v-if="product.image"
+                                                :src="product.image.startsWith('http') || product.image.startsWith('/') ? product.image : `/storage/${product.image}`"
+                                                :alt="product.name"
+                                                class="w-full h-full object-cover"
+                                            />
+                                            <Package v-else class="size-5 text-muted-foreground" />
                                         </div>
                                         <div>
                                             <span class="text-foreground font-medium">{{ product.name }}</span>
@@ -257,10 +303,13 @@ const getStockColor = (stock: number): string => {
                                             </button>
                                         </Link>
                                         <button
-                                            class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                            class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Add to Cart"
+                                            :disabled="loadingProductId === product.id || product.stock === 0"
+                                            @click="addToCart(product.id)"
                                         >
-                                            <ShoppingCart class="size-4 text-muted-foreground" />
+                                            <Loader2 v-if="loadingProductId === product.id" class="size-4 text-muted-foreground animate-spin" />
+                                            <ShoppingCart v-else class="size-4 text-muted-foreground" />
                                         </button>
                                     </div>
                                 </td>

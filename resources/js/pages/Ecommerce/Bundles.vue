@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, products, cart, orders } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Package, Tag, Plus, Edit } from 'lucide-vue-next';
+import { ShoppingCart, Package, Tag, Plus, Edit, Loader2 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 interface Bundle {
     id: string;
@@ -47,6 +49,45 @@ const formatCurrency = (amount: number): string => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     }).format(amount);
+};
+
+const { success, error: showError } = useToast();
+const loadingBundleId = ref<string | null>(null);
+
+const addToCart = async (bundleId: string) => {
+    if (loadingBundleId.value === bundleId) return;
+    
+    loadingBundleId.value = bundleId;
+    
+    try {
+        const response = await fetch('/api/ecommerce/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                bundle_id: bundleId,
+                quantity: 1,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            success('Bundle added to cart successfully!');
+            router.reload({ only: [] });
+        } else {
+            throw new Error(data.message || 'Failed to add bundle to cart');
+        }
+    } catch (err) {
+        console.error('Error adding bundle to cart:', err);
+        showError(err instanceof Error ? err.message : 'Failed to add bundle to cart. Please try again.');
+    } finally {
+        loadingBundleId.value = null;
+    }
 };
 </script>
 
@@ -182,8 +223,14 @@ const formatCurrency = (amount: number): string => {
                                                 <Edit class="size-4 text-muted-foreground" />
                                             </button>
                                         </Link>
-                                        <Button size="sm" class="h-8">
-                                            <ShoppingCart class="size-4 mr-2" />
+                                        <Button 
+                                            size="sm" 
+                                            class="h-8"
+                                            :disabled="loadingBundleId === bundle.id"
+                                            @click="addToCart(bundle.id)"
+                                        >
+                                            <Loader2 v-if="loadingBundleId === bundle.id" class="size-4 mr-2 animate-spin" />
+                                            <ShoppingCart v-else class="size-4 mr-2" />
                                             Add to Cart
                                         </Button>
                                     </div>

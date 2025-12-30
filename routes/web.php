@@ -93,16 +93,39 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
 
 Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
     Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index');
+    
+    // Products
     Route::get('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'products'])->name('products');
     Route::get('/products/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.create');
-    Route::get('/products/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.edit');
+    Route::post('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeProduct'])->name('products.store');
     Route::get('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productView'])->name('products.view');
+    Route::get('/products/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.edit');
+    Route::put('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateProduct'])->name('products.update');
+    Route::delete('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyProduct'])->name('products.destroy');
+    
+    // Bundles
     Route::get('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundles'])->name('bundles');
     Route::get('/bundles/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.create');
+    Route::post('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeBundle'])->name('bundles.store');
     Route::get('/bundles/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.edit');
+    Route::put('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateBundle'])->name('bundles.update');
+    Route::delete('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyBundle'])->name('bundles.destroy');
+    
+    // Cart
     Route::get('/cart', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'cart'])->name('cart');
+    
+    // Orders
     Route::get('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orders'])->name('orders');
+    Route::post('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeOrder'])->name('orders.store');
     Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
+    Route::put('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateOrder'])->name('orders.update');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('api/ecommerce')->name('api.ecommerce.')->group(function () {
+    Route::post('/cart/add', [App\Http\Controllers\Api\CartController::class, 'add'])->name('cart.add');
+    Route::put('/cart/{id}', [App\Http\Controllers\Api\CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{id}', [App\Http\Controllers\Api\CartController::class, 'remove'])->name('cart.remove');
+    Route::delete('/cart', [App\Http\Controllers\Api\CartController::class, 'clear'])->name('cart.clear');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {

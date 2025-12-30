@@ -3,545 +3,412 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Requests\StoreBundleRequest;
+use App\Http\Requests\UpdateBundleRequest;
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
+use App\Models\Product;
+use App\Models\ProductCategory;
+use App\Models\Bundle;
+use App\Models\Order;
+use App\Services\Ecommerce\ProductService;
+use App\Services\Ecommerce\BundleService;
+use App\Services\Ecommerce\OrderService;
+use App\Services\Ecommerce\CartService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class EcommerceController extends Controller
 {
-    public function index()
+    public function __construct(
+        protected ProductService $productService,
+        protected BundleService $bundleService,
+        protected OrderService $orderService,
+        protected CartService $cartService
+    ) {}
+
+    public function index(): Response
     {
+        $stats = [
+            'totalProducts' => Product::where('is_active', true)->count(),
+            'totalBundles' => Bundle::where('is_active', true)->count(),
+            'totalOrders' => Order::count(),
+            'totalRevenue' => Order::where('payment_status', 'paid')->sum('total'),
+            'pendingOrders' => Order::where('status', 'pending')->count(),
+            'lowStockItems' => $this->productService->getLowStockProducts()->count(),
+        ];
+
+        $recentOrders = Order::with('items')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => (string) $order->id,
+                    'customer' => $order->customer_name,
+                    'products' => $order->items->pluck('item_sku')->toArray(),
+                    'total' => (float) $order->total,
+                    'status' => $order->status,
+                    'date' => $order->order_date->format('Y-m-d'),
+                ];
+            });
+
         return Inertia::render('Ecommerce/Index', [
-            'stats' => [
-                'totalProducts' => 7,
-                'totalBundles' => 2,
-                'totalOrders' => 45,
-                'totalRevenue' => 125000,
-                'pendingOrders' => 5,
-                'lowStockItems' => 2,
-            ],
-            'recentOrders' => [
-                [
-                    'id' => 'ORD-2025-001',
-                    'customer' => 'Acme Corporation',
-                    'products' => ['QK-15', 'DS-32'],
-                    'total' => 1798.00,
-                    'status' => 'completed',
-                    'date' => '2025-01-15',
-                ],
-                [
-                    'id' => 'ORD-2025-002',
-                    'customer' => 'Tech Solutions Inc',
-                    'products' => ['Pro Bundle'],
-                    'total' => 2461.00,
-                    'status' => 'processing',
-                    'date' => '2025-01-18',
-                ],
-                [
-                    'id' => 'ORD-2025-003',
-                    'customer' => 'Global Enterprises',
-                    'products' => ['QK-22', 'DS-55'],
-                    'total' => 2798.00,
-                    'status' => 'shipped',
-                    'date' => '2025-01-20',
-                ],
-            ],
+            'stats' => $stats,
+            'recentOrders' => $recentOrders,
         ]);
     }
 
-    public function products()
+    public function products(): Response
     {
-        $products = [
-            [
-                'id' => '1',
-                'name' => '15-inch Touch Kiosk',
-                'sku' => 'QK-15',
-                'description' => 'Floor-standing kiosk with ticket printer',
-                'price' => 1299.00,
-                'stock' => 45,
-                'image' => '/images/products/qk-15.jpg',
-                'category' => 'Kiosks',
-                'specifications' => [
-                    'Screen Size' => '15 inches',
-                    'Resolution' => '1920x1080',
-                    'Touch' => 'Capacitive',
-                    'Printer' => 'Included',
-                ],
-            ],
-            [
-                'id' => '2',
-                'name' => '22-inch Touch Kiosk',
-                'sku' => 'QK-22',
-                'description' => 'Premium floor-standing kiosk',
-                'price' => 1899.00,
-                'stock' => 32,
-                'image' => '/images/products/qk-22.jpg',
-                'category' => 'Kiosks',
-                'specifications' => [
-                    'Screen Size' => '22 inches',
-                    'Resolution' => '1920x1080',
-                    'Touch' => 'Capacitive',
-                    'Printer' => 'Included',
-                ],
-            ],
-            [
-                'id' => '3',
-                'name' => 'Wall-Mount Kiosk',
-                'sku' => 'QK-WALL',
-                'description' => 'Space-saving wall mount solution',
-                'price' => 899.00,
-                'stock' => 28,
-                'image' => '/images/products/qk-wall.jpg',
-                'category' => 'Kiosks',
-                'specifications' => [
-                    'Screen Size' => '15 inches',
-                    'Resolution' => '1920x1080',
-                    'Touch' => 'Capacitive',
-                    'Mount' => 'Wall',
-                ],
-            ],
-            [
-                'id' => '4',
-                'name' => '32-inch Queue Display',
-                'sku' => 'DS-32',
-                'description' => 'HD display for queue status',
-                'price' => 499.00,
-                'stock' => 67,
-                'image' => '/images/products/ds-32.jpg',
-                'category' => 'Displays',
-                'specifications' => [
-                    'Screen Size' => '32 inches',
-                    'Resolution' => '1920x1080',
-                    'Type' => 'LED',
-                    'Mount' => 'VESA',
-                ],
-            ],
-            [
-                'id' => '5',
-                'name' => '55-inch Queue Display',
-                'sku' => 'DS-55',
-                'description' => 'Large format queue display',
-                'price' => 899.00,
-                'stock' => 24,
-                'image' => '/images/products/ds-55.jpg',
-                'category' => 'Displays',
-                'specifications' => [
-                    'Screen Size' => '55 inches',
-                    'Resolution' => '3840x2160',
-                    'Type' => 'LED',
-                    'Mount' => 'VESA',
-                ],
-            ],
-            [
-                'id' => '6',
-                'name' => 'Thermal Ticket Printer',
-                'sku' => 'TP-80',
-                'description' => 'High-speed ticket printer',
-                'price' => 299.00,
-                'stock' => 89,
-                'image' => '/images/products/tp-80.jpg',
-                'category' => 'Accessories',
-                'specifications' => [
-                    'Type' => 'Thermal',
-                    'Speed' => '80mm/s',
-                    'Connectivity' => 'USB, Ethernet',
-                    'Paper Width' => '80mm',
-                ],
-            ],
-            [
-                'id' => '7',
-                'name' => 'Numeric Keyboard',
-                'sku' => 'KB-NUM',
-                'description' => 'Customer input keyboard',
-                'price' => 79.00,
-                'stock' => 156,
-                'image' => '/images/products/kb-num.jpg',
-                'category' => 'Accessories',
-                'specifications' => [
-                    'Type' => 'Numeric',
-                    'Keys' => '12',
-                    'Connectivity' => 'USB',
-                    'Material' => 'Plastic',
-                ],
-            ],
-        ];
+        $products = Product::with(['category', 'specifications'])
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($product) {
+                $specs = $product->specifications->mapWithKeys(function ($spec) {
+                    return [$spec->spec_key => $spec->spec_value];
+                })->toArray();
+
+                return [
+                    'id' => (string) $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'description' => $product->description,
+                    'price' => (float) $product->price,
+                    'stock' => $product->stock,
+                    'image' => $product->image,
+                    'category' => $product->category?->name ?? 'Uncategorized',
+                    'specifications' => $specs,
+                ];
+            });
 
         return Inertia::render('Ecommerce/Products', [
             'products' => $products,
         ]);
     }
 
-    public function productView($id)
+    public function productView(string $id): Response
     {
-        $products = [
-            '1' => [
-                'id' => '1',
-                'name' => '15-inch Touch Kiosk',
-                'sku' => 'QK-15',
-                'description' => 'Floor-standing kiosk with ticket printer',
-                'price' => 1299.00,
-                'stock' => 45,
-                'image' => '/images/products/qk-15.jpg',
-                'category' => 'Kiosks',
-                'specifications' => [
-                    'Screen Size' => '15 inches',
-                    'Resolution' => '1920x1080',
-                    'Touch' => 'Capacitive',
-                    'Printer' => 'Included',
-                ],
-                'features' => [
-                    'High-resolution touchscreen display',
-                    'Built-in thermal ticket printer',
-                    'Durable floor-standing design',
-                    'Easy to install and configure',
-                ],
-            ],
-            '2' => [
-                'id' => '2',
-                'name' => '22-inch Touch Kiosk',
-                'sku' => 'QK-22',
-                'description' => 'Premium floor-standing kiosk',
-                'price' => 1899.00,
-                'stock' => 32,
-                'image' => '/images/products/qk-22.jpg',
-                'category' => 'Kiosks',
-                'specifications' => [
-                    'Screen Size' => '22 inches',
-                    'Resolution' => '1920x1080',
-                    'Touch' => 'Capacitive',
-                    'Printer' => 'Included',
-                ],
-                'features' => [
-                    'Larger premium display',
-                    'Enhanced processing power',
-                    'Advanced security features',
-                    'Extended warranty included',
-                ],
-            ],
+        $product = Product::with(['category', 'specifications'])
+            ->findOrFail($id);
+
+        $specs = $product->specifications->mapWithKeys(function ($spec) {
+            return [$spec->spec_key => $spec->spec_value];
+        })->toArray();
+
+        $productData = [
+            'id' => (string) $product->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'description' => $product->description,
+            'price' => (float) $product->price,
+            'stock' => $product->stock,
+            'image' => $product->image,
+            'category' => $product->category?->name ?? 'Uncategorized',
+            'specifications' => $specs,
+            'features' => $product->features ?? [],
         ];
 
-        $product = $products[$id] ?? $products['1'];
-
         return Inertia::render('Ecommerce/ProductView', [
-            'product' => $product,
+            'product' => $productData,
         ]);
     }
 
-    public function bundles()
+    public function productForm(?string $id = null): Response
     {
-        $bundles = [
-            [
-                'id' => '1',
-                'name' => 'Starter Bundle',
-                'products' => ['QK-15', 'DS-32', 'TP-80'],
-                'productNames' => [
-                    '15-inch Touch Kiosk',
-                    '32-inch Queue Display',
-                    'Thermal Ticket Printer',
-                ],
-                'discount' => 15,
-                'originalPrice' => 2097.00,
-                'price' => 1784.00,
-                'savings' => 313.00,
-                'description' => 'Perfect starter package for small businesses',
-            ],
-            [
-                'id' => '2',
-                'name' => 'Pro Bundle',
-                'products' => ['QK-22', 'DS-55', 'TP-80', 'KB-NUM'],
-                'productNames' => [
-                    '22-inch Touch Kiosk',
-                    '55-inch Queue Display',
-                    'Thermal Ticket Printer',
-                    'Numeric Keyboard',
-                ],
-                'discount' => 20,
-                'originalPrice' => 3076.00,
-                'price' => 2461.00,
-                'savings' => 615.00,
-                'description' => 'Complete professional solution for larger operations',
-            ],
-        ];
+        $product = null;
+        if ($id) {
+            $product = Product::with(['category', 'specifications'])->findOrFail($id);
+            $product = [
+                'id' => (string) $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'description' => $product->description,
+                'price' => (float) $product->price,
+                'stock' => $product->stock,
+                'low_stock_threshold' => $product->low_stock_threshold,
+                'image' => $product->image,
+                'category_id' => $product->category_id ? (string) $product->category_id : null,
+                'features' => $product->features ?? [],
+                'specifications' => $product->specifications->map(function ($spec) {
+                    return [
+                        'spec_key' => $spec->spec_key,
+                        'spec_value' => $spec->spec_value,
+                    ];
+                })->toArray(),
+            ];
+        }
+
+        $categories = ProductCategory::where('is_active', true)
+            ->orderBy('display_order')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => (string) $category->id,
+                    'name' => $category->name,
+                ];
+            });
+
+        return Inertia::render('Ecommerce/ProductForm', [
+            'id' => $id,
+            'product' => $product,
+            'categories' => $categories,
+        ]);
+    }
+
+    public function storeProduct(StoreProductRequest $request): RedirectResponse
+    {
+        $product = $this->productService->create($request->validated());
+
+        return redirect()->route('ecommerce.products')
+            ->with('success', 'Product created successfully.');
+    }
+
+    public function updateProduct(UpdateProductRequest $request, string $id): RedirectResponse
+    {
+        $product = Product::findOrFail($id);
+        $this->productService->update($product, $request->validated());
+
+        return redirect()->route('ecommerce.products')
+            ->with('success', 'Product updated successfully.');
+    }
+
+    public function destroyProduct(string $id): RedirectResponse
+    {
+        $product = Product::findOrFail($id);
+        $this->productService->delete($product);
+
+        return redirect()->route('ecommerce.products')
+            ->with('success', 'Product deleted successfully.');
+    }
+
+    public function bundles(): Response
+    {
+        $bundles = Bundle::with('products')
+            ->where('is_active', true)
+            ->get()
+            ->map(function ($bundle) {
+                return [
+                    'id' => (string) $bundle->id,
+                    'name' => $bundle->name,
+                    'products' => $bundle->products->pluck('sku')->toArray(),
+                    'productNames' => $bundle->products->pluck('name')->toArray(),
+                    'discount' => (float) $bundle->discount_percentage,
+                    'originalPrice' => (float) $bundle->original_price,
+                    'price' => (float) $bundle->price,
+                    'savings' => (float) $bundle->savings,
+                    'description' => $bundle->description,
+                ];
+            });
 
         return Inertia::render('Ecommerce/Bundles', [
             'bundles' => $bundles,
         ]);
     }
 
-    public function cart()
+    public function bundleForm(?string $id = null): Response
     {
+        $bundle = null;
+        if ($id) {
+            $bundle = Bundle::with('products')->findOrFail($id);
+            $bundle = [
+                'id' => (string) $bundle->id,
+                'name' => $bundle->name,
+                'description' => $bundle->description,
+                'discount_percentage' => (float) $bundle->discount_percentage,
+                'is_active' => $bundle->is_active,
+                'products' => $bundle->products->map(function ($product) {
+                    return [
+                        'product_id' => (string) $product->id,
+                        'quantity' => $product->pivot->quantity,
+                    ];
+                })->toArray(),
+            ];
+        }
+
+        $products = Product::where('is_active', true)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => (string) $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'price' => (float) $product->price,
+                ];
+            });
+
+        return Inertia::render('Ecommerce/BundleForm', [
+            'id' => $id,
+            'bundle' => $bundle,
+            'products' => $products,
+        ]);
+    }
+
+    public function storeBundle(StoreBundleRequest $request): RedirectResponse
+    {
+        $bundle = $this->bundleService->create($request->validated());
+
+        return redirect()->route('ecommerce.bundles')
+            ->with('success', 'Bundle created successfully.');
+    }
+
+    public function updateBundle(UpdateBundleRequest $request, string $id): RedirectResponse
+    {
+        $bundle = Bundle::findOrFail($id);
+        $this->bundleService->update($bundle, $request->validated());
+
+        return redirect()->route('ecommerce.bundles')
+            ->with('success', 'Bundle updated successfully.');
+    }
+
+    public function destroyBundle(string $id): RedirectResponse
+    {
+        $bundle = Bundle::findOrFail($id);
+        $this->bundleService->delete($bundle);
+
+        return redirect()->route('ecommerce.bundles')
+            ->with('success', 'Bundle deleted successfully.');
+    }
+
+    public function cart(): Response
+    {
+        $cartItems = $this->cartService->getCartItems();
+        $subtotal = $this->cartService->getCartTotal();
+        $tax = $subtotal * 0.08; // 8% tax
+        $shipping = 0;
+        $total = $subtotal + $tax + $shipping;
+
+        $formattedItems = collect($cartItems)->map(function ($item) {
+            if (isset($item['product'])) {
+                return [
+                    'id' => $item['id'],
+                    'productId' => $item['product_id'],
+                    'name' => $item['product']['name'],
+                    'sku' => $item['product']['sku'],
+                    'price' => $item['product']['price'],
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $item['product']['price'] * $item['quantity'],
+                    'image' => $item['product']['image'] ?? null,
+                ];
+            } elseif (isset($item['bundle'])) {
+                return [
+                    'id' => $item['id'],
+                    'bundleId' => $item['bundle_id'],
+                    'name' => $item['bundle']['name'],
+                    'sku' => 'BUNDLE-' . $item['bundle_id'],
+                    'price' => $item['bundle']['price'],
+                    'quantity' => $item['quantity'],
+                    'subtotal' => $item['bundle']['price'] * $item['quantity'],
+                    'image' => null,
+                ];
+            }
+            return null;
+        })->filter();
+
         return Inertia::render('Ecommerce/Cart', [
-            'cartItems' => [
-                [
-                    'id' => '1',
-                    'productId' => '1',
-                    'name' => '15-inch Touch Kiosk',
-                    'sku' => 'QK-15',
-                    'price' => 1299.00,
-                    'quantity' => 2,
-                    'subtotal' => 2598.00,
-                    'image' => '/images/products/qk-15.jpg',
-                ],
-                [
-                    'id' => '2',
-                    'productId' => '4',
-                    'name' => '32-inch Queue Display',
-                    'sku' => 'DS-32',
-                    'price' => 499.00,
-                    'quantity' => 1,
-                    'subtotal' => 499.00,
-                    'image' => '/images/products/ds-32.jpg',
-                ],
-            ],
-            'subtotal' => 3097.00,
-            'tax' => 247.76,
-            'shipping' => 0.00,
-            'total' => 3344.76,
+            'cartItems' => $formattedItems,
+            'subtotal' => $subtotal,
+            'tax' => $tax,
+            'shipping' => $shipping,
+            'total' => $total,
             'couponCode' => '',
             'couponDiscount' => 0.00,
         ]);
     }
 
-    public function orders()
+    public function orders(): Response
     {
-        $orders = [
-            [
-                'id' => 'ORD-2025-001',
-                'orderNumber' => 'ORD-2025-001',
-                'customer' => 'Acme Corporation',
-                'items' => [
-                    ['name' => '15-inch Touch Kiosk', 'sku' => 'QK-15', 'quantity' => 2, 'price' => 1299.00],
-                    ['name' => '32-inch Queue Display', 'sku' => 'DS-32', 'quantity' => 1, 'price' => 499.00],
-                ],
-                'subtotal' => 3097.00,
-                'tax' => 247.76,
-                'shipping' => 50.00,
-                'total' => 3394.76,
-                'status' => 'completed',
-                'paymentStatus' => 'paid',
-                'paymentMethod' => 'Stripe',
-                'shippingAddress' => '123 Main St, New York, NY 10001',
-                'orderDate' => '2025-01-15',
-                'shippedDate' => '2025-01-16',
-                'deliveredDate' => '2025-01-20',
-                'trackingNumber' => 'TRACK-123456',
-            ],
-            [
-                'id' => 'ORD-2025-002',
-                'orderNumber' => 'ORD-2025-002',
-                'customer' => 'Tech Solutions Inc',
-                'items' => [
-                    ['name' => 'Pro Bundle', 'sku' => 'PRO-BUNDLE', 'quantity' => 1, 'price' => 2461.00],
-                ],
-                'subtotal' => 2461.00,
-                'tax' => 196.88,
-                'shipping' => 75.00,
-                'total' => 2732.88,
-                'status' => 'processing',
-                'paymentStatus' => 'paid',
-                'paymentMethod' => 'PayPal',
-                'shippingAddress' => '456 Tech Ave, San Francisco, CA 94102',
-                'orderDate' => '2025-01-18',
-                'shippedDate' => null,
-                'deliveredDate' => null,
-                'trackingNumber' => null,
-            ],
-            [
-                'id' => 'ORD-2025-003',
-                'orderNumber' => 'ORD-2025-003',
-                'customer' => 'Global Enterprises',
-                'items' => [
-                    ['name' => '22-inch Touch Kiosk', 'sku' => 'QK-22', 'quantity' => 1, 'price' => 1899.00],
-                    ['name' => '55-inch Queue Display', 'sku' => 'DS-55', 'quantity' => 1, 'price' => 899.00],
-                ],
-                'subtotal' => 2798.00,
-                'tax' => 223.84,
-                'shipping' => 100.00,
-                'total' => 3121.84,
-                'status' => 'shipped',
-                'paymentStatus' => 'paid',
-                'paymentMethod' => 'Stripe',
-                'shippingAddress' => '789 Global Blvd, Chicago, IL 60601',
-                'orderDate' => '2025-01-20',
-                'shippedDate' => '2025-01-21',
-                'deliveredDate' => null,
-                'trackingNumber' => 'TRACK-789012',
-            ],
-            [
-                'id' => 'ORD-2025-004',
-                'orderNumber' => 'ORD-2025-004',
-                'customer' => 'Retail Solutions',
-                'items' => [
-                    ['name' => 'Starter Bundle', 'sku' => 'STARTER-BUNDLE', 'quantity' => 1, 'price' => 1784.00],
-                ],
-                'subtotal' => 1784.00,
-                'tax' => 142.72,
-                'shipping' => 0.00,
-                'total' => 1926.72,
-                'status' => 'pending',
-                'paymentStatus' => 'pending',
-                'paymentMethod' => null,
-                'shippingAddress' => '321 Retail St, Miami, FL 33101',
-                'orderDate' => '2025-01-22',
-                'shippedDate' => null,
-                'deliveredDate' => null,
-                'trackingNumber' => null,
-            ],
-        ];
+        $orders = Order::with('items')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => (string) $order->id,
+                    'orderNumber' => $order->order_number,
+                    'customer' => $order->customer_name,
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'name' => $item->item_name,
+                            'sku' => $item->item_sku,
+                            'quantity' => $item->quantity,
+                            'price' => (float) $item->unit_price,
+                        ];
+                    })->toArray(),
+                    'subtotal' => (float) $order->subtotal,
+                    'tax' => (float) $order->tax,
+                    'shipping' => (float) $order->shipping,
+                    'total' => (float) $order->total,
+                    'status' => $order->status,
+                    'paymentStatus' => $order->payment_status,
+                    'paymentMethod' => $order->payment_method,
+                    'shippingAddress' => $order->shipping_address,
+                    'orderDate' => $order->order_date->format('Y-m-d'),
+                    'shippedDate' => $order->shipped_date?->format('Y-m-d'),
+                    'deliveredDate' => $order->delivered_date?->format('Y-m-d'),
+                    'trackingNumber' => $order->tracking_number,
+                ];
+            });
 
         return Inertia::render('Ecommerce/Orders', [
             'orders' => $orders,
         ]);
     }
 
-    public function orderView($id)
+    public function orderView(string $id): Response
     {
-        $orders = [
-            'ORD-2025-001' => [
-                'id' => 'ORD-2025-001',
-                'orderNumber' => 'ORD-2025-001',
-                'customer' => 'Acme Corporation',
-                'items' => [
-                    ['name' => '15-inch Touch Kiosk', 'sku' => 'QK-15', 'quantity' => 2, 'price' => 1299.00],
-                    ['name' => '32-inch Queue Display', 'sku' => 'DS-32', 'quantity' => 1, 'price' => 499.00],
-                ],
-                'subtotal' => 3097.00,
-                'tax' => 247.76,
-                'shipping' => 50.00,
-                'total' => 3394.76,
-                'status' => 'completed',
-                'paymentStatus' => 'paid',
-                'paymentMethod' => 'Stripe',
-                'shippingAddress' => '123 Main St, New York, NY 10001',
-                'billingAddress' => '123 Main St, New York, NY 10001',
-                'orderDate' => '2025-01-15',
-                'shippedDate' => '2025-01-16',
-                'deliveredDate' => '2025-01-20',
-                'trackingNumber' => 'TRACK-123456',
-                'invoiceNumber' => 'INV-2025-001',
-            ],
-        ];
+        $order = Order::with('items.product', 'items.bundle')->findOrFail($id);
 
-        $order = $orders[$id] ?? $orders['ORD-2025-001'];
+        $orderData = [
+            'id' => (string) $order->id,
+            'orderNumber' => $order->order_number,
+            'customer' => $order->customer_name,
+            'items' => $order->items->map(function ($item) {
+                return [
+                    'name' => $item->item_name,
+                    'sku' => $item->item_sku,
+                    'quantity' => $item->quantity,
+                    'price' => (float) $item->unit_price,
+                ];
+            })->toArray(),
+            'subtotal' => (float) $order->subtotal,
+            'tax' => (float) $order->tax,
+            'shipping' => (float) $order->shipping,
+            'total' => (float) $order->total,
+            'status' => $order->status,
+            'paymentStatus' => $order->payment_status,
+            'paymentMethod' => $order->payment_method,
+            'shippingAddress' => $order->shipping_address,
+            'billingAddress' => $order->billing_address ?? $order->shipping_address,
+            'orderDate' => $order->order_date->format('Y-m-d'),
+            'shippedDate' => $order->shipped_date?->format('Y-m-d'),
+            'deliveredDate' => $order->delivered_date?->format('Y-m-d'),
+            'trackingNumber' => $order->tracking_number,
+            'invoiceNumber' => $order->invoice_number,
+        ];
 
         return Inertia::render('Ecommerce/OrderView', [
-            'order' => $order,
+            'order' => $orderData,
         ]);
     }
 
-    public function productForm($id = null)
+    public function storeOrder(StoreOrderRequest $request): RedirectResponse
     {
-        $product = null;
-        if ($id) {
-            $products = [
-                '1' => [
-                    'id' => '1',
-                    'name' => '15-inch Touch Kiosk',
-                    'sku' => 'QK-15',
-                    'description' => 'Floor-standing kiosk with ticket printer',
-                    'price' => 1299.00,
-                    'stock' => 45,
-                    'image' => '/images/products/qk-15.jpg',
-                    'category' => 'Kiosks',
-                    'specifications' => [
-                        'Screen Size' => '15 inches',
-                        'Resolution' => '1920x1080',
-                        'Touch' => 'Capacitive',
-                        'Printer' => 'Included',
-                    ],
-                    'features' => [
-                        'High-resolution touchscreen display',
-                        'Built-in thermal ticket printer',
-                        'Durable floor-standing design',
-                        'Easy to install and configure',
-                    ],
-                ],
-                '2' => [
-                    'id' => '2',
-                    'name' => '22-inch Touch Kiosk',
-                    'sku' => 'QK-22',
-                    'description' => 'Premium floor-standing kiosk',
-                    'price' => 1899.00,
-                    'stock' => 32,
-                    'image' => '/images/products/qk-22.jpg',
-                    'category' => 'Kiosks',
-                    'specifications' => [
-                        'Screen Size' => '22 inches',
-                        'Resolution' => '1920x1080',
-                        'Touch' => 'Capacitive',
-                        'Printer' => 'Included',
-                    ],
-                    'features' => [
-                        'Larger premium display',
-                        'Enhanced processing power',
-                        'Advanced security features',
-                        'Extended warranty included',
-                    ],
-                ],
-            ];
-            $product = $products[$id] ?? null;
-        }
+        $order = $this->orderService->create($request->validated());
 
-        return Inertia::render('Ecommerce/ProductForm', [
-            'id' => $id,
-            'product' => $product,
-            'categories' => ['Kiosks', 'Displays', 'Accessories'],
-        ]);
+        return redirect()->route('ecommerce.orders.view', $order->id)
+            ->with('success', 'Order created successfully.');
     }
 
-    public function bundleForm($id = null)
+    public function updateOrder(UpdateOrderRequest $request, string $id): RedirectResponse
     {
-        $bundle = null;
-        if ($id) {
-            $bundles = [
-                '1' => [
-                    'id' => '1',
-                    'name' => 'Starter Bundle',
-                    'products' => ['QK-15', 'DS-32', 'TP-80'],
-                    'productNames' => [
-                        '15-inch Touch Kiosk',
-                        '32-inch Queue Display',
-                        'Thermal Ticket Printer',
-                    ],
-                    'discount' => 15,
-                    'originalPrice' => 2097.00,
-                    'price' => 1784.00,
-                    'savings' => 313.00,
-                    'description' => 'Perfect starter package for small businesses',
-                ],
-                '2' => [
-                    'id' => '2',
-                    'name' => 'Pro Bundle',
-                    'products' => ['QK-22', 'DS-55', 'TP-80', 'KB-NUM'],
-                    'productNames' => [
-                        '22-inch Touch Kiosk',
-                        '55-inch Queue Display',
-                        'Thermal Ticket Printer',
-                        'Numeric Keyboard',
-                    ],
-                    'discount' => 20,
-                    'originalPrice' => 3076.00,
-                    'price' => 2461.00,
-                    'savings' => 615.00,
-                    'description' => 'Complete professional solution for larger operations',
-                ],
-            ];
-            $bundle = $bundles[$id] ?? null;
-        }
+        $order = Order::findOrFail($id);
+        $this->orderService->update($order, $request->validated());
 
-        // Get all products for selection
-        $allProducts = [
-            ['id' => '1', 'sku' => 'QK-15', 'name' => '15-inch Touch Kiosk', 'price' => 1299.00],
-            ['id' => '2', 'sku' => 'QK-22', 'name' => '22-inch Touch Kiosk', 'price' => 1899.00],
-            ['id' => '3', 'sku' => 'QK-WALL', 'name' => 'Wall-Mount Kiosk', 'price' => 899.00],
-            ['id' => '4', 'sku' => 'DS-32', 'name' => '32-inch Queue Display', 'price' => 499.00],
-            ['id' => '5', 'sku' => 'DS-55', 'name' => '55-inch Queue Display', 'price' => 899.00],
-            ['id' => '6', 'sku' => 'TP-80', 'name' => 'Thermal Ticket Printer', 'price' => 299.00],
-            ['id' => '7', 'sku' => 'KB-NUM', 'name' => 'Numeric Keyboard', 'price' => 79.00],
-        ];
-
-        return Inertia::render('Ecommerce/BundleForm', [
-            'id' => $id,
-            'bundle' => $bundle,
-            'products' => $allProducts,
-        ]);
+        return redirect()->route('ecommerce.orders.view', $id)
+            ->with('success', 'Order updated successfully.');
     }
 }

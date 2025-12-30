@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, products } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShoppingCart, Package, CheckCircle } from 'lucide-vue-next';
+import { ArrowLeft, ShoppingCart, Package, CheckCircle, Loader2 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 interface Product {
     id: string;
@@ -53,6 +55,64 @@ const formatCurrency = (amount: number): string => {
         maximumFractionDigits: 2,
     }).format(amount);
 };
+
+const getImageUrl = (imagePath: string | null | undefined): string | null => {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+    }
+    
+    // If it starts with /, return as is
+    if (imagePath.startsWith('/')) {
+        return imagePath;
+    }
+    
+    // Otherwise, prepend /storage/
+    return `/storage/${imagePath}`;
+};
+
+const { success, error: showError } = useToast();
+const isLoading = ref(false);
+
+const imageUrl = computed(() => getImageUrl(props.product.image));
+
+const addToCart = async () => {
+    if (isLoading.value || props.product.stock === 0) return;
+    
+    isLoading.value = true;
+    
+    try {
+        const response = await fetch('/api/ecommerce/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                product_id: props.product.id,
+                quantity: 1,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            success('Product added to cart successfully!');
+            router.reload({ only: [] });
+        } else {
+            throw new Error(data.message || 'Failed to add product to cart');
+        }
+    } catch (err) {
+        console.error('Error adding product to cart:', err);
+        showError(err instanceof Error ? err.message : 'Failed to add product to cart. Please try again.');
+    } finally {
+        isLoading.value = false;
+    }
+};
 </script>
 
 <template>
@@ -75,8 +135,17 @@ const formatCurrency = (amount: number): string => {
                 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <!-- Product Image -->
                     <div class="rounded-lg border border-border bg-card p-6">
-                        <div class="flex items-center justify-center h-96 bg-muted rounded-lg">
-                            <Package class="size-32 text-muted-foreground" />
+                        <div class="flex items-center justify-center h-96 bg-muted rounded-lg overflow-hidden">
+                            <img
+                                v-if="imageUrl"
+                                :src="imageUrl"
+                                :alt="product.name"
+                                class="w-full h-full object-cover"
+                            />
+                            <div v-else class="flex flex-col items-center justify-center">
+                                <Package class="size-32 text-muted-foreground" />
+                                <p class="text-sm text-muted-foreground mt-4">No image available</p>
+                            </div>
                         </div>
                     </div>
 
@@ -103,8 +172,13 @@ const formatCurrency = (amount: number): string => {
                         </div>
 
                         <div class="flex items-center gap-2 pt-4">
-                            <Button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white" :disabled="product.stock === 0">
-                                <ShoppingCart class="size-4 mr-2" />
+                            <Button 
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white" 
+                                :disabled="product.stock === 0 || isLoading"
+                                @click="addToCart"
+                            >
+                                <Loader2 v-if="isLoading" class="size-4 mr-2 animate-spin" />
+                                <ShoppingCart v-else class="size-4 mr-2" />
                                 Add to Cart
                             </Button>
                         </div>
