@@ -392,7 +392,7 @@
                         <label class="block text-sm font-semibold mb-2 text-slate-900">Company Name <span class="text-red-500">*</span></label>
                         <input type="text" name="company_name" id="company_name"
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all text-slate-900"
-                            placeholder="Enter your company name" >
+                            placeholder="Enter your company name" value="{{ $company_name ?? '' }}">
                         <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="company_name"></div>
                     </div>
                     <div>
@@ -400,7 +400,7 @@
                         <div class="flex">
                             <input type="text" name="domain_name" id="domain_name"
                                 class="flex-1 px-4 py-3.5 border border-slate-200 rounded-l-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all border-r-0 text-slate-900"
-                                placeholder="Enter your domain name" >
+                                placeholder="Enter your domain name" value="{{ $domain_name ?? '' }}">
                             <span
                                 class="bg-slate-50 border border-slate-200 border-l-0 rounded-r-xl px-4 flex items-center text-slate-500 font-medium text-sm">.qwaiting.com</span>
                         </div>
@@ -412,19 +412,20 @@
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 appearance-none bg-no-repeat bg-[right_1rem_center] text-slate-900"
                             style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22%2F%3E%3C%2Fsvg%3E');"
                             >
-                            <option value="" disabled selected>Select your role</option>
-                            <option value="owner" selected>Owner</option>
-                            <option value="manager">Manager</option>
-                            <option value="staff">Staff</option>
-                            <option value="admin">IT Admin</option>
-                            <option value="other">Other</option>
+                            <option value="" disabled {{ !isset($role) ? 'selected' : '' }}>Select your role</option>
+                            <option value="owner" {{ (isset($role) && $role === 'owner') || !isset($role) ? 'selected' : '' }}>Owner</option>
+                            <option value="manager" {{ (isset($role) && $role === 'manager') ? 'selected' : '' }}>Manager</option>
+                            <option value="staff" {{ (isset($role) && $role === 'staff') ? 'selected' : '' }}>Staff</option>
+                            <option value="admin" {{ (isset($role) && $role === 'admin') ? 'selected' : '' }}>IT Admin</option>
+                            <option value="other" {{ (isset($role) && $role === 'other') ? 'selected' : '' }}>Other</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-2 text-slate-900">Company Website</label>
-                        <input type="url" name="website"
+                        <input type="text" name="website"
                             class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:outline-none focus:border-[#7C69EF] focus:ring-4 focus:ring-[#7C69EF]/10 transition-all duration-200 hover:border-slate-300 text-slate-900"
-                            placeholder="Enter your company website url">
+                            placeholder="Enter your company website url" value="{{ $website ?? '' }}">
+                        <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="website"></div>
                     </div>
                     <div class="flex gap-4 mt-8">
                         <button type="submit"
@@ -1039,6 +1040,35 @@
             const initialStep = queryStepMap[urlParam] || 1;
             goToStep(initialStep, !queryStepMap[urlParam]);
             
+            // Check for stored errors from redirect
+            const storedErrors = sessionStorage.getItem('signupErrors');
+            if (storedErrors) {
+                try {
+                    const errors = JSON.parse(storedErrors);
+                    // Clear the stored errors
+                    sessionStorage.removeItem('signupErrors');
+                    
+                    // Display errors on the current step
+                    setTimeout(() => {
+                        $.each(errors, (field, messages) => {
+                            const errorElement = $('[data-error="' + field + '"]');
+                            if (errorElement.length > 0) {
+                                errorElement.text(messages[0]).removeClass('hidden');
+                                // Add red border to the input field
+                                const inputField = $('[name="' + field + '"]');
+                                if (inputField.length > 0) {
+                                    inputField.removeClass('border-slate-200').addClass('border-red-500');
+                                    // Focus on the field with error
+                                    inputField.focus();
+                                }
+                            }
+                        });
+                    }, 300);
+                } catch (e) {
+                    console.error('Error parsing stored errors:', e);
+                }
+            }
+            
             // Ensure logos are visible on step 1 (in case of refresh)
             if (initialStep === 1) {
                 $('#sidebar-logo, #logo-img').removeClass('hidden');
@@ -1199,8 +1229,27 @@
                 error: function(xhr) {
                     const errorData = xhr.responseJSON || {};
                     if (xhr.status === 422) {
-                        // Display field-specific errors below the fields
-                        $.each(errorData.errors || {}, (field, messages) => $form.find('[data-error="' + field + '"]').text(messages[0]).removeClass('hidden'));
+                        // If there's a redirect, navigate to that step and show errors there
+                        if (errorData.redirect) {
+                            window.location.href = errorData.redirect;
+                            // Store errors in sessionStorage to display after redirect
+                            if (errorData.errors) {
+                                sessionStorage.setItem('signupErrors', JSON.stringify(errorData.errors));
+                            }
+                        } else {
+                            // Display field-specific errors below the fields on current form
+                            $.each(errorData.errors || {}, (field, messages) => {
+                                const errorElement = $form.find('[data-error="' + field + '"]');
+                                if (errorElement.length > 0) {
+                                    errorElement.text(messages[0]).removeClass('hidden');
+                                    // Add red border to the input field
+                                    const inputField = $form.find('[name="' + field + '"]');
+                                    if (inputField.length > 0) {
+                                        inputField.removeClass('border-slate-200').addClass('border-red-500');
+                                    }
+                                }
+                            });
+                        }
                     } else if (xhr.status === 403) {
                         // User tried to access a step they haven't completed
                         if (errorData.redirect) {
@@ -1210,7 +1259,27 @@
                                 .then(() => window.location.href = '{{ route("signup") }}?basic_info');
                         }
                     } else {
-                        // Swal.fire('Error', errorData.message || 'HTTP ' + xhr.status, 'error');
+                        // Show error message for other status codes
+                        if (errorData.message) {
+                            // If there's a redirect in the error response, go to that step
+                            if (errorData.redirect) {
+                                window.location.href = errorData.redirect;
+                            } else {
+                                // Show error and display field errors if available
+                                if (errorData.errors) {
+                                    $.each(errorData.errors || {}, (field, messages) => {
+                                        // Find the form that contains this field
+                                        const formWithField = $('form').filter(function() {
+                                            return $(this).find('[name="' + field + '"], [data-error="' + field + '"]').length > 0;
+                                        });
+                                        if (formWithField.length > 0) {
+                                            formWithField.find('[data-error="' + field + '"]').text(messages[0]).removeClass('hidden');
+                                        }
+                                    });
+                                }
+                                Swal.fire('Error', errorData.message || 'Something went wrong', 'error');
+                            }
+                        }
                     }
                 },
                 complete: () => $btn.prop('disabled', false).find('.spinner').addClass('hidden')

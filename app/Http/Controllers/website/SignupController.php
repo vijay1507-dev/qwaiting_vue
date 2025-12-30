@@ -87,6 +87,20 @@ class SignupController extends Controller
                     $leadData['email'] = $lead->email;
                 }
 
+                // Populate step 2 fields from database
+                if ($lead->domain_name) {
+                    $leadData['domain_name'] = $lead->domain_name;
+                }
+                if ($lead->company_name) {
+                    $leadData['company_name'] = $lead->company_name;
+                }
+                if ($lead->role) {
+                    $leadData['role'] = $lead->role;
+                }
+                if ($lead->website) {
+                    $leadData['website'] = $lead->website;
+                }
+
                 // Restore completed steps from database
                 // signup_step in database represents the last completed step
                 // Important: Step 1 is only considered completed if email is verified
@@ -264,6 +278,14 @@ class SignupController extends Controller
 
         $lead = SignupLead::find(Session::get('signup_lead_id'));
 
+        if (! $lead) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session expired. Please start over.',
+                'redirect' => route('signup', ['basic_info']),
+            ], 403);
+        }
+
         // Check domain availability on step 2
         if ($step === 2) {
             $domainName = $validated['domain_name'] ?? '';
@@ -271,7 +293,7 @@ class SignupController extends Controller
             if ($domainName) {
                 // Check if domain exists in signup_leads table (excluding current lead)
                 $domainExistsInLeads = SignupLead::where('domain_name', $domainName)
-                    ->where('id', '!=', $lead->id ?? 0)
+                    ->where('id', '!=', $lead->id)
                     ->exists();
 
                 if ($domainExistsInLeads) {
@@ -285,11 +307,28 @@ class SignupController extends Controller
                 }
 
                 // Also check if domain exists in external database
+                // Domains are stored with suffixes (.localhost for local, .qwaiting.com for production)
+                // Check for both formats to cover all environments
                 try {
+                    $domainLocalhost = $domainName.'.localhost';
+                    $domainQwaiting = $domainName.'.qwaiting.com';
+
                     $domainExistsInExternal = DB::connection('mysql_external')
                         ->table('domains')
-                        ->where('domain', $domainName)
+                        ->where(function ($query) use ($domainName, $domainLocalhost, $domainQwaiting) {
+                            $query->where('domain', $domainName)
+                                ->orWhere('domain', $domainLocalhost)
+                                ->orWhere('domain', $domainQwaiting);
+                        })
                         ->exists();
+
+                    Log::info('Domain validation check', [
+                        'domain' => $domainName,
+                        'domain_localhost' => $domainLocalhost,
+                        'domain_qwaiting' => $domainQwaiting,
+                        'exists_in_external' => $domainExistsInExternal,
+                        'lead_id' => $lead->id,
+                    ]);
 
                     if ($domainExistsInExternal) {
                         return response()->json([
@@ -301,14 +340,22 @@ class SignupController extends Controller
                         ], 422);
                     }
                 } catch (\Exception $e) {
-                    // Log error but don't block user - let API handle validation at step 6
-                    Log::error('Domain check in external database failed', [
+                    // If external DB check fails, fail validation to ensure domain availability is verified
+                    // This prevents invalid domains from proceeding to step 3
+                    Log::error('Domain check in external database failed - failing validation', [
                         'domain' => $domainName,
                         'error' => $e->getMessage(),
-                        'lead_id' => $lead->id ?? null,
+                        'lead_id' => $lead->id,
+                        'trace' => $e->getTraceAsString(),
                     ]);
 
-                    // Continue with normal flow - API will validate at step 6
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unable to verify domain availability. Please try again.',
+                        'errors' => [
+                            'domain_name' => ['Unable to verify domain availability. Please try again.'],
+                        ],
+                    ], 422);
                 }
             }
         }
@@ -393,9 +440,34 @@ class SignupController extends Controller
                             'lead_id' => $lead->id,
                         ]);
 
+                        // Parse API response to get error details
+                        $errorBody = json_decode($response->body(), true);
+                        $errorMessage = $errorBody['error'] ?? 'Failed to create tenant. Please try again.';
+
+                        // Domain duplicate errors should be caught at step 2 validation, not here
+                        // If a domain duplicate error reaches step 6, it indicates step 2 validation failed
+                        // Handle email duplicate error
+                        if ($response->status() === 409 && stripos($errorMessage, 'email') !== false) {
+                            // Rollback step 6 - set back to step 1
+                            $lead->update(['signup_step' => 1]);
+
+                            // Remove all steps from completed steps
+                            Session::put('completed_steps', []);
+
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'This email address is already registered.',
+                                'errors' => [
+                                    'email' => ['This email address is already registered.'],
+                                ],
+                                'redirect' => route('signup', ['basic_info']),
+                            ], 422);
+                        }
+
+                        // Generic error for other cases
                         return response()->json([
                             'success' => false,
-                            'message' => 'Failed to create tenant. Please try again.',
+                            'message' => $errorMessage ?: 'Failed to create tenant. Please try again.',
                         ], 500);
                     }
                 } catch (\Exception $e) {

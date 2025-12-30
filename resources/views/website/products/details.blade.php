@@ -22,39 +22,44 @@
                             <div class="grid md:grid-cols-2 gap-6">
 
                                 <div>
-                                    <input type="text" id="firstName" name="firstName" required
+                                    <input type="text" id="firstName" name="firstName"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="First Name*">
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="firstName"></div>
                                 </div>
                                 <div>
-                                    <input type="text" id="lastName" name="lastName" required
+                                    <input type="text" id="lastName" name="lastName"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="Last Name*">
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="lastName"></div>
                                 </div>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <input type="email" id="email" name="email" required
+                                    <input type="email" id="email" name="email"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="Email*">
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="email"></div>
                                 </div>
                                 <div>
-                                    <input type="tel" id="phone" name="phone" required
+                                    <input type="tel" id="phone" name="phone"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="Phone Number*">
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="phone"></div>
                                 </div>
                             </div>
 
                             <div>
-                                <input type="text" id="address" name="address" required
+                                <input type="text" id="address" name="address"
                                     class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                     placeholder="Address*">
+                                <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="address"></div>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <select id="country" name="country" required
+                                    <select id="country" name="country"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none bg-white text-gray-500">
                                         <option value="" disabled selected>Country/Region*</option>
                                         <option value="US">United States</option>
@@ -64,11 +69,13 @@
                                         <option value="SG">Singapore</option>
                                         <option value="AE">United Arab Emirates</option>
                                     </select>
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="country"></div>
                                 </div>
                                 <div>
-                                    <input type="text" id="zip" name="zip" required
+                                    <input type="text" id="zip" name="zip"
                                         class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                         placeholder="Postal Code*">
+                                    <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="zip"></div>
                                 </div>
                             </div>
 
@@ -77,32 +84,37 @@
                                 <h2 class="text-2xl font-bold text-gray-900 mb-4">Credit Card</h2>
                                 <div class="space-y-6">
                                     <div>
-                                        <input type="text" id="cardNumber" name="cardNumber" required
+                                        <input type="text" id="cardNumber" name="cardNumber"
                                             class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                             placeholder="Card Number*">
+                                        <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="cardNumber"></div>
                                     </div>
 
                                     <div>
-                                        <input type="text" id="cardName" name="cardName" required
+                                        <input type="text" id="cardName" name="cardName"
                                             class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                             placeholder="Card Holder Name*">
+                                        <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="cardName"></div>
                                     </div>
 
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
-                                            <input type="text" id="expMonth" name="expMonth" required
+                                            <input type="text" id="expMonth" name="expMonth"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                                 placeholder="Expiration Month*">
+                                            <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="expMonth"></div>
                                         </div>
                                         <div>
-                                            <input type="text" id="expYear" name="expYear" required
+                                            <input type="text" id="expYear" name="expYear"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                                 placeholder="Expiration Year*">
+                                            <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="expYear"></div>
                                         </div>
                                         <div>
-                                            <input type="text" id="cvc" name="cvc" required
+                                            <input type="text" id="cvc" name="cvc"
                                                 class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                                 placeholder="Security Code*">
+                                            <div class="hidden text-red-500 text-xs font-medium mt-2" data-error="cvc"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -287,12 +299,36 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Detect page refresh and clear cart
+            const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+            const isRefresh = navigationType === 'reload' || 
+                              (typeof performance.navigation !== 'undefined' && performance.navigation.type === 1);
+            
+            if (isRefresh) {
+                // Clear cart on refresh
+                localStorage.removeItem('qwaiting_cart');
+            }
+            
             // Load cart from localStorage
             const cartData = localStorage.getItem('qwaiting_cart');
             const cart = cartData ? JSON.parse(cartData) : [];
             const orderItemsContainer = document.getElementById('orderItems');
             const summarySubtotal = document.getElementById('summarySubtotal');
             const summaryTotal = document.getElementById('summaryTotal');
+
+            // Clear errors when user starts typing
+            const form = document.getElementById('orderForm');
+            form.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('input', function() {
+                    const fieldName = this.name || this.id;
+                    const errorDiv = form.querySelector(`[data-error="${fieldName}"]`);
+                    if (errorDiv) {
+                        errorDiv.textContent = '';
+                        errorDiv.classList.add('hidden');
+                    }
+                    this.classList.remove('border-red-500');
+                });
+            });
 
             if (cart.length === 0) {
                 orderItemsContainer.innerHTML = '<div class="text-center py-8 text-gray-500">Your cart is empty. <a href="/products" class="text-primary font-semibold hover:underline">Go back to products</a></div>';
@@ -329,6 +365,140 @@
             // Handle form submission
             document.getElementById('orderForm').addEventListener('submit', function (e) {
                 e.preventDefault();
+                
+                const form = e.target;
+                const errors = {};
+                let hasErrors = false;
+
+                // Clear all previous errors
+                form.querySelectorAll('[data-error]').forEach(errorDiv => {
+                    errorDiv.textContent = '';
+                    errorDiv.classList.add('hidden');
+                });
+
+                // Remove error border classes from all inputs
+                form.querySelectorAll('input, select').forEach(input => {
+                    input.classList.remove('border-red-500');
+                });
+
+                // Validate First Name
+                const firstName = form.querySelector('#firstName').value.trim();
+                if (!firstName) {
+                    errors.firstName = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Last Name
+                const lastName = form.querySelector('#lastName').value.trim();
+                if (!lastName) {
+                    errors.lastName = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Email
+                const email = form.querySelector('#email').value.trim();
+                if (!email) {
+                    errors.email = 'Please fill in this field.';
+                    hasErrors = true;
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    errors.email = 'Please enter a valid email address.';
+                    hasErrors = true;
+                }
+
+                // Validate Phone
+                const phone = form.querySelector('#phone').value.trim();
+                if (!phone) {
+                    errors.phone = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Address
+                const address = form.querySelector('#address').value.trim();
+                if (!address) {
+                    errors.address = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Country
+                const country = form.querySelector('#country').value;
+                if (!country) {
+                    errors.country = 'Please select a country.';
+                    hasErrors = true;
+                }
+
+                // Validate Zip Code
+                const zip = form.querySelector('#zip').value.trim();
+                if (!zip) {
+                    errors.zip = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Card Number
+                const cardNumber = form.querySelector('#cardNumber').value.trim();
+                if (!cardNumber) {
+                    errors.cardNumber = 'Please fill in this field.';
+                    hasErrors = true;
+                } else if (!/^\d{13,19}$/.test(cardNumber.replace(/\s/g, ''))) {
+                    errors.cardNumber = 'Please enter a valid card number.';
+                    hasErrors = true;
+                }
+
+                // Validate Card Holder Name
+                const cardName = form.querySelector('#cardName').value.trim();
+                if (!cardName) {
+                    errors.cardName = 'Please fill in this field.';
+                    hasErrors = true;
+                }
+
+                // Validate Expiration Month
+                const expMonth = form.querySelector('#expMonth').value.trim();
+                if (!expMonth) {
+                    errors.expMonth = 'Please fill in this field.';
+                    hasErrors = true;
+                } else if (!/^(0[1-9]|1[0-2])$/.test(expMonth)) {
+                    errors.expMonth = 'Please enter a valid month (01-12).';
+                    hasErrors = true;
+                }
+
+                // Validate Expiration Year
+                const expYear = form.querySelector('#expYear').value.trim();
+                if (!expYear) {
+                    errors.expYear = 'Please fill in this field.';
+                    hasErrors = true;
+                } else if (!/^\d{4}$/.test(expYear) || parseInt(expYear) < new Date().getFullYear()) {
+                    errors.expYear = 'Please enter a valid year.';
+                    hasErrors = true;
+                }
+
+                // Validate CVC
+                const cvc = form.querySelector('#cvc').value.trim();
+                if (!cvc) {
+                    errors.cvc = 'Please fill in this field.';
+                    hasErrors = true;
+                } else if (!/^\d{3,4}$/.test(cvc)) {
+                    errors.cvc = 'Please enter a valid security code.';
+                    hasErrors = true;
+                }
+
+                // Display errors
+                if (hasErrors) {
+                    Object.keys(errors).forEach(fieldName => {
+                        const errorDiv = form.querySelector(`[data-error="${fieldName}"]`);
+                        const input = form.querySelector(`#${fieldName}`);
+                        
+                        if (errorDiv) {
+                            errorDiv.textContent = errors[fieldName];
+                            errorDiv.classList.remove('hidden');
+                        }
+                        
+                        if (input) {
+                            input.classList.add('border-red-500');
+                        }
+                    });
+                    return;
+                }
+
+                // If no errors, proceed with submission
                 alert('Thank you for your order! This is a demo integration.');
                 localStorage.removeItem('qwaiting_cart');
                 window.location.href = '/products';

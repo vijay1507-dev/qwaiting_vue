@@ -26,6 +26,13 @@ import {
     ChevronLeft,
     ChevronRight,
     AlertCircle,
+    ExternalLink,
+    Building2,
+    Users,
+    Briefcase,
+    TrendingUp,
+    Package,
+    Shield,
 } from 'lucide-vue-next';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
@@ -42,6 +49,14 @@ interface Client {
     expires: string;
     status: 'active' | 'inactive';
     plan?: 'Free' | 'Paid' | 'Trial';
+    additionalInfo?: {
+        website?: string | null;
+        role?: string | null;
+        usage_preference?: string | null;
+        industry?: string | null;
+        footfall?: string | null;
+        current_solution?: string | null;
+    };
 }
 
 interface EmailLog {
@@ -608,6 +623,88 @@ onUnmounted(() => {
                                 <div class="flex-1 min-w-0">
                                     <p class="text-xs text-muted-foreground mb-1">Expires</p>
                                     <p class="text-sm font-medium text-foreground">{{ props.client.expires || '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information Card -->
+                    <div v-if="props.client.additionalInfo && Object.values(props.client.additionalInfo).some(v => v !== null && v !== '')" class="lg:col-span-2 bg-card border border-border rounded-lg p-6">
+                        <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                            <FileText class="size-5 text-muted-foreground" />
+                            Additional Information
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Website -->
+                            <div v-if="props.client.additionalInfo.website" class="flex items-start gap-3">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <ExternalLink class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Website</p>
+                                    <a 
+                                        :href="props.client.additionalInfo.website"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline break-all"
+                                    >
+                                        {{ props.client.additionalInfo.website }}
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Role -->
+                            <div v-if="props.client.additionalInfo.role" class="flex items-start gap-3">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <Shield class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Role</p>
+                                    <p class="text-sm font-medium text-foreground capitalize">{{ props.client.additionalInfo.role }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Usage Preference -->
+                            <div v-if="props.client.additionalInfo.usage_preference" class="flex items-start gap-3">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <Users class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Usage Preference</p>
+                                    <p class="text-sm font-medium text-foreground">{{ props.client.additionalInfo.usage_preference }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Industry -->
+                            <div v-if="props.client.additionalInfo.industry" class="flex items-start gap-3">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <Building2 class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Industry</p>
+                                    <p class="text-sm font-medium text-foreground">{{ props.client.additionalInfo.industry }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Footfall -->
+                            <div v-if="props.client.additionalInfo.footfall" class="flex items-start gap-3">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <TrendingUp class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Daily Footfall</p>
+                                    <p class="text-sm font-medium text-foreground">{{ props.client.additionalInfo.footfall }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Current Solution -->
+                            <div v-if="props.client.additionalInfo.current_solution" class="flex items-start gap-3 md:col-span-2">
+                                <div class="flex items-center justify-center size-10 rounded-lg bg-muted">
+                                    <Package class="size-5 text-muted-foreground" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-muted-foreground mb-1">Current Solution</p>
+                                    <p class="text-sm font-medium text-foreground">{{ props.client.additionalInfo.current_solution }}</p>
                                 </div>
                             </div>
                         </div>

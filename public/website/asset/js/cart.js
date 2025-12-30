@@ -2,6 +2,27 @@
 let cart = JSON.parse(localStorage.getItem('qwaiting_cart')) || [];
 const KEYPAD_PRICE = 300; // Price per keypad
 
+// Detect page refresh and clear cart
+(function() {
+    // Check if page was refreshed using Performance Navigation API
+    const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+    const isRefresh = navigationType === 'reload' || 
+                      (typeof performance.navigation !== 'undefined' && performance.navigation.type === 1);
+    
+    // Use sessionStorage to track if this is a refresh
+    const pageLoadKey = 'qwaiting_page_loaded';
+    const wasPageLoaded = sessionStorage.getItem(pageLoadKey);
+    
+    if (isRefresh) {
+        // Clear cart on refresh
+        cart = [];
+        localStorage.removeItem('qwaiting_cart');
+    }
+    
+    // Mark that page has been loaded (for future refresh detection)
+    sessionStorage.setItem(pageLoadKey, 'true');
+})();
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     // If we have items in cart, update the keypad input if present
@@ -41,7 +62,13 @@ function updateCartDisplay() {
 
         // Update cart items
         if (cartItems) {
-            cartItems.innerHTML = cart.map(item => `
+            cartItems.innerHTML = cart.map(item => {
+                const itemTotal = (item.price * item.quantity).toFixed(2);
+                const formattedPrice = parseFloat(itemTotal).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                return `
                 <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl">
                     <div class="flex-shrink-0 w-12 h-12 bg-white rounded-lg border border-gray-200 flex items-center justify-center">
                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,11 +76,11 @@ function updateCartDisplay() {
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-gray-900">${item.name} ${item.quantity}</h4>
-                        <p class="text-sm text-gray-500">Quantity: ${item.quantity}</p>
+                        <h4 class="font-semibold text-gray-900">${item.name}</h4>
+                        <p class="text-sm text-gray-500">Quantity: ${item.quantity} × $${item.price.toFixed(2)}</p>
                     </div>
                     <div class="text-right">
-                        <p class="font-bold text-gray-900">$${item.price * item.quantity}</p>
+                        <p class="font-bold text-gray-900">$${formattedPrice}</p>
                         <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-700 mt-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -61,12 +88,17 @@ function updateCartDisplay() {
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // Update subtotal
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        if (subtotalAmount) subtotalAmount.textContent = `$${subtotal}`;
+        const formattedSubtotal = subtotal.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        if (subtotalAmount) subtotalAmount.textContent = `$${formattedSubtotal}`;
     }
 }
 
@@ -84,6 +116,41 @@ function addToCart(item) {
         cart.push(item);
     }
     updateCartDisplay();
+}
+
+// Add Product to Cart from Product Card
+function addProductToCart(element) {
+    if (!element) {
+        return;
+    }
+
+    const productId = element.getAttribute('data-product-id');
+    const productName = element.getAttribute('data-product-name');
+    const productPrice = parseFloat(element.getAttribute('data-product-price'));
+
+    if (!productId || !productName || !productPrice) {
+        console.error('Missing product data attributes');
+        return;
+    }
+
+    // Check if product already exists in cart
+    const existingItem = cart.find(i => i.id === productId);
+    
+    if (existingItem) {
+        // If exists, increment quantity
+        existingItem.quantity += 1;
+    } else {
+        // If new, add to cart with quantity 1
+        addToCart({
+            id: productId,
+            name: productName,
+            price: productPrice,
+            quantity: 1
+        });
+    }
+
+    // Show visual feedback
+    showAddToCartFeedback(element);
 }
 
 // Remove from Cart
@@ -138,4 +205,28 @@ function updateCartFromQuantity() {
 function toggleCart() {
     const cartSidebar = document.getElementById('cartSidebar');
     if (cartSidebar) cartSidebar.classList.toggle('translate-x-full');
+}
+
+// Show visual feedback when product is added to cart
+function showAddToCartFeedback(element) {
+    // Add a temporary class for visual feedback
+    element.classList.add('ring-4', 'ring-primary', 'ring-opacity-50');
+    
+    setTimeout(() => {
+        element.classList.remove('ring-4', 'ring-primary', 'ring-opacity-50');
+    }, 500);
+
+    // Optional: Show a toast notification
+    // You can enhance this with a proper toast library if needed
+    const button = element.querySelector('button');
+    if (button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Added!';
+        button.classList.add('bg-green-500');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('bg-green-500');
+        }, 1500);
+    }
 }

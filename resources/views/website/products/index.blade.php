@@ -42,7 +42,11 @@
 
                     {{-- Qwaiting Handy Q5 --}}
                     <div
-                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20">
+                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20 cursor-pointer"
+                        data-product-id="qwaiting-handy-q5"
+                        data-product-name="Qwaiting Handy Q5"
+                        data-product-price="899"
+                        onclick="addProductToCart(this)">
                         <div class="p-8">
                             <div
                                 class="w-full h-70 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -81,12 +85,32 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-2xl font-bold text-gray-900">$899</span>
+                                </div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Qwaiting Standard Q7 --}}
                     <div
-                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20">
+                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20 cursor-pointer"
+                        data-product-id="qwaiting-standard-q7"
+                        data-product-name="Qwaiting Standard Q7 (Printer)"
+                        data-product-price="1299"
+                        onclick="addProductToCart(this)">
                         <div class="p-8">
                             <div
                                 class="w-full h-70 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -125,12 +149,32 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-2xl font-bold text-gray-900">$1,299</span>
+                                </div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Qwaiting Pro Q9 --}}
                     <div
-                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20">
+                        class="group bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:border-primary/20 cursor-pointer"
+                        data-product-id="qwaiting-pro-q9"
+                        data-product-name="Qwaiting Pro Q9"
+                        data-product-price="1899"
+                        onclick="addProductToCart(this)">
                         <div class="p-8">
                             <div
                                 class="w-full h-70 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -169,6 +213,22 @@
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-2xl font-bold text-gray-900">$1,899</span>
+                                </div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -291,7 +351,11 @@
                 <div class="flex items-end justify-center gap-8">
                     {{-- Screen 32" - Small --}}
                     <div
-                        class="group bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0">
+                        class="group bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0 cursor-pointer"
+                        data-product-id="tv-screen-32"
+                        data-product-name="TV Screen 32\""
+                        data-product-price="499"
+                        onclick="addProductToCart(this)">
                         <div class="text-center">
                             <div
                                 class="w-48 h-auto rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-105 transition-transform">
@@ -299,13 +363,30 @@
                                     class="w-full h-auto object-contain">
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 mb-2">Screen 32"</h3>
-                            <p class="text-gray-600 text-sm">Perfect for small to medium spaces</p>
+                            <p class="text-gray-600 text-sm mb-4">Perfect for small to medium spaces</p>
+                            <div class="mt-4">
+                                <div class="text-xl font-bold text-gray-900 mb-3">$499</div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Screen 42" - Medium --}}
                     <div
-                        class="group bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0">
+                        class="group bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0 cursor-pointer"
+                        data-product-id="tv-screen-42"
+                        data-product-name="TV Screen 42\""
+                        data-product-price="799"
+                        onclick="addProductToCart(this)">
                         <div class="text-center">
                             <div
                                 class="w-64 h-auto rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-105 transition-transform">
@@ -313,13 +394,30 @@
                                     class="w-full h-auto object-contain">
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 mb-2">Screen 42"</h3>
-                            <p class="text-gray-600 text-sm">Ideal for medium to large areas</p>
+                            <p class="text-gray-600 text-sm mb-4">Ideal for medium to large areas</p>
+                            <div class="mt-4">
+                                <div class="text-xl font-bold text-gray-900 mb-3">$799</div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Screen 52" - Large --}}
                     <div
-                        class="group bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0">
+                        class="group bg-gradient-to-br from-green-50 to-white border border-green-100 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-primary/20 flex-shrink-0 cursor-pointer"
+                        data-product-id="tv-screen-52"
+                        data-product-name="TV Screen 52\""
+                        data-product-price="1199"
+                        onclick="addProductToCart(this)">
                         <div class="text-center">
                             <div
                                 class="w-80 h-auto rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-105 transition-transform">
@@ -327,7 +425,20 @@
                                     class="w-full h-auto object-contain">
                             </div>
                             <h3 class="text-2xl font-bold text-gray-900 mb-2">Screen 52"</h3>
-                            <p class="text-gray-600 text-sm">Best for large waiting areas</p>
+                            <p class="text-gray-600 text-sm mb-4">Best for large waiting areas</p>
+                            <div class="mt-4">
+                                <div class="text-xl font-bold text-gray-900 mb-3">$1,199</div>
+                                <button
+                                    class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                                    onclick="event.stopPropagation(); addProductToCart(this.closest('[data-product-id]'))">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    Add to Cart
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailNotificationLog;
+use App\Models\SignupLead;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -156,6 +157,48 @@ class ClientsController extends Controller
                 $plan = 'Paid'; // No trial, must be paid
             }
 
+            // Find signup lead by email first (most reliable)
+            // Include soft-deleted records to ensure we find the lead if it exists
+            $signupLead = SignupLead::withTrashed()->where('email', $user->email)->first();
+
+            // If not found by email, try to find by domain name
+            // Domain in external DB might be "test-user-emill.localhost"
+            // but in signup_leads it's stored as "test-user-emill"
+            if (! $signupLead && $domain && $domain->domain) {
+                // Extract subdomain part (before first dot)
+                $domainParts = explode('.', $domain->domain);
+                $subdomain = $domainParts[0] ?? '';
+
+                if ($subdomain) {
+                    $signupLead = SignupLead::withTrashed()->where('domain_name', $subdomain)->first();
+                }
+
+                // If still not found, try exact match
+                if (! $signupLead) {
+                    $signupLead = SignupLead::withTrashed()->where('domain_name', $domain->domain)->first();
+                }
+            }
+
+            // Log for debugging
+            if ($signupLead) {
+                Log::info('Signup lead found for client', [
+                    'user_email' => $user->email,
+                    'domain' => $domain->domain ?? null,
+                    'signup_lead_id' => $signupLead->id,
+                    'has_website' => ! empty($signupLead->website),
+                    'has_usage_preference' => ! empty($signupLead->usage_preference),
+                    'has_industry' => ! empty($signupLead->industry),
+                    'has_footfall' => ! empty($signupLead->footfall),
+                    'has_current_solution' => ! empty($signupLead->current_solution),
+                ]);
+            } else {
+                Log::info('Signup lead not found for client', [
+                    'user_email' => $user->email,
+                    'domain' => $domain->domain ?? null,
+                    'user_id' => $id,
+                ]);
+            }
+
             $client = [
                 'id' => (string) $user->id,
                 'domain' => $domain->domain ?? '',
@@ -167,6 +210,21 @@ class ClientsController extends Controller
                 'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
                 'status' => $user->is_active ? 'active' : 'inactive',
                 'plan' => $plan,
+                'additionalInfo' => $signupLead ? [
+                    'website' => $signupLead->website,
+                    'role' => $signupLead->role,
+                    'usage_preference' => $signupLead->usage_preference,
+                    'industry' => $signupLead->industry,
+                    'footfall' => $signupLead->footfall,
+                    'current_solution' => $signupLead->current_solution,
+                ] : [
+                    'website' => null,
+                    'role' => null,
+                    'usage_preference' => null,
+                    'industry' => null,
+                    'footfall' => null,
+                    'current_solution' => null,
+                ],
             ];
 
             // Fetch email logs for this client's email with filters
