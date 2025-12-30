@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\EmailNotificationLog;
 use App\Models\EmailNotificationTemplate;
 use App\Models\EmailSend;
+use App\Models\SignupLead;
 use App\Services\EmailTemplateWrapper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,6 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class SendSequenceEmailToUserJob implements ShouldQueue
 {
@@ -194,6 +196,9 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         $userDomain = $this->userData['domain'] ?? '';
         $dashboardUrl = $this->buildDashboardUrl($userDomain);
 
+        // Generate verification URL for SignupLead users
+        $verificationUrl = $this->buildVerificationUrl();
+
         $variables = array_merge([
             'first_name' => $this->userData['name'] ?? 'User',
             'last_name' => '',
@@ -209,6 +214,7 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             'domain' => $userDomain,
             'plan_expiry' => $this->userData['plan_expiry'] ?? '',
             'days_until_expiry' => $this->userData['days_until_expiry'] ?? '',
+            'verification_url' => $verificationUrl,
         ], $this->userData);
 
         foreach ($variables as $key => $value) {
@@ -216,6 +222,28 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         }
 
         return $text;
+    }
+
+    /**
+     * Build verification URL for SignupLead users.
+     */
+    private function buildVerificationUrl(): string
+    {
+        // Check if this is a SignupLead user
+        $signupLead = SignupLead::find($this->externalUserId);
+
+        if ($signupLead) {
+            // Generate verification URL for signup lead
+            $hash = sha1($signupLead->email);
+
+            return URL::route('signup.verify', [
+                'id' => $signupLead->id,
+                'hash' => $hash,
+            ]);
+        }
+
+        // Return empty string if not a SignupLead (external users don't need verification URL)
+        return '';
     }
 
     /**
