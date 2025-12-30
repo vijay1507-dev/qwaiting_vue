@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, bundles } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,14 +17,20 @@ interface Product {
     price: number;
 }
 
+interface BundleProduct {
+    product_id: string;
+    quantity: number;
+}
+
 interface Props {
     id?: string;
     bundle?: {
         id: string;
         name: string;
-        products: string[];
-        discount: number;
         description: string;
+        discount_percentage: number;
+        is_active?: boolean;
+        products: BundleProduct[];
     };
     products: Product[];
 }
@@ -56,23 +62,28 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const isEditMode = computed(() => !!props.id);
 
+// Convert bundle products array to selectedProducts array with product_id
+const selectedProducts = ref<BundleProduct[]>(
+    props.bundle?.products ? [...props.bundle.products] : []
+);
+
 const formData = ref({
     name: props.bundle?.name || '',
     description: props.bundle?.description || '',
-    discount: props.bundle?.discount || 0,
-    selectedProducts: props.bundle?.products ? [...props.bundle.products] : [],
+    discount_percentage: props.bundle?.discount_percentage || 0,
+    is_active: props.bundle?.is_active ?? true,
 });
 
 const originalPrice = computed(() => {
-    return formData.value.selectedProducts.reduce((total, sku) => {
-        const product = props.products.find(p => p.sku === sku);
-        return total + (product?.price || 0);
+    return selectedProducts.value.reduce((total, bundleProduct) => {
+        const product = props.products.find(p => p.id === bundleProduct.product_id);
+        return total + (product?.price || 0) * bundleProduct.quantity;
     }, 0);
 });
 
 const discountedPrice = computed(() => {
     if (originalPrice.value === 0) return 0;
-    return originalPrice.value * (1 - formData.value.discount / 100);
+    return originalPrice.value * (1 - formData.value.discount_percentage / 100);
 });
 
 const savings = computed(() => {
@@ -80,36 +91,56 @@ const savings = computed(() => {
 });
 
 const availableProducts = computed(() => {
-    return props.products.filter(p => !formData.value.selectedProducts.includes(p.sku));
+    const selectedProductIds = selectedProducts.value.map(p => p.product_id);
+    return props.products.filter(p => !selectedProductIds.includes(p.id));
 });
 
-const addProduct = (sku: string) => {
-    if (!formData.value.selectedProducts.includes(sku)) {
-        formData.value.selectedProducts.push(sku);
+const addProduct = (productId: string) => {
+    if (!selectedProducts.value.find(p => p.product_id === productId)) {
+        selectedProducts.value.push({
+            product_id: productId,
+            quantity: 1,
+        });
     }
 };
 
-const removeProduct = (sku: string) => {
-    const index = formData.value.selectedProducts.indexOf(sku);
+const removeProduct = (productId: string) => {
+    const index = selectedProducts.value.findIndex(p => p.product_id === productId);
     if (index > -1) {
-        formData.value.selectedProducts.splice(index, 1);
+        selectedProducts.value.splice(index, 1);
     }
 };
 
-const getProductBySku = (sku: string): Product | undefined => {
-    return props.products.find(p => p.sku === sku);
+const updateQuantity = (productId: string, quantity: number) => {
+    const item = selectedProducts.value.find(p => p.product_id === productId);
+    if (item) {
+        item.quantity = Math.max(1, quantity);
+    }
+};
+
+const getProductById = (productId: string): Product | undefined => {
+    return props.products.find(p => p.id === productId);
 };
 
 const saveBundle = () => {
+    if (selectedProducts.value.length === 0) {
+        alert('Please add at least one product to the bundle.');
+        return;
+    }
+
     const bundleData = {
-        ...formData.value,
-        originalPrice: originalPrice.value,
-        price: discountedPrice.value,
-        savings: savings.value,
+        name: formData.value.name,
+        description: formData.value.description,
+        discount_percentage: formData.value.discount_percentage,
+        is_active: formData.value.is_active,
+        products: selectedProducts.value,
     };
 
-    console.log('Saving bundle:', bundleData);
-    // TODO: Implement actual save logic
+    if (isEditMode.value) {
+        router.put(`/ecommerce/bundles/${props.id}`, bundleData);
+    } else {
+        router.post('/ecommerce/bundles', bundleData);
+    }
 };
 </script>
 
@@ -168,7 +199,7 @@ const saveBundle = () => {
                                     <Label for="discount">Discount (%)</Label>
                                     <Input
                                         id="discount"
-                                        v-model.number="formData.discount"
+                                        v-model.number="formData.discount_percentage"
                                         type="number"
                                         min="0"
                                         max="100"
@@ -182,24 +213,38 @@ const saveBundle = () => {
                         <!-- Selected Products -->
                         <div class="rounded-lg border border-border bg-card p-4">
                             <h2 class="text-base font-semibold text-foreground mb-4">Selected Products</h2>
-                            <div v-if="formData.selectedProducts.length === 0" class="text-center py-8 text-sm text-muted-foreground">
+                            <div v-if="selectedProducts.length === 0" class="text-center py-8 text-sm text-muted-foreground">
                                 No products selected. Add products from the right panel.
                             </div>
-                            <div v-else class="space-y-2">
+                            <div v-else class="space-y-2 max-h-96 overflow-y-auto">
                                 <div
-                                    v-for="sku in formData.selectedProducts"
-                                    :key="sku"
+                                    v-for="bundleProduct in selectedProducts"
+                                    :key="bundleProduct.product_id"
                                     class="flex items-center justify-between p-3 rounded-md border border-border bg-muted/50"
                                 >
                                     <div class="flex-1">
-                                        <p class="text-sm font-medium text-foreground">{{ getProductBySku(sku)?.name }}</p>
-                                        <p class="text-xs text-muted-foreground font-mono">{{ sku }}</p>
-                                        <p class="text-xs text-muted-foreground mt-1">${{ getProductBySku(sku)?.price.toFixed(2) }}</p>
+                                        <p class="text-sm font-medium text-foreground">{{ getProductById(bundleProduct.product_id)?.name }}</p>
+                                        <p class="text-xs text-muted-foreground font-mono">{{ getProductById(bundleProduct.product_id)?.sku }}</p>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <Label for="quantity" class="text-xs">Quantity:</Label>
+                                            <Input
+                                                :id="`quantity-${bundleProduct.product_id}`"
+                                                v-model.number="bundleProduct.quantity"
+                                                type="number"
+                                                min="1"
+                                                class="h-7 w-20 text-xs"
+                                                @update:model-value="updateQuantity(bundleProduct.product_id, bundleProduct.quantity)"
+                                            />
+                                            <span class="text-xs text-muted-foreground">
+                                                × ${{ getProductById(bundleProduct.product_id)?.price.toFixed(2) }} = 
+                                                ${{ ((getProductById(bundleProduct.product_id)?.price || 0) * bundleProduct.quantity).toFixed(2) }}
+                                            </span>
+                                        </div>
                                     </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        @click="removeProduct(sku)"
+                                        @click="removeProduct(bundleProduct.product_id)"
                                     >
                                         <Trash2 class="size-4 text-red-600 dark:text-red-400" />
                                     </Button>
@@ -218,13 +263,14 @@ const saveBundle = () => {
                                     v-for="product in availableProducts"
                                     :key="product.id"
                                     class="flex items-center justify-between p-2 rounded-md border border-border hover:bg-muted/50 cursor-pointer"
-                                    @click="addProduct(product.sku)"
+                                    @click="addProduct(product.id)"
                                 >
                                     <div class="flex-1">
                                         <p class="text-sm font-medium text-foreground">{{ product.name }}</p>
                                         <p class="text-xs text-muted-foreground font-mono">{{ product.sku }}</p>
+                                        <p class="text-xs text-muted-foreground mt-1">${{ product.price.toFixed(2) }}</p>
                                     </div>
-                                    <Button variant="ghost" size="sm">
+                                    <Button variant="ghost" size="sm" @click.stop="addProduct(product.id)">
                                         <Plus class="size-4" />
                                     </Button>
                                 </div>
@@ -244,7 +290,7 @@ const saveBundle = () => {
                                 </div>
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="text-muted-foreground">Discount</span>
-                                    <span class="text-green-600 dark:text-green-400 font-medium">{{ formData.discount }}%</span>
+                                    <span class="text-green-600 dark:text-green-400 font-medium">{{ formData.discount_percentage }}%</span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm">
                                     <span class="text-muted-foreground">Savings</span>

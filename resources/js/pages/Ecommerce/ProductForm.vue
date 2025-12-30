@@ -4,11 +4,11 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, products } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Plus, X } from 'lucide-vue-next';
+import { ArrowLeft, Save, Plus, X, Upload, Image as ImageIcon } from 'lucide-vue-next';
 
 interface Props {
     id?: string;
@@ -19,11 +19,13 @@ interface Props {
         description: string;
         price: number;
         stock: number;
-        category: string;
-        specifications: Record<string, string>;
+        low_stock_threshold?: number;
+        image?: string;
+        category_id: string | null;
+        specifications: Array<{ spec_key: string; spec_value: string }>;
         features: string[];
     };
-    categories: string[];
+    categories: Array<{ id: string; name: string }>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -53,19 +55,69 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const isEditMode = computed(() => !!props.id);
 
+// Convert specifications array to key-value pairs
+const initialSpecs = props.product?.specifications || [];
+const specificationKeys = ref<string[]>(initialSpecs.map(s => s.spec_key || ''));
+const specificationValues = ref<string[]>(initialSpecs.map(s => s.spec_value || ''));
+
 const formData = ref({
     name: props.product?.name || '',
     sku: props.product?.sku || '',
     description: props.product?.description || '',
     price: props.product?.price || 0,
     stock: props.product?.stock || 0,
-    category: props.product?.category || '',
-    specifications: props.product?.specifications ? { ...props.product.specifications } : {},
-    features: props.product?.features ? [...props.product.features] : [''],
+    low_stock_threshold: props.product?.low_stock_threshold || 10,
+    category_id: props.product?.category_id || '',
+    image: props.product?.image || '',
+    features: props.product?.features && props.product.features.length > 0 ? [...props.product.features] : [''],
 });
 
-const specificationKeys = ref(Object.keys(formData.value.specifications));
-const specificationValues = ref(Object.values(formData.value.specifications));
+const imageFile = ref<File | null>(null);
+const imagePreview = ref<string | null>(
+    props.product?.image 
+        ? (props.product.image.startsWith('http') || props.product.image.startsWith('/') 
+            ? props.product.image 
+            : `/storage/${props.product.image}`)
+        : null
+);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const handleImageSelect = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    
+    if (file) {
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+            return;
+        }
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Image size must be less than 2MB');
+            return;
+        }
+        
+        imageFile.value = file;
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const removeImage = () => {
+    imageFile.value = null;
+    imagePreview.value = null;
+    if (fileInputRef.value) {
+        fileInputRef.value.value = '';
+    }
+};
 
 const addSpecification = () => {
     specificationKeys.value.push('');
@@ -88,25 +140,48 @@ const removeFeature = (index: number) => {
 };
 
 const saveProduct = () => {
-    // Build specifications object
-    const specifications: Record<string, string> = {};
+    // Build specifications array
+    const specifications: Array<{ spec_key: string; spec_value: string }> = [];
     specificationKeys.value.forEach((key, index) => {
         if (key && specificationValues.value[index]) {
-            specifications[key] = specificationValues.value[index];
+            specifications.push({
+                spec_key: key.trim(),
+                spec_value: specificationValues.value[index].trim(),
+            });
         }
     });
 
     // Filter empty features
     const features = formData.value.features.filter(f => f.trim() !== '');
 
-    const productData = {
-        ...formData.value,
+    // Create FormData for file upload
+    const productData: Record<string, any> = {
+        name: formData.value.name,
+        sku: formData.value.sku,
+        description: formData.value.description,
+        price: formData.value.price,
+        stock: formData.value.stock,
+        low_stock_threshold: formData.value.low_stock_threshold,
+        category_id: formData.value.category_id || null,
         specifications,
         features,
     };
+    
+    // Add image file if selected
+    if (imageFile.value) {
+        productData.image = imageFile.value;
+    }
 
-    console.log('Saving product:', productData);
-    // TODO: Implement actual save logic
+    if (isEditMode.value) {
+        // Update product
+        router.post(`/ecommerce/products/${props.id}`, {
+            _method: 'PUT',
+            ...productData,
+        });
+    } else {
+        // Create product
+        router.post('/ecommerce/products', productData);
+    }
 };
 </script>
 
@@ -165,12 +240,12 @@ const saveProduct = () => {
                                     <Label for="category">Category</Label>
                                     <select
                                         id="category"
-                                        v-model="formData.category"
+                                        v-model="formData.category_id"
                                         class="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                     >
                                         <option value="">Select category</option>
-                                        <option v-for="category in categories" :key="category" :value="category">
-                                            {{ category }}
+                                        <option v-for="category in categories" :key="category.id" :value="category.id">
+                                            {{ category.name }}
                                         </option>
                                     </select>
                                 </div>
@@ -209,6 +284,16 @@ const saveProduct = () => {
                                         v-model.number="formData.stock"
                                         type="number"
                                         placeholder="0"
+                                        class="mt-1"
+                                    />
+                                </div>
+                                <div>
+                                    <Label for="low_stock_threshold">Low Stock Threshold</Label>
+                                    <Input
+                                        id="low_stock_threshold"
+                                        v-model.number="formData.low_stock_threshold"
+                                        type="number"
+                                        placeholder="10"
                                         class="mt-1"
                                     />
                                 </div>
@@ -289,14 +374,43 @@ const saveProduct = () => {
                         <!-- Product Image -->
                         <div class="rounded-lg border border-border bg-card p-4">
                             <h2 class="text-base font-semibold text-foreground mb-4">Product Image</h2>
-                            <div class="flex items-center justify-center h-64 bg-muted rounded-lg border-2 border-dashed border-border">
+                            <div v-if="imagePreview" class="relative mb-4">
+                                <img
+                                    :src="imagePreview"
+                                    alt="Product preview"
+                                    class="w-full h-64 object-cover rounded-lg border border-border"
+                                />
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    class="absolute top-2 right-2"
+                                    @click="removeImage"
+                                >
+                                    <X class="size-4" />
+                                </Button>
+                            </div>
+                            <div
+                                v-else
+                                class="flex items-center justify-center h-64 bg-muted rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/80 transition-colors"
+                                @click="fileInputRef?.click()"
+                            >
                                 <div class="text-center">
+                                    <ImageIcon class="size-12 text-muted-foreground mx-auto mb-2" />
                                     <p class="text-sm text-muted-foreground mb-2">Upload product image</p>
-                                    <Button variant="outline" size="sm">
+                                    <Button variant="outline" size="sm" type="button">
+                                        <Upload class="size-4 mr-2" />
                                         Choose File
                                     </Button>
+                                    <p class="text-xs text-muted-foreground mt-2">JPEG, PNG, GIF, WebP (Max 2MB)</p>
                                 </div>
                             </div>
+                            <input
+                                ref="fileInputRef"
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                class="hidden"
+                                @change="handleImageSelect"
+                            />
                         </div>
                     </div>
                 </div>

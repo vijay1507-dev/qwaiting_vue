@@ -4,20 +4,22 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { index as ecommerceIndex, products, bundles, orders } from '@/routes/ecommerce';
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Tag } from 'lucide-vue-next';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Tag, Loader2 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 interface CartItem {
     id: string;
-    productId: string;
+    productId?: string;
+    bundleId?: string;
     name: string;
     sku: string;
     price: number;
     quantity: number;
     subtotal: number;
-    image: string;
+    image: string | null;
 }
 
 interface Props {
@@ -56,7 +58,95 @@ const formatCurrency = (amount: number): string => {
     }).format(amount);
 };
 
+const { success, error: showError } = useToast();
 const couponInput = ref(props.couponCode);
+const updatingItems = ref<Set<string>>(new Set());
+const removingItems = ref<Set<string>>(new Set());
+
+const updateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+        removeItem(itemId);
+        return;
+    }
+
+    if (updatingItems.value.has(itemId)) return;
+    
+    updatingItems.value.add(itemId);
+    
+    try {
+        // URL encode the item ID to handle special characters like underscores
+        const encodedId = encodeURIComponent(itemId);
+        const response = await fetch(`/api/ecommerce/cart/${encodedId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                quantity: newQuantity,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            success('Cart updated successfully!');
+            router.reload({ only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'] });
+        } else {
+            throw new Error(data.message || 'Failed to update cart item');
+        }
+    } catch (err) {
+        console.error('Error updating cart item:', err);
+        showError(err instanceof Error ? err.message : 'Failed to update cart item. Please try again.');
+    } finally {
+        updatingItems.value.delete(itemId);
+    }
+};
+
+const incrementQuantity = (item: CartItem) => {
+    updateQuantity(item.id, item.quantity + 1);
+};
+
+const decrementQuantity = (item: CartItem) => {
+    if (item.quantity > 1) {
+        updateQuantity(item.id, item.quantity - 1);
+    }
+};
+
+const removeItem = async (itemId: string) => {
+    if (removingItems.value.has(itemId)) return;
+    
+    removingItems.value.add(itemId);
+    
+    try {
+        // URL encode the item ID to handle special characters like underscores
+        const encodedId = encodeURIComponent(itemId);
+        const response = await fetch(`/api/ecommerce/cart/${encodedId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            success('Item removed from cart');
+            router.reload({ only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'] });
+        } else {
+            throw new Error(data.message || 'Failed to remove item from cart');
+        }
+    } catch (err) {
+        console.error('Error removing cart item:', err);
+        showError(err instanceof Error ? err.message : 'Failed to remove item from cart. Please try again.');
+    } finally {
+        removingItems.value.delete(itemId);
+    }
+};
 
 const applyCoupon = () => {
     // TODO: Implement coupon application
@@ -132,8 +222,14 @@ const applyCoupon = () => {
                                 class="rounded-lg border border-border bg-card p-4"
                             >
                                 <div class="flex items-center gap-4">
-                                    <div class="flex size-16 items-center justify-center rounded-md bg-muted">
-                                        <ShoppingCart class="size-8 text-muted-foreground" />
+                                    <div class="flex size-16 items-center justify-center rounded-md bg-muted overflow-hidden shrink-0">
+                                        <img
+                                            v-if="item.image"
+                                            :src="item.image.startsWith('http') || item.image.startsWith('/') ? item.image : `/storage/${item.image}`"
+                                            :alt="item.name"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <ShoppingCart v-else class="size-8 text-muted-foreground" />
                                     </div>
                                     <div class="flex-1">
                                         <h3 class="text-sm font-medium text-foreground">{{ item.name }}</h3>
@@ -141,18 +237,33 @@ const applyCoupon = () => {
                                         <p class="text-sm font-medium text-foreground mt-1">{{ formatCurrency(item.price) }}</p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <button class="p-1 hover:bg-muted rounded-md">
-                                            <Minus class="size-4 text-muted-foreground" />
+                                        <button 
+                                            class="p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                            :disabled="updatingItems.has(item.id) || item.quantity <= 1"
+                                            @click="decrementQuantity(item)"
+                                        >
+                                            <Loader2 v-if="updatingItems.has(item.id)" class="size-4 text-muted-foreground animate-spin" />
+                                            <Minus v-else class="size-4 text-muted-foreground" />
                                         </button>
                                         <span class="text-sm font-medium text-foreground w-8 text-center">{{ item.quantity }}</span>
-                                        <button class="p-1 hover:bg-muted rounded-md">
-                                            <Plus class="size-4 text-muted-foreground" />
+                                        <button 
+                                            class="p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                            :disabled="updatingItems.has(item.id)"
+                                            @click="incrementQuantity(item)"
+                                        >
+                                            <Loader2 v-if="updatingItems.has(item.id)" class="size-4 text-muted-foreground animate-spin" />
+                                            <Plus v-else class="size-4 text-muted-foreground" />
                                         </button>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-sm font-semibold text-foreground">{{ formatCurrency(item.subtotal) }}</p>
-                                        <button class="mt-1 p-1 hover:bg-muted rounded-md">
-                                            <Trash2 class="size-4 text-red-600 dark:text-red-400" />
+                                        <button 
+                                            class="mt-1 p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                            :disabled="removingItems.has(item.id)"
+                                            @click="removeItem(item.id)"
+                                        >
+                                            <Loader2 v-if="removingItems.has(item.id)" class="size-4 text-red-600 dark:text-red-400 animate-spin" />
+                                            <Trash2 v-else class="size-4 text-red-600 dark:text-red-400" />
                                         </button>
                                     </div>
                                 </div>
