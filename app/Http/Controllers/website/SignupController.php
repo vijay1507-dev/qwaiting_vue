@@ -16,10 +16,79 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class SignupController extends Controller
 {
+    /**
+     * Check the registration status of an email address.
+     *
+     * @return array{status: string, lead: SignupLead|null, message: string, redirect_url?: string}
+     */
+    private function checkEmailStatus(string $email): array
+    {
+        // First, check if email exists in external database (fully registered users)
+        try {
+            $existsInExternal = DB::connection('mysql_external')
+                ->table('users')
+                ->where('email', $email)
+                ->whereNull('deleted_at')
+                ->exists();
+
+            if ($existsInExternal) {
+                return [
+                    'status' => 'completed',
+                    'lead' => null,
+                    'message' => 'Email already registered',
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to check email in external database', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+            // Continue with signup_leads check if external DB check fails
+        }
+
+        // Check signup_leads table
+        $lead = SignupLead::where('email', $email)->first();
+
+        // Email not found in signup_leads - new registration
+        if (! $lead) {
+            return [
+                'status' => 'new',
+                'lead' => null,
+                'message' => 'New registration',
+            ];
+        }
+
+        // Check if registration is fully completed (signup_step = 6)
+        if ($lead->signup_step >= 6) {
+            return [
+                'status' => 'completed',
+                'lead' => $lead,
+                'message' => 'Email already registered',
+            ];
+        }
+
+        // Check if email is verified
+        if (! $lead->hasVerifiedEmail()) {
+            return [
+                'status' => 'unverified',
+                'lead' => $lead,
+                'message' => 'Email not verified',
+            ];
+        }
+
+        // Email is verified but registration is incomplete
+        return [
+            'status' => 'incomplete',
+            'lead' => $lead,
+            'message' => 'Incomplete registration',
+        ];
+    }
+
     public function index()
     {
         // Check if this is from verification redirect
@@ -211,6 +280,130 @@ class SignupController extends Controller
         $validated = $request->validated();
 
         if ($step === 1) {
+            // If user has a session but is trying to sign up with a different email,
+            // clear the session to start fresh
+            $leadId = Session::get('signup_lead_id');
+            if ($leadId) {
+                $existingLead = SignupLead::find($leadId);
+                if ($existingLead && $existingLead->email !== $validated['email']) {
+                    // Different email - clear session
+                    Session::forget('signup_lead_id');
+                    Session::forget('completed_steps');
+                    Session::forget('signup_form_data');
+                    Log::info('Cleared session for different email signup attempt', [
+                        'old_email' => $existingLead->email,
+                        'new_email' => $validated['email'],
+                    ]);
+                }
+            }
+
+            // Check email status before processing
+            $emailStatus = $this->checkEmailStatus($validated['email']);
+
+            // Scenario 1: Registration is fully completed
+            if ($emailStatus['status'] === 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email address is already registered.',
+                    'error_type' => 'email_already_registered',
+                ], 422);
+            }
+
+            // Scenario 2: Email exists but not verified - resend verification email
+            if ($emailStatus['status'] === 'unverified') {
+                $lead = $emailStatus['lead'];
+
+                // Update lead with new form data
+                $lead->update([
+                    'name' => $validated['name'],
+                    'phone_number' => $validated['country_code'].' '.$validated['phone_number'],
+                    'password' => Hash::make($validated['password']),
+                ]);
+
+                // Resend verification email
+                try {
+                    $lead->notify(new SignupLeadVerifyEmail);
+                    Log::info('Verification email resent for existing unverified lead', [
+                        'lead_id' => $lead->id,
+                        'email' => $lead->email,
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'A verification email has been sent to your email address. Please check your inbox and verify your email to continue.',
+                        'verification_sent' => true,
+                        'email' => $lead->email,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to resend verification email', [
+                        'lead_id' => $lead->id,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to send verification email. Please try again later.',
+                    ], 500);
+                }
+            }
+
+            // Scenario 3: Email verified but registration incomplete - restore session and redirect
+            if ($emailStatus['status'] === 'incomplete') {
+                $lead = $emailStatus['lead'];
+
+                // Restore session
+                Session::put('signup_lead_id', $lead->id);
+
+                // Restore completed steps from database
+                $completedSteps = [];
+                $dbSignupStep = $lead->signup_step ?? 0;
+
+                // Step 1 is always completed if email is verified
+                $completedSteps[] = 1;
+
+                // Add all completed steps up to signup_step
+                for ($stepNum = 2; $stepNum <= $dbSignupStep && $stepNum <= 6; $stepNum++) {
+                    $completedSteps[] = $stepNum;
+                }
+
+                Session::put('completed_steps', $completedSteps);
+
+                // Determine next step to redirect to
+                $nextStep = $dbSignupStep + 1;
+                $stepQueryMap = [
+                    1 => 'basic_info',
+                    2 => 'business_info',
+                    3 => 'usage_preference',
+                    4 => 'industry',
+                    5 => 'daily_footfall',
+                    6 => 'current_solution',
+                ];
+
+                $stepQuery = $stepQueryMap[$nextStep] ?? 'basic_info';
+
+                // Generate hash for security
+                $hash = sha1($lead->email.$lead->id.config('app.key'));
+
+                // Build redirect URL
+                $redirectUrl = URL::route('signup', [], true).'?'.$stepQuery.'&hash='.$hash;
+
+                Log::info('Redirecting incomplete registration to step', [
+                    'lead_id' => $lead->id,
+                    'email' => $lead->email,
+                    'current_step' => $dbSignupStep,
+                    'next_step' => $nextStep,
+                    'step_query' => $stepQuery,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Welcome back! Redirecting you to continue your registration.',
+                    'redirect' => $redirectUrl,
+                    'redirect_to_step' => $nextStep,
+                ]);
+            }
+
+            // Scenario 4: New registration - proceed with normal flow
             // Check if lead already exists (from email verification)
             $leadId = Session::get('signup_lead_id');
             $lead = null;

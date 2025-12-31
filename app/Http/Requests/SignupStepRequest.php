@@ -6,7 +6,6 @@ use App\Models\SignupLead;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class SignupStepRequest extends FormRequest
@@ -36,10 +35,8 @@ class SignupStepRequest extends FormRequest
                     'string',
                     'email',
                     'max:255',
-                    Rule::unique('signup_leads', 'email')->ignore(
-                        Session::get('signup_lead_id'),
-                        'id'
-                    ),
+                    // Note: Email uniqueness is checked in the controller to handle
+                    // different scenarios (completed, unverified, incomplete registrations)
                 ],
                 'phone_number' => ['required', 'string', 'max:20'],
                 'country_code' => ['required', 'string', 'max:10'],
@@ -186,24 +183,9 @@ class SignupStepRequest extends FormRequest
                 $email = $this->input('email');
 
                 if ($email) {
-                    // Check email in external database
-                    try {
-                        $existsInExternal = DB::connection('mysql_external')
-                            ->table('users')
-                            ->where('email', $email)
-                            ->whereNull('deleted_at')
-                            ->exists();
-
-                        if ($existsInExternal) {
-                            $validator->errors()->add('email', 'This email address is already registered.');
-                        }
-                    } catch (\Exception $e) {
-                        // Log error but don't block validation
-                        \Illuminate\Support\Facades\Log::error('Email validation check in external database failed', [
-                            'email' => $email,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+                    // Note: Email registration status (completed, unverified, incomplete) is now
+                    // checked in SignupController@storeStep() method to provide better UX
+                    // and handle different scenarios appropriately
 
                     // Extract domain from email
                     $domain = substr(strrchr($email, '@'), 1);
