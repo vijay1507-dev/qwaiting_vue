@@ -65,6 +65,28 @@ class SignupController extends Controller
             Session::forget('from_verification_redirect');
         }
 
+        // Check if hash is provided in query parameters (from email link)
+        // No lead_id in URL for security - find user by hash only
+        $queryHash = request()->query('hash');
+
+        if ($queryHash) {
+            // Find user by matching hash (hash = sha1(email + id + app_key))
+            // Only check incomplete signups (signup_step < 6) for efficiency
+            $leads = SignupLead::whereNotNull('email_verified_at')
+                ->where('email', '!=', '')
+                ->where('signup_step', '<', 6)
+                ->get();
+
+            foreach ($leads as $candidateLead) {
+                $expectedHash = sha1($candidateLead->email.$candidateLead->id.config('app.key'));
+                if ($expectedHash === $queryHash) {
+                    // Restore session from query parameters
+                    Session::put('signup_lead_id', $candidateLead->id);
+                    break;
+                }
+            }
+        }
+
         // Get data from session (stored before verification)
         $sessionData = Session::get('signup_form_data', []);
 

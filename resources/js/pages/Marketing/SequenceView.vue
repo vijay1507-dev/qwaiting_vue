@@ -180,7 +180,7 @@ watch(() => sequence.value.target_user_type, (newType, oldType) => {
                 
                 // If email type is NOT "Signup Nudge", ensure no event-based timing units
                 if (email.type !== 'signup_nudge') {
-                    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+                    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'];
                     if (eventBasedUnits.includes(email.timingUnit)) {
                         email.timingUnit = 'days';
                         if (email.timingValue === 0) {
@@ -257,13 +257,14 @@ const allTimingUnits = [
     { value: 'on_verification', label: 'On Verification (Event)' },
     { value: 'if_not_verified', label: 'If Not Verified (Event)' },
     { value: 'after_verification', label: 'After Verification (Event)' },
+    { value: 'incomplete_registration', label: 'Incomplete Registration (Event)' },
 ];
 
 // Get timing units for a specific email based on target user type and email type
 const getTimingUnitsForEmail = (email: EmailTemplate) => {
     const targetType = sequence.value.target_user_type || 'trial_users';
     let filteredUnits = [...allTimingUnits];
-    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'];
     
     // Show event-based options ONLY when email type is "Signup Nudge" (signup_nudge)
     const shouldShowEventBased = email.type === 'signup_nudge';
@@ -316,13 +317,13 @@ const timingUnits = computed(() => {
     // For paid_users, exclude expiry-based and event-based timing units
     if (targetType === 'paid_users') {
         return allTimingUnits.filter(unit => 
-            !['days_before_expiry', 'on_expired', 'on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(unit.value)
+            !['days_before_expiry', 'on_expired', 'on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'].includes(unit.value)
         );
     }
     
     // trial_users and all_users can use time-based timing units (exclude event-based)
     return allTimingUnits.filter(unit => 
-        !['on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(unit.value)
+        !['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'].includes(unit.value)
     );
 });
 
@@ -635,7 +636,7 @@ const handleTimingUnitChange = (email: EmailTemplate) => {
         email.timingValue = 0;
     }
     // Event-based timing units don't need timing values
-    if (['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'on_expired'].includes(email.timingUnit)) {
+    if (['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration', 'on_expired'].includes(email.timingUnit)) {
         email.timingValue = 0;
     }
 };
@@ -684,7 +685,7 @@ const getTimingRecommendation = (emailType: string): { unit: string; value: numb
 
 // Watch email type changes to suggest timing
 const handleEmailTypeChange = (email: EmailTemplate) => {
-    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification'];
+    const eventBasedUnits = ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'];
     
     // Reset event-based timing units if email type is NOT "Signup Nudge"
     if (email.type !== 'signup_nudge' && eventBasedUnits.includes(email.timingUnit)) {
@@ -1060,7 +1061,7 @@ const handleSave = () => {
                                                     <div class="flex items-center gap-2 text-xs text-muted-foreground">
                                                         <Clock class="size-3" />
                                                         <span>
-                                                            <template v-if="email.timingUnit === 'immediate' || (email.timingValue === 0 && email.timingUnit !== 'days_before_expiry' && email.timingUnit !== 'on_expired' && !['on_signup', 'on_verification', 'if_not_verified', 'after_verification'].includes(email.timingUnit))">
+                                                            <template v-if="email.timingUnit === 'immediate' || (email.timingValue === 0 && email.timingUnit !== 'days_before_expiry' && email.timingUnit !== 'on_expired' && !['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration'].includes(email.timingUnit))">
                                                                 Immediate
                                                             </template>
                                                             <template v-else-if="email.timingUnit === 'days_before_expiry'">
@@ -1080,6 +1081,9 @@ const handleSave = () => {
                                                             </template>
                                                             <template v-else-if="email.timingUnit === 'after_verification'">
                                                                 After Verification (Event)
+                                                            </template>
+                                                            <template v-else-if="email.timingUnit === 'incomplete_registration'">
+                                                                Incomplete Registration (Event)
                                                             </template>
                                                             <template v-else>
                                                                 {{ email.timingValue }} {{ email.timingUnit }}
@@ -1125,7 +1129,7 @@ const handleSave = () => {
                                                         v-model.number="email.timingValue"
                                                         type="number"
                                                         min="0"
-                                                        :disabled="email.timingUnit === 'immediate' || ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'on_expired'].includes(email.timingUnit)"
+                                                        :disabled="email.timingUnit === 'immediate' || ['on_signup', 'on_verification', 'if_not_verified', 'after_verification', 'incomplete_registration', 'on_expired'].includes(email.timingUnit)"
                                                         class="w-full"
                                                     />
                                                 </div>

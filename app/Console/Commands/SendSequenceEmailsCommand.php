@@ -109,8 +109,59 @@ class SendSequenceEmailsCommand extends Command
                 // Process each email template in the sequence
                 foreach ($sequence->emailTemplates->where('status', 'active') as $emailTemplate) {
                     // Skip most event-based emails in scheduled runs (they're handled by events)
-                    // But handle "if_not_verified" in scheduled runs for incomplete signups
+                    // But handle "if_not_verified" and "incomplete_registration" in scheduled runs
                     if (in_array($emailTemplate->timing_unit, ['on_signup', 'on_verification', 'after_verification'])) {
+                        continue;
+                    }
+
+                    // Handle "incomplete_registration" emails for verified users who haven't completed signup
+                    if ($emailTemplate->timing_unit === 'incomplete_registration') {
+                        // Only process for incomplete_signups target type
+                        if ($sequence->target_user_type === 'incomplete_signups') {
+                            // Check if user is verified but hasn't completed all steps
+                            $isIncomplete = false;
+
+                            if (isset($user['source']) && $user['source'] === 'signup_leads') {
+                                // For SignupLead, check if verified and signup_step < 6
+                                $signupLead = SignupLead::find($user['id']);
+                                if ($signupLead && $signupLead->hasVerifiedEmail() && $signupLead->signup_step < 6) {
+                                    $isIncomplete = true;
+                                }
+                            } elseif (isset($user['email_verified_at']) && ! is_null($user['email_verified_at'])) {
+                                // For external users, if verified but signup_step is not 6, they're incomplete
+                                // Note: External users typically don't have signup_step, so we check if they're in incomplete_signups
+                                // This means they're verified but haven't completed full registration
+                                $isIncomplete = true;
+                            }
+
+                            if ($isIncomplete) {
+                                // User is verified but incomplete, send the email
+                                $userEmailCount++;
+                                if ($isPreview) {
+                                    $signupStep = $user['signup_step'] ?? 0;
+                                    $nextStep = min($signupStep + 1, 6);
+                                    $this->line("  │  ✓ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                    $this->line("  │    Type: {$emailTemplate->type} | Incomplete Registration (Event) - Step {$signupStep}/6, Next: {$nextStep}");
+                                    if (isset($user['source'])) {
+                                        $this->line("  │    Source: {$user['source']}");
+                                    }
+                                } else {
+                                    $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (Incomplete Registration)");
+                                    SendSequenceEmailToUserJob::dispatch(
+                                        $emailTemplate,
+                                        $user['id'],
+                                        $user['email'],
+                                        $user,
+                                        $daysSinceRegistration
+                                    )->delay(now()->addSeconds($totalSent * 5));
+                                }
+                                $totalSent++;
+                            } elseif ($isPreview) {
+                                $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                                $this->line("  │    Type: {$emailTemplate->type} | Incomplete Registration (Event) - User completed registration or not verified");
+                            }
+                        }
+
                         continue;
                     }
 
@@ -120,7 +171,7 @@ class SendSequenceEmailsCommand extends Command
                         if ($sequence->target_user_type === 'incomplete_signups') {
                             // Check if user is not verified
                             $isUnverified = false;
-                            
+
                             // Check email_verified_at from user array (set in getIncompleteSignups)
                             if (isset($user['email_verified_at']) && is_null($user['email_verified_at'])) {
                                 $isUnverified = true;
@@ -520,7 +571,7 @@ class SendSequenceEmailsCommand extends Command
             $tenants = collect();
             $domains = collect();
 
-            if (!empty($teamIds)) {
+            if (! empty($teamIds)) {
                 $tenants = DB::connection('mysql_external')
                     ->table('tenants')
                     ->whereIn('id', $teamIds)

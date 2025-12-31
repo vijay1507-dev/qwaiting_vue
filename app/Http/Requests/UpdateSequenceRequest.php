@@ -30,7 +30,7 @@ class UpdateSequenceRequest extends FormRequest
             'emails' => ['required', 'array', 'min:1'],
             'emails.*.sequence_number' => ['required', 'integer', 'min:1'],
             'emails.*.timing_value' => ['required', 'integer', 'min:0'],
-            'emails.*.timing_unit' => ['required', 'in:immediate,minutes,hours,days,weeks,days_before_expiry,on_expired,on_signup,on_verification,if_not_verified,after_verification'],
+            'emails.*.timing_unit' => ['required', 'in:immediate,minutes,hours,days,weeks,days_before_expiry,on_expired,on_signup,on_verification,if_not_verified,after_verification,incomplete_registration'],
             'emails.*.subject' => ['required', 'string', 'max:255'],
             'emails.*.type' => ['required', 'in:welcome,feature_highlight,social_proof,trial_reminder,sales_outreach,offer,completion_reminder,signup_nudge,upsell,renewal_reminder,feature_update,feedback_request,loyalty_reward'],
             'emails.*.content' => ['nullable', 'string'],

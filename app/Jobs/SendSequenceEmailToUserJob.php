@@ -199,6 +199,9 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         // Generate verification URL for SignupLead users
         $verificationUrl = $this->buildVerificationUrl();
 
+        // Generate signup URL with step parameter for incomplete registrations
+        $signupUrl = $this->buildSignupUrl();
+
         $variables = array_merge([
             'first_name' => $this->userData['name'] ?? 'User',
             'last_name' => '',
@@ -215,10 +218,26 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             'plan_expiry' => $this->userData['plan_expiry'] ?? '',
             'days_until_expiry' => $this->userData['days_until_expiry'] ?? '',
             'verification_url' => $verificationUrl,
+            'incomplete_signup_step_url' => $signupUrl,
         ], $this->userData);
 
+        // Ensure incomplete_signup_step_url is set after merging userData to prevent override
+        $variables['incomplete_signup_step_url'] = $signupUrl;
+
+        // Log for debugging
+        Log::info('Replacing variables in email', [
+            'has_incomplete_signup_step_url' => isset($variables['incomplete_signup_step_url']),
+            'incomplete_signup_step_url_value' => $variables['incomplete_signup_step_url'] ?? 'NOT SET',
+            'signup_url_value' => $signupUrl,
+        ]);
+
         foreach ($variables as $key => $value) {
+            // Replace with exact match
             $text = str_replace('{{'.$key.'}}', (string) $value, $text);
+            // Also replace with spaces around the variable name (handle template formatting)
+            $text = str_replace('{{ '.$key.' }}', (string) $value, $text);
+            // Replace with spaces inside (handle cases like {{incomplete signup step url}})
+            $text = str_replace('{{'.str_replace('_', ' ', $key).'}}', (string) $value, $text);
         }
 
         return $text;
@@ -265,6 +284,58 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         $protocol = config('app.env') === 'local' ? 'http://' : 'https://';
 
         return $protocol.rtrim($domain, '/').'/dashboard';
+    }
+
+    /**
+     * Build signup URL with step parameter for incomplete registrations.
+     */
+    private function buildSignupUrl(): string
+    {
+        // Check if this is a SignupLead user with incomplete registration
+        $signupLead = SignupLead::query()->find($this->externalUserId);
+
+        if ($signupLead && $signupLead->hasVerifiedEmail() && $signupLead->signup_step < 6) {
+            // Refresh to get the latest signup_step from database
+            $signupLead->refresh();
+
+            // Step mapping: 1: 'basic_info', 2: 'business_info', 3: 'usage_preference',
+            // 4: 'industry', 5: 'daily_footfall', 6: 'current_solution'
+            $stepQueryMap = [
+                1 => 'basic_info',
+                2 => 'business_info',
+                3 => 'usage_preference',
+                4 => 'industry',
+                5 => 'daily_footfall',
+                6 => 'current_solution',
+            ];
+
+            // Get the next step they need to complete (signup_step + 1)
+            // signup_step represents the last completed step
+            // If signup_step = 2, they completed step 2, so they need to continue at step 3
+            $currentStep = (int) $signupLead->signup_step;
+            $nextStep = $currentStep + 1;
+            $stepQuery = $stepQueryMap[$nextStep] ?? 'basic_info';
+
+            // Generate signup URL using URL::route() same as verification_url
+            // Use hash only (no lead_id in URL for security)
+            // Hash includes email + ID + app key for verification
+            $hash = sha1($signupLead->email.$signupLead->id.config('app.key'));
+            // Format: ?step_query&hash=Y (no lead_id shown)
+            $url = URL::route('signup', [], true).'?'.$stepQuery.'&hash='.$hash;
+
+            Log::info('Building signup URL', [
+                'signup_lead_id' => $signupLead->id,
+                'current_signup_step' => $currentStep,
+                'next_step' => $nextStep,
+                'step_query' => $stepQuery,
+                'url' => $url,
+            ]);
+
+            return $url;
+        }
+
+        // Return default signup URL if not applicable
+        return URL::route('signup', [], true);
     }
 
     /**
