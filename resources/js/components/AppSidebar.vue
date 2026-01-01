@@ -19,9 +19,10 @@ import { sequences as marketingSequences } from '@/routes/marketing';
 import { index as financeIndex } from '@/routes/finance';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
 import { index as subscriptionIndex } from '@/routes/subscription';
+import { employees as userManagementEmployees, roles as userManagementRoles } from '@/routes/user-management';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, Users, Briefcase, Receipt, Mail, DollarSign, ShoppingBag, CreditCard } from 'lucide-vue-next';
+import { LayoutGrid, Users, Users2, Briefcase, Receipt, Mail, DollarSign, ShoppingBag, CreditCard } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -64,6 +65,20 @@ const mainNavItems: NavItem[] = [
         title: 'Subscription Management',
         href: subscriptionIndex(),
         icon: CreditCard,
+    },
+    {
+        title: 'User Management',
+        icon: Users2,
+        children: [
+            {
+                title: 'Users',
+                href: userManagementEmployees(),
+            },
+            {
+                title: 'Role',
+                href: userManagementRoles().url,
+            },
+        ],
     },
 ];
 

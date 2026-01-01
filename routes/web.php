@@ -39,6 +39,25 @@ Route::get('clients/{id}/email-logs', [App\Http\Controllers\Client\ClientsContro
 Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->middleware(['auth', 'verified'])->name('clients.update');
 Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->middleware(['auth', 'verified'])->name('clients.reset-password');
 
+Route::middleware(['auth', 'verified'])->prefix('user-management')->name('user-management.')->group(function () {
+    Route::get('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('employees');
+    Route::get('/employees/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('employees.create');
+    Route::post('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('employees.store');
+    Route::get('/employees/{id}/edit', [App\Http\Controllers\UserManagement\UserManagementController::class, 'edit'])->name('employees.edit');
+    Route::put('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'update'])->name('employees.update');
+    Route::delete('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'destroy'])->name('employees.destroy');
+    Route::post('/employees/{id}/reset-password', [App\Http\Controllers\UserManagement\UserManagementController::class, 'resetPassword'])->name('employees.reset-password');
+    Route::post('/employees/{id}/toggle-lock', [App\Http\Controllers\UserManagement\UserManagementController::class, 'toggleLock'])->name('employees.toggle-lock');
+
+    // Roles
+    Route::get('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'roles'])->name('roles');
+    Route::get('/roles/create', [App\Http\Controllers\UserManagement\RoleController::class, 'create'])->name('roles.create');
+    Route::post('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'store'])->name('roles.store');
+    Route::get('/roles/{id}/edit', [App\Http\Controllers\UserManagement\RoleController::class, 'edit'])->name('roles.edit');
+    Route::put('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'update'])->name('roles.update');
+    Route::delete('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'destroy'])->name('roles.destroy');
+});
+
 Route::get('quotes', function () {
     return Inertia::render('Quotes/Index');
 })->middleware(['auth', 'verified'])->name('quotes.index');
@@ -70,7 +89,7 @@ Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')
     Route::get('/workflows/create', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.create');
     Route::get('/workflows/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.edit');
     Route::get('/tracking', [App\Http\Controllers\Marketing\MarketingController::class, 'tracking'])->name('tracking');
-    
+
     // System Templates
     Route::get('/system-templates', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'index'])->name('system-templates.index');
     Route::get('/system-templates/{id}/edit', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'edit'])->name('system-templates.edit');
@@ -93,7 +112,7 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
 
 Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
     Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index');
-    
+
     // Products
     Route::get('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'products'])->name('products');
     Route::get('/products/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.create');
@@ -102,7 +121,7 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
     Route::get('/products/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.edit');
     Route::put('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyProduct'])->name('products.destroy');
-    
+
     // Bundles
     Route::get('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundles'])->name('bundles');
     Route::get('/bundles/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.create');
@@ -110,10 +129,10 @@ Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')
     Route::get('/bundles/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.edit');
     Route::put('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateBundle'])->name('bundles.update');
     Route::delete('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyBundle'])->name('bundles.destroy');
-    
+
     // Cart
     Route::get('/cart', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'cart'])->name('cart');
-    
+
     // Orders
     Route::get('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orders'])->name('orders');
     Route::post('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeOrder'])->name('orders.store');
