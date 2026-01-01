@@ -22,6 +22,8 @@ class TemplateVariableSeeder extends Seeder
             ['name' => 'dashboard_url', 'module' => 'general', 'description' => 'Link to dashboard', 'example_value' => 'https://app.qwaiting.com/dashboard'],
             ['name' => 'unsubscribe_url', 'module' => 'general', 'description' => 'Unsubscribe link', 'example_value' => 'https://app.qwaiting.com/unsubscribe'],
             ['name' => 'preferences_url', 'module' => 'general', 'description' => 'Email preferences link', 'example_value' => 'https://app.qwaiting.com/preferences'],
+            ['name' => 'domain', 'module' => 'general', 'description' => 'User domain', 'example_value' => 'example.qwaiting.com'],
+            ['name' => 'password', 'module' => 'general', 'description' => 'User password', 'example_value' => '********'],
 
             // Leads module
             ['name' => 'lead_name', 'module' => 'leads', 'description' => 'Lead name', 'example_value' => 'Jane Smith'],

@@ -131,6 +131,8 @@ class SendSequenceTestEmailJob implements ShouldQueue
             'preferences_url' => rtrim(config('app.url'), '/').'/preferences',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
+            'domain' => 'test-company.qwaiting.com',
+            'password' => 'TestPassword123!',
             'incomplete_signup_step_url' => rtrim(config('app.url'), '/').'/signup?basic_info&hash=test123',
         ], $this->testVariables);
 

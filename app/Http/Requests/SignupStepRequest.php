@@ -35,8 +35,8 @@ class SignupStepRequest extends FormRequest
                     'string',
                     'email',
                     'max:255',
-                    // Note: Email uniqueness is checked in the controller to handle
-                    // different scenarios (completed, unverified, incomplete registrations)
+                    // Note: We allow existing emails here and handle them in the controller
+                    // to check if registration is complete, verification status, etc.
                 ],
                 'phone_number' => ['required', 'string', 'max:20'],
                 'country_code' => ['required', 'string', 'max:10'],
@@ -183,9 +183,24 @@ class SignupStepRequest extends FormRequest
                 $email = $this->input('email');
 
                 if ($email) {
-                    // Note: Email registration status (completed, unverified, incomplete) is now
-                    // checked in SignupController@storeStep() method to provide better UX
-                    // and handle different scenarios appropriately
+                    // Check email in external database
+                    try {
+                        $existsInExternal = DB::connection('mysql_external')
+                            ->table('users')
+                            ->where('email', $email)
+                            ->whereNull('deleted_at')
+                            ->exists();
+
+                        if ($existsInExternal) {
+                            $validator->errors()->add('email', 'This email address is already registered.');
+                        }
+                    } catch (\Exception $e) {
+                        // Log error but don't block validation
+                        \Illuminate\Support\Facades\Log::error('Email validation check in external database failed', [
+                            'email' => $email,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
 
                     // Extract domain from email
                     $domain = substr(strrchr($email, '@'), 1);

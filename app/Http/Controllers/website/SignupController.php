@@ -16,79 +16,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class SignupController extends Controller
 {
-    /**
-     * Check the registration status of an email address.
-     *
-     * @return array{status: string, lead: SignupLead|null, message: string, redirect_url?: string}
-     */
-    private function checkEmailStatus(string $email): array
-    {
-        // First, check if email exists in external database (fully registered users)
-        try {
-            $existsInExternal = DB::connection('mysql_external')
-                ->table('users')
-                ->where('email', $email)
-                ->whereNull('deleted_at')
-                ->exists();
-
-            if ($existsInExternal) {
-                return [
-                    'status' => 'completed',
-                    'lead' => null,
-                    'message' => 'Email already registered',
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning('Failed to check email in external database', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-            // Continue with signup_leads check if external DB check fails
-        }
-
-        // Check signup_leads table
-        $lead = SignupLead::where('email', $email)->first();
-
-        // Email not found in signup_leads - new registration
-        if (! $lead) {
-            return [
-                'status' => 'new',
-                'lead' => null,
-                'message' => 'New registration',
-            ];
-        }
-
-        // Check if registration is fully completed (signup_step = 6)
-        if ($lead->signup_step >= 6) {
-            return [
-                'status' => 'completed',
-                'lead' => $lead,
-                'message' => 'Email already registered',
-            ];
-        }
-
-        // Check if email is verified
-        if (! $lead->hasVerifiedEmail()) {
-            return [
-                'status' => 'unverified',
-                'lead' => $lead,
-                'message' => 'Email not verified',
-            ];
-        }
-
-        // Email is verified but registration is incomplete
-        return [
-            'status' => 'incomplete',
-            'lead' => $lead,
-            'message' => 'Incomplete registration',
-        ];
-    }
-
     public function index()
     {
         // Check if this is from verification redirect
@@ -280,63 +211,44 @@ class SignupController extends Controller
         $validated = $request->validated();
 
         if ($step === 1) {
-            // If user has a session but is trying to sign up with a different email,
-            // clear the session to start fresh
-            $leadId = Session::get('signup_lead_id');
-            if ($leadId) {
-                $existingLead = SignupLead::find($leadId);
-                if ($existingLead && $existingLead->email !== $validated['email']) {
-                    // Different email - clear session
-                    Session::forget('signup_lead_id');
-                    Session::forget('completed_steps');
-                    Session::forget('signup_form_data');
-                    Log::info('Cleared session for different email signup attempt', [
-                        'old_email' => $existingLead->email,
-                        'new_email' => $validated['email'],
-                    ]);
-                }
-            }
+            $email = $validated['email'];
 
-            // Check email status before processing
-            $emailStatus = $this->checkEmailStatus($validated['email']);
+            // Check if email already exists in signup_leads table
+            $existingLead = SignupLead::where('email', $email)->first();
 
-            // Scenario 1: Registration is fully completed
-            if ($emailStatus['status'] === 'completed') {
+            // Scenario 1: Registration is fully completed (signup_step = 6)
+            if ($existingLead && $existingLead->signup_step === 6) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This email address is already registered.',
-                    'error_type' => 'email_already_registered',
+                    'errors' => [
+                        'email' => ['This email address is already registered.'],
+                    ],
                 ], 422);
             }
 
-            // Scenario 2: Email exists but not verified - resend verification email
-            if ($emailStatus['status'] === 'unverified') {
-                $lead = $emailStatus['lead'];
-
-                // Update lead with new form data
-                $lead->update([
-                    'name' => $validated['name'],
-                    'phone_number' => $validated['country_code'].' '.$validated['phone_number'],
-                    'password' => Hash::make($validated['password']),
-                ]);
-
+            // Scenario 2: User signed up but didn't verify email
+            if ($existingLead && ! $existingLead->hasVerifiedEmail()) {
                 // Resend verification email
                 try {
-                    $lead->notify(new SignupLeadVerifyEmail);
+                    $existingLead->notify(new SignupLeadVerifyEmail);
+
                     Log::info('Verification email resent for existing unverified lead', [
-                        'lead_id' => $lead->id,
-                        'email' => $lead->email,
+                        'lead_id' => $existingLead->id,
+                        'email' => $existingLead->email,
                     ]);
 
                     return response()->json([
                         'success' => true,
-                        'message' => 'A verification email has been sent to your email address. Please check your inbox and verify your email to continue.',
                         'verification_sent' => true,
-                        'email' => $lead->email,
+                        'email' => $existingLead->email,
+                        'lead_id' => $existingLead->id,
+                        'message' => 'A verification email has been sent to your email address. Please check your inbox.',
+                        'next_step' => 1, // Stay on step 1 to show verification message
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to resend verification email', [
-                        'lead_id' => $lead->id,
+                        'lead_id' => $existingLead->id,
                         'error' => $e->getMessage(),
                     ]);
 
@@ -347,16 +259,14 @@ class SignupController extends Controller
                 }
             }
 
-            // Scenario 3: Email verified but registration incomplete - restore session and redirect
-            if ($emailStatus['status'] === 'incomplete') {
-                $lead = $emailStatus['lead'];
-
+            // Scenario 3: User verified email but didn't complete all registration steps
+            if ($existingLead && $existingLead->hasVerifiedEmail() && $existingLead->signup_step < 6) {
                 // Restore session
-                Session::put('signup_lead_id', $lead->id);
+                Session::put('signup_lead_id', $existingLead->id);
 
                 // Restore completed steps from database
                 $completedSteps = [];
-                $dbSignupStep = $lead->signup_step ?? 0;
+                $dbSignupStep = $existingLead->signup_step ?? 0;
 
                 // Step 1 is always completed if email is verified
                 $completedSteps[] = 1;
@@ -368,7 +278,7 @@ class SignupController extends Controller
 
                 Session::put('completed_steps', $completedSteps);
 
-                // Determine next step to redirect to
+                // Determine next step and redirect
                 $nextStep = $dbSignupStep + 1;
                 $stepQueryMap = [
                     1 => 'basic_info',
@@ -382,14 +292,11 @@ class SignupController extends Controller
                 $stepQuery = $stepQueryMap[$nextStep] ?? 'basic_info';
 
                 // Generate hash for security
-                $hash = sha1($lead->email.$lead->id.config('app.key'));
+                $hash = sha1($existingLead->email.$existingLead->id.config('app.key'));
 
-                // Build redirect URL
-                $redirectUrl = URL::route('signup', [], true).'?'.$stepQuery.'&hash='.$hash;
-
-                Log::info('Redirecting incomplete registration to step', [
-                    'lead_id' => $lead->id,
-                    'email' => $lead->email,
+                Log::info('Redirecting incomplete signup to step', [
+                    'lead_id' => $existingLead->id,
+                    'email' => $existingLead->email,
                     'current_step' => $dbSignupStep,
                     'next_step' => $nextStep,
                     'step_query' => $stepQuery,
@@ -397,14 +304,13 @@ class SignupController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Welcome back! Redirecting you to continue your registration.',
-                    'redirect' => $redirectUrl,
-                    'redirect_to_step' => $nextStep,
+                    'message' => 'Continuing from where you left off.',
+                    'redirect' => route('signup').'?'.$stepQuery.'&hash='.$hash,
+                    'next_step' => $nextStep,
                 ]);
             }
 
-            // Scenario 4: New registration - proceed with normal flow
-            // Check if lead already exists (from email verification)
+            // Scenario 4: New user or existing lead from session - proceed with normal flow
             $leadId = Session::get('signup_lead_id');
             $lead = null;
 
@@ -414,20 +320,22 @@ class SignupController extends Controller
 
             // This is when "Start Free Trial" button is clicked - save to database
             // If lead exists (from email verification), update it with all form data
-            if ($lead && $lead->email === $validated['email']) {
+            if ($lead && $lead->email === $email) {
                 $lead->update([
                     'name' => $validated['name'],
                     'phone_number' => $validated['country_code'].' '.$validated['phone_number'],
                     'password' => Hash::make($validated['password']),
+                    'temp_password' => $validated['password'], // Store plain password temporarily
                     'signup_step' => 1,
                 ]);
             } else {
                 // Create new lead record with all data
                 $lead = SignupLead::create([
                     'name' => $validated['name'],
-                    'email' => $validated['email'],
+                    'email' => $email,
                     'phone_number' => $validated['country_code'].' '.$validated['phone_number'],
                     'password' => Hash::make($validated['password']),
+                    'temp_password' => $validated['password'], // Store plain password temporarily
                     'signup_step' => 1,
                 ]);
                 Session::put('signup_lead_id', $lead->id);
@@ -629,7 +537,61 @@ class SignupController extends Controller
                     $response = Http::post('https://qwaiting-ai.thevistiq.com/api/create/tenant', $apiData);
 
                     if ($response->successful()) {
+                        // Update email_verified_at in external database users table
+                        try {
+                            $updated = DB::connection('mysql_external')
+                                ->table('users')
+                                ->where('email', $lead->email)
+                                ->update(['email_verified_at' => now()]);
+
+                            if ($updated) {
+                                Log::info('Updated email_verified_at in external database', [
+                                    'lead_id' => $lead->id,
+                                    'email' => $lead->email,
+                                ]);
+                            } else {
+                                Log::warning('User not found in external database for email_verified_at update', [
+                                    'lead_id' => $lead->id,
+                                    'email' => $lead->email,
+                                ]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to update email_verified_at in external database', [
+                                'lead_id' => $lead->id,
+                                'email' => $lead->email,
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString(),
+                            ]);
+                        }
+
+                        // Send registration complete email before deleting lead
+                        // Don't clear temp_password here - let the email job clear it after sending
+                        try {
+                            $sequenceService = new SequenceEmailService;
+                            // Refresh lead to get latest data including temp_password
+                            $lead->refresh();
+
+                            Log::info('Sending registration complete email', [
+                                'lead_id' => $lead->id,
+                                'has_temp_password' => ! empty($lead->temp_password),
+                                'temp_password_length' => strlen($lead->temp_password ?? ''),
+                            ]);
+
+                            // Send "after_verification" emails for registration complete
+                            $sequenceService->sendEventBasedEmails('after_verification', $lead);
+
+                            // Also send "immediate" emails in case registration complete uses immediate timing
+                            $sequenceService->sendEventBasedEmails('immediate', $lead);
+                        } catch (\Exception $e) {
+                            Log::error('Failed to send registration complete email', [
+                                'lead_id' => $lead->id,
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString(),
+                            ]);
+                        }
+
                         // Soft delete the lead after successful API call
+                        // Note: temp_password will be cleared by the email job after sending
                         $lead->delete();
 
                         // $user = User::create([

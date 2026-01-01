@@ -112,6 +112,17 @@ class SendSequenceEmailToUserJob implements ShouldQueue
                 'sent_at' => now(),
             ]);
 
+            // Clear temp_password from signup_leads if this is a SignupLead user
+            // Use withTrashed() in case the lead was soft deleted
+            $signupLead = SignupLead::withTrashed()->find($this->externalUserId);
+            if ($signupLead && $signupLead->temp_password) {
+                $signupLead->update(['temp_password' => null]);
+                Log::info('Cleared temp_password after email sent', [
+                    'lead_id' => $signupLead->id,
+                    'email_template_id' => $this->emailTemplate->id,
+                ]);
+            }
+
             Log::info('Sequence email sent successfully', [
                 'email_template_id' => $this->emailTemplate->id,
                 'external_user_id' => $this->externalUserId,
@@ -202,6 +213,36 @@ class SendSequenceEmailToUserJob implements ShouldQueue
         // Generate signup URL with step parameter for incomplete registrations
         $signupUrl = $this->buildSignupUrl();
 
+        // Get password from userData, or retrieve from database if not set (for SignupLead users)
+        $password = $this->userData['password'] ?? '';
+
+        // Always try to get password from database for SignupLead users to ensure we have the latest value
+        // This is important because the lead might be soft-deleted or the password might not be in userData
+        $signupLead = SignupLead::withTrashed()->find($this->externalUserId);
+        if ($signupLead) {
+            // Refresh to get latest data including temp_password
+            $signupLead->refresh();
+            if ($signupLead->temp_password) {
+                $password = $signupLead->temp_password;
+                Log::info('Retrieved password from database in email job', [
+                    'lead_id' => $signupLead->id,
+                    'has_password' => ! empty($password),
+                    'password_length' => strlen($password),
+                    'was_in_userdata' => ! empty($this->userData['password'] ?? ''),
+                ]);
+            } else {
+                Log::warning('Password not found in database', [
+                    'lead_id' => $signupLead->id,
+                    'has_temp_password_field' => isset($signupLead->temp_password),
+                    'temp_password_value' => $signupLead->temp_password ?? 'NULL',
+                ]);
+            }
+        } else {
+            Log::warning('SignupLead not found for password retrieval', [
+                'external_user_id' => $this->externalUserId,
+            ]);
+        }
+
         $variables = array_merge([
             'first_name' => $this->userData['name'] ?? 'User',
             'last_name' => '',
@@ -215,20 +256,30 @@ class SendSequenceEmailToUserJob implements ShouldQueue
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
             'phone' => $this->userData['phone'] ?? '',
             'domain' => $userDomain,
+            'password' => $password,
             'plan_expiry' => $this->userData['plan_expiry'] ?? '',
             'days_until_expiry' => $this->userData['days_until_expiry'] ?? '',
             'verification_url' => $verificationUrl,
             'incomplete_signup_step_url' => $signupUrl,
         ], $this->userData);
 
+        // Ensure password is set even if userData overrides it
+        $variables['password'] = $password;
+
         // Ensure incomplete_signup_step_url is set after merging userData to prevent override
         $variables['incomplete_signup_step_url'] = $signupUrl;
 
         // Log for debugging
         Log::info('Replacing variables in email', [
+            'email_template_id' => $this->emailTemplate->id,
+            'external_user_id' => $this->externalUserId,
             'has_incomplete_signup_step_url' => isset($variables['incomplete_signup_step_url']),
             'incomplete_signup_step_url_value' => $variables['incomplete_signup_step_url'] ?? 'NOT SET',
             'signup_url_value' => $signupUrl,
+            'has_password' => isset($variables['password']),
+            'password_value' => ! empty($variables['password']) ? 'SET (length: '.strlen($variables['password']).')' : 'NOT SET',
+            'user_data_password' => ! empty($this->userData['password']) ? 'SET (length: '.strlen($this->userData['password']).')' : 'NOT SET',
+            'final_password' => ! empty($password) ? 'SET (length: '.strlen($password).')' : 'NOT SET',
         ]);
 
         foreach ($variables as $key => $value) {

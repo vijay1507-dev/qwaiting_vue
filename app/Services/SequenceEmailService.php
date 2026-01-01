@@ -26,6 +26,33 @@ class SequenceEmailService
             }])
             ->get();
 
+        // Also get sequences with completion_reminder emails for registration complete
+        // This handles cases where registration complete email is in a different sequence
+        if ($event === 'after_verification' || $event === 'immediate') {
+            $completionSequences = Sequence::where('status', 'active')
+                ->with(['emailTemplates' => function ($query) use ($event) {
+                    $query->where('status', 'active')
+                        ->where('type', 'completion_reminder')
+                        ->where(function ($q) use ($event) {
+                            if ($event === 'immediate') {
+                                $q->where('timing_unit', 'immediate');
+                            } else {
+                                $q->where('timing_unit', 'immediate')
+                                    ->orWhere('timing_unit', 'after_verification');
+                            }
+                        });
+                }])
+                ->get();
+
+            // Merge sequences, avoiding duplicates
+            $sequenceIds = $sequences->pluck('id')->toArray();
+            $completionSequences = $completionSequences->reject(function ($seq) use ($sequenceIds) {
+                return in_array($seq->id, $sequenceIds);
+            });
+
+            $sequences = $sequences->merge($completionSequences);
+        }
+
         if ($sequences->isEmpty()) {
             return;
         }
@@ -77,6 +104,10 @@ class SequenceEmailService
                     'email_template_id' => $emailTemplate->id,
                     'signup_lead_id' => $signupLead->id,
                     'email' => $signupLead->email,
+                    'email_type' => $emailTemplate->type,
+                    'timing_unit' => $emailTemplate->timing_unit,
+                    'has_password_in_userdata' => ! empty($userData['password']),
+                    'password_length' => strlen($userData['password'] ?? ''),
                 ]);
             }
         }
@@ -87,11 +118,24 @@ class SequenceEmailService
      */
     private function prepareUserData(SignupLead $signupLead): array
     {
+        // Refresh to get latest data including temp_password
+        $signupLead->refresh();
+
+        // Get temp_password directly from database to ensure we have the latest value
+        $tempPassword = $signupLead->temp_password ?? '';
+
+        Log::info('Preparing user data for email', [
+            'lead_id' => $signupLead->id,
+            'has_temp_password' => ! empty($tempPassword),
+            'temp_password_length' => strlen($tempPassword),
+        ]);
+
         return [
             'id' => $signupLead->id,
             'name' => $signupLead->name ?? '',
             'email' => $signupLead->email ?? '',
             'phone' => $signupLead->phone_number ?? '',
+            'password' => $tempPassword, // Get plain password from temp_password field
             'team_id' => null,
             'is_active' => 1,
             'created_at' => $signupLead->created_at,

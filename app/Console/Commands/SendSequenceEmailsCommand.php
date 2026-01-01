@@ -541,6 +541,7 @@ class SendSequenceEmailsCommand extends Command
                 'name' => $lead->name ?? '',
                 'email' => $lead->email ?? '',
                 'phone' => $lead->phone_number ?? '',
+                'password' => $lead->temp_password ?? '', // Get plain password from temp_password field
                 'team_id' => null, // Doesn't exist for incomplete signups
                 'is_active' => 1, // Assume active
                 'created_at' => $lead->created_at,
