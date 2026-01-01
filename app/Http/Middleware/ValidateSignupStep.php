@@ -29,6 +29,37 @@ class ValidateSignupStep
             return $next($request);
         }
 
+        // Restore completed steps from database if available (Self-Healing)
+        $leadId = Session::get('signup_lead_id');
+        if ($leadId) {
+            $lead = SignupLead::find($leadId);
+            if ($lead && $lead->hasVerifiedEmail()) {
+                $completedSteps = Session::get('completed_steps', []);
+                $dbSignupStep = $lead->signup_step ?? 0;
+
+                // Step 1 is always completed if email is verified
+                if (!in_array(1, $completedSteps)) {
+                    $completedSteps[] = 1;
+                }
+
+                // Restore all completed steps up to the signup_step in database
+                if ($dbSignupStep >= 1) {
+                    for ($s = 2; $s <= $dbSignupStep && $s <= 6; $s++) {
+                        if (!in_array($s, $completedSteps)) {
+                            $completedSteps[] = $s;
+                        }
+                    }
+                }
+
+                Session::put('completed_steps', $completedSteps);
+
+                Log::info('ValidateSignupStep: Session synced with DB', [
+                    'db_step' => $dbSignupStep,
+                    'restored_steps' => $completedSteps
+                ]);
+            }
+        }
+
         // Get completed steps from session
         $completedSteps = Session::get('completed_steps', []);
 
@@ -40,29 +71,29 @@ class ValidateSignupStep
 
         // Check if user has completed all previous steps
         for ($i = 1; $i < $requestedStep; $i++) {
-            if (! in_array($i, $completedSteps)) {
-                // User hasn't completed a previous step, show 404
+            if (!in_array($i, $completedSteps)) {
+                // User hasn't completed a previous step, redirect to start
                 Log::warning('ValidateSignupStep: Step access denied', [
                     'requested_step' => $requestedStep,
                     'missing_step' => $i,
                     'completed_steps' => $completedSteps,
                 ]);
-                abort(404);
+                return redirect()->route('signup');
             }
         }
 
         // For steps 2-6, email must be verified (step 1 completion includes email verification)
         if ($requestedStep >= 2) {
             $leadId = Session::get('signup_lead_id');
-            if (! $leadId) {
-                // No lead ID, show 404
-                abort(404);
+            if (!$leadId) {
+                // No lead ID, redirect to start
+                return redirect()->route('signup');
             }
 
-            $lead = SignupLead::find($leadId);
-            if (! $lead || ! $lead->hasVerifiedEmail()) {
-                // Email not verified, show 404
-                abort(404);
+            $lead = $lead ?? SignupLead::find($leadId);
+            if (!$lead || !$lead->hasVerifiedEmail()) {
+                // Email not verified, redirect to start
+                return redirect()->route('signup');
             }
         }
 
@@ -114,7 +145,7 @@ class ValidateSignupStep
         $queryHash = $request->query('hash');
 
         Log::info('ValidateSignupStep: Checking query parameters', [
-            'hash_present' => ! empty($queryHash),
+            'hash_present' => !empty($queryHash),
         ]);
 
         if ($queryHash) {
@@ -127,7 +158,7 @@ class ValidateSignupStep
 
             $lead = null;
             foreach ($leads as $candidateLead) {
-                $expectedHash = sha1($candidateLead->email.$candidateLead->id.config('app.key'));
+                $expectedHash = sha1($candidateLead->email . $candidateLead->id . config('app.key'));
                 if ($expectedHash === $queryHash) {
                     $lead = $candidateLead;
                     break;
@@ -143,14 +174,14 @@ class ValidateSignupStep
                 $dbSignupStep = $lead->signup_step ?? 0;
 
                 // Step 1 is always completed if email is verified
-                if (! in_array(1, $completedSteps)) {
+                if (!in_array(1, $completedSteps)) {
                     $completedSteps[] = 1;
                 }
 
                 // Restore all completed steps up to the signup_step in database
                 if ($dbSignupStep >= 1) {
                     for ($step = 2; $step <= $dbSignupStep && $step <= 6; $step++) {
-                        if (! in_array($step, $completedSteps)) {
+                        if (!in_array($step, $completedSteps)) {
                             $completedSteps[] = $step;
                         }
                     }
@@ -165,7 +196,7 @@ class ValidateSignupStep
                 ]);
             } else {
                 Log::warning('ValidateSignupStep: Failed to restore session', [
-                    'lead_found' => ! is_null($lead),
+                    'lead_found' => !is_null($lead),
                     'email_verified' => $lead ? $lead->hasVerifiedEmail() : false,
                 ]);
             }
