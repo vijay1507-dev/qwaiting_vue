@@ -72,11 +72,11 @@ class RoleController extends Controller
                 $role->syncPermissions($validated['permissions']);
             }
 
-            return redirect()->route('user-management.roles.index')->with('success', 'Role created successfully');
+            return redirect()->route('user-management.roles')->with('success', 'Role created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error creating role: '.$e->getMessage());
+            Log::error('Error creating role: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to create role. Please try again.'])->withInput();
         }
@@ -96,6 +96,7 @@ class RoleController extends Controller
                 'name' => $role->name,
                 'description' => $role->description ?? '',
                 'status' => $role->status ?? 'Active',
+                'status' => $role->status ?? 'Active',
                 'permissions' => $role->permissions->pluck('name')->toArray(),
             ],
             'permissions' => $permissions,
@@ -109,7 +110,7 @@ class RoleController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:roles,name,'.$id,
+                'name' => 'required|string|max:255|unique:roles,name,' . $id,
                 'description' => 'nullable|string|max:500',
                 'status' => 'required|string|in:Active,Inactive',
                 'permissions' => 'nullable|array',
@@ -127,11 +128,11 @@ class RoleController extends Controller
                 $role->syncPermissions($validated['permissions'] ?? []);
             }
 
-            return redirect()->route('user-management.roles.index')->with('success', 'Role updated successfully');
+            return redirect()->route('user-management.roles')->with('success', 'Role updated successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error updating role: '.$e->getMessage());
+            Log::error('Error updating role: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to update role. Please try again.'])->withInput();
         }
@@ -146,9 +147,9 @@ class RoleController extends Controller
             $role = Role::findOrFail($id);
             $role->delete();
 
-            return redirect()->route('user-management.roles.index')->with('success', 'Role deleted successfully');
+            return redirect()->route('user-management.roles')->with('success', 'Role deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Error deleting role: '.$e->getMessage());
+            Log::error('Error deleting role: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to delete role. Please try again.']);
         }

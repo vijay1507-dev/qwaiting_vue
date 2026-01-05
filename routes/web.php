@@ -14,7 +14,7 @@ Route::get('/', function () {
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'can:dashboard.read'])->name('dashboard');
 
 Route::get('leads', function () {
     return Inertia::render('Leads/Index');
@@ -32,14 +32,16 @@ Route::get('leads/{id}/edit', function ($id) {
     return Inertia::render('Leads/Create', ['id' => $id]);
 })->middleware(['auth', 'verified'])->name('leads.edit');
 
-Route::get('clients', [App\Http\Controllers\Client\ClientsController::class, 'index'])->middleware(['auth', 'verified'])->name('clients.index');
-Route::get('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'show'])->middleware(['auth', 'verified'])->name('clients.show');
-Route::get('clients/{id}/edit', [App\Http\Controllers\Client\ClientsController::class, 'edit'])->middleware(['auth', 'verified'])->name('clients.edit');
-Route::get('clients/{id}/email-logs', [App\Http\Controllers\Client\ClientsController::class, 'emailLogs'])->middleware(['auth', 'verified'])->name('clients.email-logs');
-Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->middleware(['auth', 'verified'])->name('clients.update');
-Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->middleware(['auth', 'verified'])->name('clients.reset-password');
+Route::middleware(['auth', 'verified', 'can:clients.read'])->group(function () {
+    Route::get('clients', [App\Http\Controllers\Client\ClientsController::class, 'index'])->name('clients.index');
+    Route::get('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'show'])->name('clients.show');
+    Route::get('clients/{id}/edit', [App\Http\Controllers\Client\ClientsController::class, 'edit'])->name('clients.edit');
+    Route::get('clients/{id}/email-logs', [App\Http\Controllers\Client\ClientsController::class, 'emailLogs'])->name('clients.email-logs');
+    Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->name('clients.update');
+    Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->name('clients.reset-password');
+});
 
-Route::middleware(['auth', 'verified'])->prefix('user-management')->name('user-management.')->group(function () {
+Route::middleware(['auth', 'verified', 'can:user_management.read'])->prefix('user-management')->name('user-management.')->group(function () {
     Route::get('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('employees');
     Route::get('/employees/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('employees.create');
     Route::post('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('employees.store');
@@ -70,7 +72,7 @@ Route::get('quotes/{id}/edit', function ($id) {
     return Inertia::render('Quotes/Create', ['id' => $id]);
 })->middleware(['auth', 'verified'])->name('quotes.edit');
 
-Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
+Route::middleware(['auth', 'verified', 'can:marketing.read'])->prefix('marketing')->name('marketing.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('marketing.sequences');
     })->name('index');
@@ -110,7 +112,7 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
     Route::get('/analytics/view', [App\Http\Controllers\Finance\FinanceController::class, 'analyticsView'])->name('analytics.view');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
+Route::middleware(['auth', 'verified', 'can:e-commerce.read'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
     Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index');
 
     // Products
@@ -147,7 +149,7 @@ Route::middleware(['auth', 'verified'])->prefix('api/ecommerce')->name('api.ecom
     Route::delete('/cart', [App\Http\Controllers\Api\CartController::class, 'clear'])->name('cart.clear');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
+Route::middleware(['auth', 'verified', 'can:subscription_management.read'])->prefix('subscription')->name('subscription.')->group(function () {
     Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index');
 
     // Features
@@ -180,7 +182,7 @@ Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscript
     Route::get('/preview', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPreviewData'])->name('preview');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
 
 // Website Routes
 

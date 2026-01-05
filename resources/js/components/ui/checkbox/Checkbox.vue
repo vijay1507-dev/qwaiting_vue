@@ -8,6 +8,7 @@ import { computed, type HTMLAttributes } from 'vue'
 interface Props extends CheckboxRootProps {
   class?: HTMLAttributes['class']
   indeterminate?: boolean
+  checked?: boolean | 'indeterminate'
 }
 
 const props = withDefaults(defineProps<Props>(), {

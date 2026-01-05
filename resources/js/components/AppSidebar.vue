@@ -12,24 +12,40 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as leadsIndex } from '@/routes/leads';
 import { index as clientsIndex } from '@/routes/clients';
-import { index as quotesIndex } from '@/routes/quotes';
-import { sequences as marketingSequences } from '@/routes/marketing';
-import { index as financeIndex } from '@/routes/finance';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
+import { sequences as marketingSequences } from '@/routes/marketing';
 import { index as subscriptionIndex } from '@/routes/subscription';
-import { employees as userManagementEmployees, roles as userManagementRoles } from '@/routes/user-management';
+import {
+    employees as userManagementEmployees,
+    roles as userManagementRoles,
+} from '@/routes/user-management';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, Users, Users2, Briefcase, Receipt, Mail, DollarSign, ShoppingBag, CreditCard } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    Briefcase,
+    CreditCard,
+    LayoutGrid,
+    Mail,
+    ShoppingBag,
+    Users2,
+} from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
+const page = usePage();
+const permissions = computed(() => page.props.auth.permissions);
+
+const hasPermission = (permission: string) => {
+    return permissions.value.includes(permission);
+};
+
+const allMainNavItems: (NavItem & { permission?: string })[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+        permission: 'dashboard.read',
     },
     /* {
         title: 'Leads',
@@ -40,6 +56,7 @@ const mainNavItems: NavItem[] = [
         title: 'Clients',
         href: clientsIndex(),
         icon: Briefcase,
+        permission: 'clients.read',
     },
     /*{
         title: 'Quotes',
@@ -50,6 +67,7 @@ const mainNavItems: NavItem[] = [
         title: 'Marketing',
         href: marketingSequences(),
         icon: Mail,
+        permission: 'marketing.read',
     },
     /* {
         title: 'Finance & Analytics',
@@ -60,15 +78,18 @@ const mainNavItems: NavItem[] = [
         title: 'E-Commerce',
         href: ecommerceIndex(),
         icon: ShoppingBag,
+        permission: 'e-commerce.read',
     },
     {
         title: 'Subscription Management',
         href: subscriptionIndex(),
         icon: CreditCard,
+        permission: 'subscription_management.read',
     },
     {
         title: 'User Management',
         icon: Users2,
+        permission: 'user_management.read',
         children: [
             {
                 title: 'Users',
@@ -81,6 +102,15 @@ const mainNavItems: NavItem[] = [
         ],
     },
 ];
+
+const mainNavItems = computed(() => {
+    return allMainNavItems.filter((item) => {
+        if (item.permission) {
+            return hasPermission(item.permission);
+        }
+        return true;
+    });
+});
 
 const footerNavItems: NavItem[] = [];
 </script>

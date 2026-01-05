@@ -19,47 +19,54 @@ class BundleSeeder extends Seeder
         $kbNum = Product::where('sku', 'KB-NUM')->first();
 
         // Starter Bundle
-        $starterBundle = new Bundle([
-            'name' => 'Starter Bundle',
-            'slug' => Str::slug('Starter Bundle'),
-            'description' => 'Perfect starter package for small businesses',
-            'discount_percentage' => 15,
-            'is_active' => true,
-            'original_price' => 0,
-            'price' => 0,
-            'savings' => 0,
-        ]);
-        $starterBundle->save();
+        $starterBundle = Bundle::firstOrCreate(
+            ['slug' => Str::slug('Starter Bundle')],
+            [
+                'name' => 'Starter Bundle',
+                'description' => 'Perfect starter package for small businesses',
+                'discount_percentage' => 15,
+                'is_active' => true,
+                'original_price' => 0,
+                'price' => 0,
+                'savings' => 0,
+            ]
+        );
 
-        $starterBundle->products()->attach([
-            $qk15->id => ['quantity' => 1],
-            $ds32->id => ['quantity' => 1],
-            $tp80->id => ['quantity' => 1],
-        ]);
+        // Sync products (this handles both creating new relations and updating existing ones safely)
+        if ($qk15 && $ds32 && $tp80) {
+            $starterBundle->products()->syncWithoutDetaching([
+                $qk15->id => ['quantity' => 1],
+                $ds32->id => ['quantity' => 1],
+                $tp80->id => ['quantity' => 1],
+            ]);
+        }
 
         $starterBundle->refresh();
         $starterBundle->calculatePrice();
         $starterBundle->save();
 
         // Pro Bundle
-        $proBundle = new Bundle([
-            'name' => 'Pro Bundle',
-            'slug' => Str::slug('Pro Bundle'),
-            'description' => 'Complete professional solution for larger operations',
-            'discount_percentage' => 20,
-            'is_active' => true,
-            'original_price' => 0,
-            'price' => 0,
-            'savings' => 0,
-        ]);
-        $proBundle->save();
+        $proBundle = Bundle::firstOrCreate(
+            ['slug' => Str::slug('Pro Bundle')],
+            [
+                'name' => 'Pro Bundle',
+                'description' => 'Complete professional solution for larger operations',
+                'discount_percentage' => 20,
+                'is_active' => true,
+                'original_price' => 0,
+                'price' => 0,
+                'savings' => 0,
+            ]
+        );
 
-        $proBundle->products()->attach([
-            $qk22->id => ['quantity' => 1],
-            $ds55->id => ['quantity' => 1],
-            $tp80->id => ['quantity' => 1],
-            $kbNum->id => ['quantity' => 1],
-        ]);
+        if ($qk22 && $ds55 && $tp80 && $kbNum) {
+            $proBundle->products()->syncWithoutDetaching([
+                $qk22->id => ['quantity' => 1],
+                $ds55->id => ['quantity' => 1],
+                $tp80->id => ['quantity' => 1],
+                $kbNum->id => ['quantity' => 1],
+            ]);
+        }
 
         $proBundle->refresh();
         $proBundle->calculatePrice();

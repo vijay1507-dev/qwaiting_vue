@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
-import { edit as userManagementEmployeesEdit } from '@/routes/user-management/employees';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { employees as userManagementEmployees } from '@/routes/user-management';
+import { type BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/vue3';
 
 interface User {
     id: string;
@@ -22,6 +20,7 @@ interface User {
 
 interface Props {
     user: User;
+    roles: string[];
 }
 
 const props = defineProps<Props>();
@@ -62,7 +61,9 @@ const submit = () => {
             success('User updated successfully');
         },
         onError: () => {
-            showError('Failed to update user. Please check the form for errors.');
+            showError(
+                'Failed to update user. Please check the form for errors.',
+            );
         },
     });
 };
@@ -74,11 +75,15 @@ const submit = () => {
 
         <div class="flex flex-col gap-6 p-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold text-foreground">Edit User</h1>
+                <h1 class="text-2xl font-semibold text-foreground">
+                    Edit User
+                </h1>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6 max-w-2xl">
-                <div class="space-y-4 rounded-lg border border-border bg-card p-6">
+            <form @submit.prevent="submit" class="max-w-2xl space-y-6">
+                <div
+                    class="space-y-4 rounded-lg border border-border bg-card p-6"
+                >
                     <div class="space-y-2">
                         <Label for="name">Name</Label>
                         <Input
@@ -88,7 +93,10 @@ const submit = () => {
                             required
                             :class="{ 'border-destructive': form.errors.name }"
                         />
-                        <p v-if="form.errors.name" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.name"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.name }}
                         </p>
                     </div>
@@ -102,7 +110,10 @@ const submit = () => {
                             required
                             :class="{ 'border-destructive': form.errors.email }"
                         />
-                        <p v-if="form.errors.email" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.email"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.email }}
                         </p>
                     </div>
@@ -115,7 +126,10 @@ const submit = () => {
                             type="tel"
                             :class="{ 'border-destructive': form.errors.phone }"
                         />
-                        <p v-if="form.errors.phone" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.phone"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.phone }}
                         </p>
                     </div>
@@ -126,13 +140,21 @@ const submit = () => {
                             id="role"
                             v-model="form.role"
                             required
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                             :class="{ 'border-destructive': form.errors.role }"
                         >
-                            <option value="Employee">Employee</option>
-                            <option value="Administrator">Administrator</option>
+                            <option
+                                v-for="role in props.roles"
+                                :key="role"
+                                :value="role"
+                            >
+                                {{ role }}
+                            </option>
                         </select>
-                        <p v-if="form.errors.role" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.role"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.role }}
                         </p>
                     </div>
@@ -143,13 +165,18 @@ const submit = () => {
                             id="status"
                             v-model="form.status"
                             required
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            :class="{ 'border-destructive': form.errors.status }"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                            :class="{
+                                'border-destructive': form.errors.status,
+                            }"
                         >
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
-                        <p v-if="form.errors.status" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.status"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.status }}
                         </p>
                     </div>
@@ -171,4 +198,3 @@ const submit = () => {
         </div>
     </AppLayout>
 </template>
-

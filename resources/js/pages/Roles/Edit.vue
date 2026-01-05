@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { employees as userManagementEmployees } from '@/routes/user-management';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/composables/useToast';
+import { computed } from 'vue';
 
 interface Permission {
     name: string;
@@ -77,7 +76,7 @@ const togglePermission = (permissionName: string, checked: boolean) => {
 
 const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
     const modulePermissions = props.permissions[module] || [];
-    
+
     // If checked is undefined (indeterminate state clicked), check all
     if (checked === undefined || checked === true) {
         // Select all permissions for this module
@@ -99,12 +98,17 @@ const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
 
 const isModuleAllSelected = (module: string) => {
     const modulePermissions = props.permissions[module] || [];
-    return modulePermissions.length > 0 && modulePermissions.every((p) => form.permissions.includes(p.name));
+    return (
+        modulePermissions.length > 0 &&
+        modulePermissions.every((p) => form.permissions.includes(p.name))
+    );
 };
 
 const isModulePartiallySelected = (module: string) => {
     const modulePermissions = props.permissions[module] || [];
-    const selectedCount = modulePermissions.filter((p) => form.permissions.includes(p.name)).length;
+    const selectedCount = modulePermissions.filter((p) =>
+        form.permissions.includes(p.name),
+    ).length;
     return selectedCount > 0 && selectedCount < modulePermissions.length;
 };
 
@@ -115,7 +119,9 @@ const submit = () => {
             success('Role updated successfully');
         },
         onError: () => {
-            showError('Failed to update role. Please check the form for errors.');
+            showError(
+                'Failed to update role. Please check the form for errors.',
+            );
         },
     });
 };
@@ -123,6 +129,37 @@ const submit = () => {
 const permissionModules = computed(() => {
     return Object.keys(props.permissions).sort();
 });
+
+const allPermissions = computed(() => {
+    let all: string[] = [];
+    Object.values(props.permissions).forEach((modulePerms) => {
+        modulePerms.forEach((p) => all.push(p.name));
+    });
+    return all;
+});
+
+const isAllSelected = computed(() => {
+    return (
+        allPermissions.value.length > 0 &&
+        allPermissions.value.length === form.permissions.length &&
+        allPermissions.value.every((p) => form.permissions.includes(p))
+    );
+});
+
+const isPartiallySelected = computed(() => {
+    return (
+        form.permissions.length > 0 &&
+        form.permissions.length < allPermissions.value.length
+    );
+});
+
+const toggleGlobalSelectAll = (checked: boolean | undefined) => {
+    if (checked === undefined || checked === true) {
+        form.permissions = [...allPermissions.value];
+    } else {
+        form.permissions = [];
+    }
+};
 </script>
 
 <template>
@@ -131,26 +168,38 @@ const permissionModules = computed(() => {
 
         <div class="flex flex-col gap-6 p-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold text-foreground">Edit Role</h1>
+                <h1 class="text-2xl font-semibold text-foreground">
+                    Edit Role
+                </h1>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6 max-w-4xl">
+            <form @submit.prevent="submit" class="max-w-4xl space-y-6">
                 <!-- Basic Info Section -->
-                <div class="space-y-4 rounded-lg border border-border bg-card p-6">
-                    <h2 class="text-lg font-semibold text-foreground">Basic Info</h2>
+                <div
+                    class="space-y-4 rounded-lg border border-border bg-card p-6"
+                >
+                    <h2 class="text-lg font-semibold text-foreground">
+                        Basic Info
+                    </h2>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="name">
-                                Roll Name <span class="text-destructive">*</span>
+                                Role Name
+                                <span class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
                                 required
-                                :class="{ 'border-destructive': form.errors.name }"
+                                :class="{
+                                    'border-destructive': form.errors.name,
+                                }"
                             />
-                            <p v-if="form.errors.name" class="text-sm text-destructive">
+                            <p
+                                v-if="form.errors.name"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.name }}
                             </p>
                         </div>
@@ -162,9 +211,15 @@ const permissionModules = computed(() => {
                                 v-model="form.description"
                                 type="text"
                                 placeholder="Name"
-                                :class="{ 'border-destructive': form.errors.description }"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.description,
+                                }"
                             />
-                            <p v-if="form.errors.description" class="text-sm text-destructive">
+                            <p
+                                v-if="form.errors.description"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.description }}
                             </p>
                         </div>
@@ -172,8 +227,35 @@ const permissionModules = computed(() => {
                 </div>
 
                 <!-- Permissions Section -->
-                <div class="space-y-4 rounded-lg border border-border bg-card p-6">
-                    <h2 class="text-lg font-semibold text-foreground">Permissions</h2>
+                <div
+                    class="space-y-4 rounded-lg border border-border bg-card p-6"
+                >
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">
+                            Permissions
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                :checked="isAllSelected"
+                                :indeterminate="isPartiallySelected"
+                                @change="
+                                    (e) =>
+                                        toggleGlobalSelectAll(
+                                            (e.target as HTMLInputElement)
+                                                .checked,
+                                        )
+                                "
+                                class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
+                            />
+                            <Label
+                                class="cursor-pointer text-base font-medium"
+                                @click="toggleGlobalSelectAll(!isAllSelected)"
+                            >
+                                Select All
+                            </Label>
+                        </div>
+                    </div>
                     <div class="space-y-6">
                         <div
                             v-for="module in permissionModules"
@@ -181,38 +263,75 @@ const permissionModules = computed(() => {
                             class="space-y-3"
                         >
                             <div class="flex items-center gap-2">
-                                <Checkbox
+                                <input
+                                    type="checkbox"
                                     :checked="isModuleAllSelected(module)"
-                                    :indeterminate="isModulePartiallySelected(module)"
-                                    @update:checked="(checked) => {
-                                        const shouldCheck = checked !== false;
-                                        toggleAllPermissions(module, shouldCheck);
-                                    }"
+                                    :indeterminate="
+                                        isModulePartiallySelected(module)
+                                    "
+                                    @change="
+                                        (e) =>
+                                            toggleAllPermissions(
+                                                module,
+                                                (e.target as HTMLInputElement)
+                                                    .checked,
+                                            )
+                                    "
+                                    class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
                                 />
-                                <Label class="text-base font-medium cursor-pointer" @click="toggleAllPermissions(module, !isModuleAllSelected(module))">{{ module }}</Label>
+                                <Label
+                                    class="cursor-pointer text-base font-medium"
+                                    @click="
+                                        toggleAllPermissions(
+                                            module,
+                                            !isModuleAllSelected(module),
+                                        )
+                                    "
+                                    >{{ module }}</Label
+                                >
                             </div>
-                            <div class="grid grid-cols-2 gap-3 pl-6 md:grid-cols-4">
+                            <div
+                                class="grid grid-cols-2 gap-3 pl-6 md:grid-cols-4"
+                            >
                                 <div
                                     v-for="permission in permissions[module]"
                                     :key="permission.name"
                                     class="flex items-center gap-2"
                                 >
-                                    <Checkbox
+                                    <input
+                                        type="checkbox"
                                         :id="permission.name"
-                                        :checked="form.permissions.includes(permission.name)"
-                                        @update:checked="(checked) => togglePermission(permission.name, checked)"
+                                        :checked="
+                                            form.permissions.includes(
+                                                permission.name,
+                                            )
+                                        "
+                                        @change="
+                                            (e) =>
+                                                togglePermission(
+                                                    permission.name,
+                                                    (
+                                                        e.target as HTMLInputElement
+                                                    ).checked,
+                                                )
+                                        "
+                                        class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
                                     />
                                     <Label
                                         :for="permission.name"
                                         class="cursor-pointer text-sm font-normal"
                                     >
                                         {{ module }} {{ permission.action }}
+                                        
                                     </Label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <p v-if="form.errors.permissions" class="text-sm text-destructive">
+                    <p
+                        v-if="form.errors.permissions"
+                        class="text-sm text-destructive"
+                    >
                         {{ form.errors.permissions }}
                     </p>
                 </div>
@@ -233,4 +352,3 @@ const permissionModules = computed(() => {
         </div>
     </AppLayout>
 </template>
-
