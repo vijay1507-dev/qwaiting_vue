@@ -15,7 +15,7 @@ class PermissionsSeeder extends Seeder
         // Define CRM modules and their permissions (only main modules from sidebar)
         $modules = [
             'Dashboard' => ['read'],
-            'Clients' => ['read', 'update'],
+            'Clients' => ['read', 'update', 'reset_password'],
             'Marketing' => [
                 'sequences.read',
                 'sequences.create',

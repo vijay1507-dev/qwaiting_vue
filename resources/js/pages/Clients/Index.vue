@@ -31,6 +31,7 @@ import {
     Edit,
     Eye,
     Filter,
+    Lock,
     Search,
     X,
 } from 'lucide-vue-next';
@@ -893,6 +894,20 @@ onUnmounted(() => {
                                         title="Edit"
                                     >
                                         <Edit
+                                            class="size-4 text-muted-foreground"
+                                        />
+                                    </Link>
+                                    <Link
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'clients.reset_password',
+                                            )
+                                        "
+                                        :href="`/clients/${client.id}/reset-password`"
+                                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
+                                        title="Reset Password"
+                                    >
+                                        <Lock
                                             class="size-4 text-muted-foreground"
                                         />
                                     </Link>

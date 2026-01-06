@@ -38,7 +38,8 @@ Route::middleware(['auth', 'verified', 'can:clients.read'])->group(function () {
     Route::get('clients/{id}/edit', [App\Http\Controllers\Client\ClientsController::class, 'edit'])->name('clients.edit');
     Route::get('clients/{id}/email-logs', [App\Http\Controllers\Client\ClientsController::class, 'emailLogs'])->name('clients.email-logs');
     Route::put('clients/{id}', [App\Http\Controllers\Client\ClientsController::class, 'update'])->name('clients.update');
-    Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->name('clients.reset-password');
+    Route::get('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPasswordForm'])->name('clients.reset-password-page')->middleware('can:clients.reset_password');
+    Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->name('clients.reset-password')->middleware('can:clients.reset_password');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('user-management')->name('user-management.')->group(function () {
