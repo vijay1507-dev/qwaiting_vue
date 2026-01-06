@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CountryMultiSelect from '@/components/CountryMultiSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,11 +17,13 @@ interface User {
     phone: string;
     role: string;
     status: string;
+    countries: number[];
 }
 
 interface Props {
     user: User;
     roles: string[];
+    countries: Array<{ id: number; name: string; code: string }>;
 }
 
 const props = defineProps<Props>();
@@ -52,6 +55,7 @@ const form = useForm({
     phone: props.user.phone || '',
     role: props.user.role,
     status: props.user.status,
+    countries: props.user.countries || [],
 });
 
 const submit = () => {
@@ -180,6 +184,12 @@ const submit = () => {
                             {{ form.errors.status }}
                         </p>
                     </div>
+
+                    <CountryMultiSelect
+                        v-model="form.countries"
+                        :countries="props.countries"
+                        :error="form.errors.countries"
+                    />
                 </div>
 
                 <div class="flex items-center gap-4">

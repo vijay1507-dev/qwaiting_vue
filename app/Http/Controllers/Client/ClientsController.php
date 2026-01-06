@@ -38,10 +38,45 @@ class ClientsController extends Controller
             }
 
             // Fetch users from external database, ordered by created_at descending
-            $users = DB::connection('mysql_external')
+            $usersQuery = DB::connection('mysql_external')
                 ->table('users')
                 ->whereIn('team_id', $teamIds)
-                ->whereNull('deleted_at')
+                ->whereNull('deleted_at');
+
+            // Apply Country Access Filter
+            $user = auth()->user();
+            if ($user && !$user->hasRole('Super Admin')) {
+                // Get user's assigned countries (IDs)
+                // Cast to array ensuring not null
+                $assignedCountryIds = $user->countries ?? [];
+
+                if (!empty($assignedCountryIds)) {
+                    // Fetch corresponding phone codes
+                    $allowedPhoneCodes = \App\Models\Country::whereIn('id', $assignedCountryIds)
+                        ->pluck('phonecode')
+                        ->toArray();
+
+                    if (!empty($allowedPhoneCodes)) {
+                        $usersQuery->where(function ($query) use ($allowedPhoneCodes) {
+                            foreach ($allowedPhoneCodes as $code) {
+                                $query->orWhere('phone', 'LIKE', "+{$code}%")
+                                    ->orWhere('phone', 'LIKE', "{$code}%");
+                            }
+                        });
+                    } else {
+                        // User has countries assigned but no valid phone codes found? 
+                        // Or if assignedCountries is empty but we want to restrict?
+                        // If logic is "Only show designated countries", and phone codes are missing, show nothing.
+                        $usersQuery->whereRaw('1 = 0');
+                    }
+                } else {
+                    // User is not Super Admin and has NO countries assigned.
+                    // Assume "No Access".
+                    $usersQuery->whereRaw('1 = 0');
+                }
+            }
+
+            $users = $usersQuery
                 ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -103,7 +138,6 @@ class ClientsController extends Controller
 
                     return $client;
                 });
-
             return Inertia::render('Clients/Index', [
                 'clients' => $clients,
             ]);

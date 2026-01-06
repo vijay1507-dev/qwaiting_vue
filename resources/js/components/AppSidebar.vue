@@ -14,7 +14,6 @@ import {
 import { dashboard } from '@/routes';
 import { index as clientsIndex } from '@/routes/clients';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
-import { sequences as marketingSequences } from '@/routes/marketing';
 import { index as subscriptionIndex } from '@/routes/subscription';
 import {
     employees as userManagementEmployees,
@@ -69,7 +68,7 @@ const allMainNavItems: (NavItem & { permission?: string })[] = [
     }, */
     {
         title: 'Marketing',
-        href: marketingSequences(),
+        href: '/marketing',
         icon: Mail,
         permission: 'marketing.*',
     },

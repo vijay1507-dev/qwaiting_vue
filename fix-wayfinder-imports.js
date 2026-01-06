@@ -5,8 +5,8 @@
  * This should be run after wayfinder:generate
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
-import { join, dirname } from 'path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'fs';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,10 +19,10 @@ function fixImportsInFile(filePath) {
         let content = readFileSync(filePath, 'utf8');
         const originalContent = content;
 
-        // Replace relative wayfinder imports with @/ alias
+        // Replace relative or existing abbreviated wayfinder imports with @/wayfinder/index
         content = content.replace(
-            /from\s+['"]\.\.\/.*?wayfinder['"]/g,
-            "from '@/wayfinder'"
+            /from\s+['"]((\.\/)?\.\.\/.*?wayfinder|@\/wayfinder)['"]/g,
+            "from '@/wayfinder/index'",
         );
 
         if (content !== originalContent) {
@@ -59,4 +59,3 @@ function walkDir(dir) {
 
 const fixedCount = walkDir(routesDir);
 console.log(`\nFixed ${fixedCount} route file(s)`);
-

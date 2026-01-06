@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CountryMultiSelect from '@/components/CountryMultiSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
     roles: string[];
+    countries: Array<{ id: number; name: string; code: string }>;
 }>();
 
 const { success, error: showError } = useToast();
@@ -42,6 +44,7 @@ const form = useForm({
     phone: '',
     role: props.roles.length > 0 ? props.roles[0] : '',
     status: 'Active',
+    countries: [],
 });
 
 const submit = () => {
@@ -213,6 +216,12 @@ const submit = () => {
                             {{ form.errors.status }}
                         </p>
                     </div>
+
+                    <CountryMultiSelect
+                        v-model="form.countries"
+                        :countries="props.countries"
+                        :error="form.errors.countries"
+                    />
                 </div>
 
                 <div class="flex items-center gap-4">

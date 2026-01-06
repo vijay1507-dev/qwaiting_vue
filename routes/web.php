@@ -75,7 +75,17 @@ Route::get('quotes/{id}/edit', function ($id) {
 
 Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
     Route::get('/', function () {
-        return redirect()->route('marketing.sequences');
+        $user = auth()->user();
+
+        if ($user->can('marketing.sequences.read')) {
+            return redirect()->route('marketing.sequences');
+        }
+
+        if ($user->can('marketing.system_templates.read')) {
+            return redirect()->route('marketing.system-templates.index');
+        }
+
+        return redirect()->route('marketing.campaigns');
     })->name('index');
 
     // Campaigns (Unprotected by specific permission as marketing.read is removed, falling back to auth)
@@ -135,7 +145,7 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
 });
 
 Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index')->middleware('can:ecommerce.overview.read');
+    Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index');
 
     // Products
     // Products

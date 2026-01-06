@@ -31,8 +31,26 @@ class EcommerceController extends Controller
         protected CartService $cartService
     ) {}
 
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
+        $user = auth()->user();
+
+        if (! $user->can('ecommerce.overview.read')) {
+            if ($user->can('ecommerce.product_catalog.read')) {
+                return redirect()->route('ecommerce.products');
+            }
+            if ($user->can('ecommerce.bundle_offers.read')) {
+                return redirect()->route('ecommerce.bundles');
+            }
+            if ($user->can('ecommerce.shopping_cart.read')) {
+                return redirect()->route('ecommerce.cart');
+            }
+            if ($user->can('ecommerce.orders.read')) {
+                return redirect()->route('ecommerce.orders');
+            }
+
+            abort(403, 'Unauthorized action.');
+        }
         $stats = [
             'totalProducts' => Product::where('is_active', true)->count(),
             'totalBundles' => Bundle::where('is_active', true)->count(),

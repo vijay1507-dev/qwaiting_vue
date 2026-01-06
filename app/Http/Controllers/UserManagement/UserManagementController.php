@@ -20,9 +20,16 @@ class UserManagementController extends Controller
      */
     public function employees(Request $request): Response
     {
+        $allCountries = \App\Models\Country::pluck('name', 'id');
+
         $users = User::orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($user) {
+            ->map(function ($user) use ($allCountries) {
+                $countryNames = collect($user->countries ?? [])
+                    ->map(fn($id) => $allCountries[$id] ?? null)
+                    ->filter()
+                    ->join(', ');
+
                 return [
                     'id' => (string) $user->id,
                     'userId' => 'User' . str_pad((string) $user->id, 4, '0', STR_PAD_LEFT),
@@ -31,6 +38,7 @@ class UserManagementController extends Controller
                     'emailAddress' => $user->email,
                     'accountStatus' => $user->status ?? 'Active',
                     'role' => $user->role ?? 'Employee',
+                    'assignedCountries' => $countryNames ?: '-',
                 ];
             });
 
@@ -45,11 +53,16 @@ class UserManagementController extends Controller
     public function create(Request $request): Response
     {
         $roles = Role::pluck('name');
+        $countries = \App\Models\Country::all();
         return Inertia::render('Users/Create', [
             'roles' => $roles,
+            'countries' => $countries,
         ]);
     }
 
+    /**
+     * Store a newly created user.
+     */
     /**
      * Store a newly created user.
      */
@@ -63,6 +76,8 @@ class UserManagementController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'role' => 'required|string|exists:roles,name',
                 'status' => 'required|string|in:Active,Inactive',
+                'countries' => 'nullable|array',
+                'countries.*' => 'exists:countries,id',
             ]);
 
             $user = User::create([
@@ -72,6 +87,7 @@ class UserManagementController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'role' => $validated['role'],
                 'status' => $validated['status'],
+                'countries' => $validated['countries'] ?? [],
             ]);
 
             $user->assignRole($validated['role']);
@@ -101,8 +117,10 @@ class UserManagementController extends Controller
                 'phone' => $user->phone ?? '',
                 'role' => $user->role ?? 'Employee',
                 'status' => $user->status ?? 'Active',
+                'countries' => $user->countries ?? [],
             ],
             'roles' => Role::pluck('name'),
+            'countries' => \App\Models\Country::all(),
         ]);
     }
 
@@ -118,10 +136,21 @@ class UserManagementController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'role' => 'required|string|exists:roles,name',
                 'status' => 'required|string|in:Active,Inactive',
+                'countries' => 'nullable|array',
+                'countries.*' => 'exists:countries,id',
             ]);
 
             $user = User::findOrFail($id);
-            $user->update($validated);
+
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'role' => $validated['role'],
+                'status' => $validated['status'],
+                'countries' => $validated['countries'] ?? [],
+            ]);
+
             $user->syncRoles([$validated['role']]);
 
             return redirect()->route('user-management.employees')->with('success', 'User updated successfully');
