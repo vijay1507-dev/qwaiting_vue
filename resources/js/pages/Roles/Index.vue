@@ -1,19 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Plus, Edit, MoreHorizontal, Trash2 } from 'lucide-vue-next';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Dialog,
     DialogContent,
@@ -22,7 +8,21 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/composables/useToast';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import { employees as userManagementEmployees } from '@/routes/user-management';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Edit, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
 interface Role {
     id: string;
@@ -42,18 +42,32 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const { success, error: showError } = useToast();
 
-// Watch for flash messages
-watch(() => (page.props as any).flash?.success, (message) => {
-    if (message) {
-        success(message);
-    }
-}, { immediate: true });
+// Permission helper
+const hasPermission = (permission: string) => {
+    const permissions = (page.props as any).auth?.permissions || [];
+    return permissions.includes(permission) || permissions.includes('*');
+};
 
-watch(() => (page.props as any).flash?.error, (message) => {
-    if (message) {
-        showError(message);
-    }
-}, { immediate: true });
+// Watch for flash messages
+watch(
+    () => (page.props as any).flash?.success,
+    (message) => {
+        if (message) {
+            success(message);
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => (page.props as any).flash?.error,
+    (message) => {
+        if (message) {
+            showError(message);
+        }
+    },
+    { immediate: true },
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -82,7 +96,7 @@ const filteredRoles = computed(() => {
     return (props.roles || []).filter(
         (role) =>
             (role.name || '').toLowerCase().includes(query) ||
-            (role.description || '').toLowerCase().includes(query)
+            (role.description || '').toLowerCase().includes(query),
     );
 });
 
@@ -138,7 +152,9 @@ const getStatusText = (status: string) => {
 
             <div class="flex items-center gap-4">
                 <div class="relative flex-1">
-                    <Search class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search
+                        class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                    />
                     <Input
                         v-model="searchQuery"
                         type="text"
@@ -146,8 +162,13 @@ const getStatusText = (status: string) => {
                         class="pl-10"
                     />
                 </div>
-                <Link href="/user-management/roles/create">
-                    <Button class="bg-purple-600 hover:bg-purple-700 text-white">
+                <Link
+                    v-if="hasPermission('user_management.roles.create')"
+                    href="/user-management/roles/create"
+                >
+                    <Button
+                        class="bg-purple-600 text-white hover:bg-purple-700"
+                    >
                         <Plus class="mr-2 size-4" />
                         Add Role
                     </Button>
@@ -159,16 +180,24 @@ const getStatusText = (status: string) => {
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-border">
-                                <th class="px-6 py-3 text-left text-sm font-medium text-foreground">
+                                <th
+                                    class="px-6 py-3 text-left text-sm font-medium text-foreground"
+                                >
                                     Role Name
                                 </th>
-                                <th class="px-6 py-3 text-left text-sm font-medium text-foreground">
+                                <th
+                                    class="px-6 py-3 text-left text-sm font-medium text-foreground"
+                                >
                                     Description
                                 </th>
-                                <th class="px-6 py-3 text-left text-sm font-medium text-foreground">
+                                <th
+                                    class="px-6 py-3 text-left text-sm font-medium text-foreground"
+                                >
                                     Status
                                 </th>
-                                <th class="px-6 py-3 text-right text-sm font-medium text-foreground">
+                                <th
+                                    class="px-6 py-3 text-right text-sm font-medium text-foreground"
+                                >
                                     Operations
                                 </th>
                             </tr>
@@ -182,7 +211,9 @@ const getStatusText = (status: string) => {
                                 <td class="px-6 py-4 text-sm text-foreground">
                                     {{ role.name }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-muted-foreground">
+                                <td
+                                    class="px-6 py-4 text-sm text-muted-foreground"
+                                >
                                     {{ role.description || '-' }}
                                 </td>
                                 <td class="px-6 py-4">
@@ -196,24 +227,53 @@ const getStatusText = (status: string) => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <Link :href="`/user-management/roles/${role.id}/edit`">
-                                            <Button variant="ghost" size="icon" class="size-8">
+                                    <div
+                                        class="flex items-center justify-end gap-2"
+                                    >
+                                        <Link
+                                            v-if="
+                                                hasPermission(
+                                                    'user_management.roles.update',
+                                                )
+                                            "
+                                            :href="`/user-management/roles/${role.id}/edit`"
+                                        >
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="size-8"
+                                            >
                                                 <Edit class="size-4" />
                                             </Button>
                                         </Link>
-                                        <DropdownMenu>
+                                        <DropdownMenu
+                                            v-if="
+                                                hasPermission(
+                                                    'user_management.roles.delete',
+                                                )
+                                            "
+                                        >
                                             <DropdownMenuTrigger as-child>
-                                                <Button variant="ghost" size="icon" class="size-8">
-                                                    <MoreHorizontal class="size-4" />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    class="size-8"
+                                                >
+                                                    <MoreHorizontal
+                                                        class="size-4"
+                                                    />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem
-                                                    @click="openDeleteDialog(role)"
+                                                    @click="
+                                                        openDeleteDialog(role)
+                                                    "
                                                     class="text-destructive"
                                                 >
-                                                    <Trash2 class="mr-2 size-4" />
+                                                    <Trash2
+                                                        class="mr-2 size-4"
+                                                    />
                                                     Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -222,7 +282,10 @@ const getStatusText = (status: string) => {
                                 </td>
                             </tr>
                             <tr v-if="filteredRoles.length === 0">
-                                <td colspan="4" class="px-6 py-8 text-center text-sm text-muted-foreground">
+                                <td
+                                    colspan="4"
+                                    class="px-6 py-8 text-center text-sm text-muted-foreground"
+                                >
                                     No roles found
                                 </td>
                             </tr>
@@ -238,8 +301,9 @@ const getStatusText = (status: string) => {
                 <DialogHeader>
                     <DialogTitle>Delete Role</DialogTitle>
                     <DialogDescription>
-                        Are you sure you want to delete the role "{{ selectedRole?.name }}"? This action
-                        cannot be undone.
+                        Are you sure you want to delete the role "{{
+                            selectedRole?.name
+                        }}"? This action cannot be undone.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -262,5 +326,3 @@ const getStatusText = (status: string) => {
         </Dialog>
     </AppLayout>
 </template>
-
-

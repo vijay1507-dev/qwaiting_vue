@@ -16,7 +16,7 @@ interface Permission {
 }
 
 interface Props {
-    permissions: Record<string, Permission[]>;
+    permissions: Record<string, Permission[] | Record<string, Permission[]>>;
 }
 
 const props = defineProps<Props>();
@@ -65,8 +65,16 @@ const togglePermission = (permissionName: string, checked: boolean) => {
     // The main checkbox state will automatically update via computed properties
 };
 
+const getModulePermissions = (module: string): Permission[] => {
+    const content = props.permissions[module];
+    if (Array.isArray(content)) {
+        return content;
+    }
+    return Object.values(content).flat();
+};
+
 const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
-    const modulePermissions = props.permissions[module] || [];
+    const modulePermissions = getModulePermissions(module);
 
     // If checked is undefined (indeterminate state clicked), check all
     if (checked === undefined || checked === true) {
@@ -88,19 +96,58 @@ const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
 };
 
 const isModuleAllSelected = (module: string) => {
-    const modulePermissions = props.permissions[module] || [];
-    return (
-        modulePermissions.length > 0 &&
-        modulePermissions.every((p) => form.permissions.includes(p.name))
-    );
+    const modulePermissions = getModulePermissions(module);
+    if (modulePermissions.length === 0) return false;
+    return modulePermissions.every((p) => form.permissions.includes(p.name));
 };
 
 const isModulePartiallySelected = (module: string) => {
-    const modulePermissions = props.permissions[module] || [];
+    const modulePermissions = getModulePermissions(module);
     const selectedCount = modulePermissions.filter((p) =>
         form.permissions.includes(p.name),
     ).length;
     return selectedCount > 0 && selectedCount < modulePermissions.length;
+};
+
+const isSubModuleAllSelected = (
+    module: string,
+    subModule: string,
+    permissions: Permission[],
+) => {
+    return permissions.every((p) => form.permissions.includes(p.name));
+};
+
+const isSubModulePartiallySelected = (
+    module: string,
+    subModule: string,
+    permissions: Permission[],
+) => {
+    const selectedCount = permissions.filter((p) =>
+        form.permissions.includes(p.name),
+    ).length;
+    return selectedCount > 0 && selectedCount < permissions.length;
+};
+
+const toggleSubModulePermissions = (
+    module: string,
+    subModule: string,
+    permissions: Permission[],
+    checked: boolean,
+) => {
+    const permissionNames = permissions.map((p) => p.name);
+
+    if (checked) {
+        // Add all permissions from this submodule
+        const newPermissions = permissionNames.filter(
+            (name) => !form.permissions.includes(name),
+        );
+        form.permissions.push(...newPermissions);
+    } else {
+        // Remove all permissions from this submodule
+        form.permissions = form.permissions.filter(
+            (name) => !permissionNames.includes(name),
+        );
+    }
 };
 
 const submit = () => {
@@ -123,8 +170,14 @@ const permissionModules = computed(() => {
 
 const allPermissions = computed(() => {
     let all: string[] = [];
-    Object.values(props.permissions).forEach((modulePerms) => {
-        modulePerms.forEach((p) => all.push(p.name));
+    Object.values(props.permissions).forEach((content) => {
+        if (Array.isArray(content)) {
+            content.forEach((p) => all.push(p.name));
+        } else {
+            Object.values(content).forEach((sub) =>
+                sub.forEach((p) => all.push(p.name)),
+            );
+        }
     });
     return all;
 });
@@ -256,7 +309,10 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                                     >{{ module }}</Label
                                 >
                             </div>
+
+                            <!-- Flat Permissions List -->
                             <div
+                                v-if="Array.isArray(permissions[module])"
                                 class="grid grid-cols-2 gap-3 pl-6 md:grid-cols-4"
                             >
                                 <div
@@ -287,8 +343,131 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                                         :for="permission.name"
                                         class="cursor-pointer text-sm font-normal"
                                     >
-                                        {{ module }} {{ permission.action }}
+                                        {{
+                                            permission.action.includes(module)
+                                                ? permission.action
+                                                : module +
+                                                  ' ' +
+                                                  permission.action
+                                        }}
                                     </Label>
+                                </div>
+                            </div>
+
+                            <!-- Nested Submodules List -->
+                            <div v-else class="space-y-4 pl-6">
+                                <div
+                                    v-for="(
+                                        subPermissions, subModule
+                                    ) in permissions[module]"
+                                    :key="subModule"
+                                    class="space-y-2"
+                                >
+                                    <!-- Single Permission Submodule (Flattened) -->
+                                    <div
+                                        v-if="subPermissions.length === 1"
+                                        class="flex items-center gap-2 pl-4"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            :id="subPermissions[0].name"
+                                            :checked="
+                                                form.permissions.includes(
+                                                    subPermissions[0].name,
+                                                )
+                                            "
+                                            @change="
+                                                (e) =>
+                                                    togglePermission(
+                                                        subPermissions[0].name,
+                                                        (
+                                                            e.target as HTMLInputElement
+                                                        ).checked,
+                                                    )
+                                            "
+                                            class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <Label
+                                            :for="subPermissions[0].name"
+                                            class="cursor-pointer text-sm font-normal"
+                                        >
+                                            {{ subModule }}
+                                        </Label>
+                                    </div>
+
+                                    <!-- Multiple Permissions Submodule (Grouped) -->
+                                    <div v-else class="space-y-2">
+                                        <div
+                                            class="mb-2 flex items-center gap-2"
+                                        >
+                                            <Checkbox
+                                                :id="`${module}-${subModule}-all`"
+                                                :checked="
+                                                    isSubModuleAllSelected(
+                                                        module,
+                                                        subModule,
+                                                        subPermissions,
+                                                    )
+                                                "
+                                                :indeterminate="
+                                                    isSubModulePartiallySelected(
+                                                        module,
+                                                        subModule,
+                                                        subPermissions,
+                                                    )
+                                                "
+                                                @update:checked="
+                                                    toggleSubModulePermissions(
+                                                        module,
+                                                        subModule,
+                                                        subPermissions,
+                                                        $event,
+                                                    )
+                                                "
+                                            />
+                                            <Label
+                                                :for="`${module}-${subModule}-all`"
+                                                class="text-sm font-medium text-muted-foreground"
+                                            >
+                                                {{ subModule }}
+                                            </Label>
+                                        </div>
+                                        <div
+                                            class="grid grid-cols-2 gap-3 pl-4 md:grid-cols-4"
+                                        >
+                                            <div
+                                                v-for="permission in subPermissions"
+                                                :key="permission.name"
+                                                class="flex items-center gap-2"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    :id="permission.name"
+                                                    :checked="
+                                                        form.permissions.includes(
+                                                            permission.name,
+                                                        )
+                                                    "
+                                                    @change="
+                                                        (e) =>
+                                                            togglePermission(
+                                                                permission.name,
+                                                                (
+                                                                    e.target as HTMLInputElement
+                                                                ).checked,
+                                                            )
+                                                    "
+                                                    class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <Label
+                                                    :for="permission.name"
+                                                    class="cursor-pointer text-sm font-normal"
+                                                >
+                                                    {{ permission.action }}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

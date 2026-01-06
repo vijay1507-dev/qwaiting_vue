@@ -41,23 +41,23 @@ Route::middleware(['auth', 'verified', 'can:clients.read'])->group(function () {
     Route::post('clients/{id}/reset-password', [App\Http\Controllers\Client\ClientsController::class, 'resetPassword'])->name('clients.reset-password');
 });
 
-Route::middleware(['auth', 'verified', 'can:user_management.read'])->prefix('user-management')->name('user-management.')->group(function () {
-    Route::get('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('employees');
-    Route::get('/employees/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('employees.create');
-    Route::post('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('employees.store');
-    Route::get('/employees/{id}/edit', [App\Http\Controllers\UserManagement\UserManagementController::class, 'edit'])->name('employees.edit');
-    Route::put('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'update'])->name('employees.update');
-    Route::delete('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'destroy'])->name('employees.destroy');
-    Route::post('/employees/{id}/reset-password', [App\Http\Controllers\UserManagement\UserManagementController::class, 'resetPassword'])->name('employees.reset-password');
-    Route::post('/employees/{id}/toggle-lock', [App\Http\Controllers\UserManagement\UserManagementController::class, 'toggleLock'])->name('employees.toggle-lock');
+Route::middleware(['auth', 'verified'])->prefix('user-management')->name('user-management.')->group(function () {
+    Route::get('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('employees')->middleware('can:user_management.users.read');
+    Route::get('/employees/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('employees.create')->middleware('can:user_management.users.create');
+    Route::post('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('employees.store')->middleware('can:user_management.users.create');
+    Route::get('/employees/{id}/edit', [App\Http\Controllers\UserManagement\UserManagementController::class, 'edit'])->name('employees.edit')->middleware('can:user_management.users.update');
+    Route::put('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'update'])->name('employees.update')->middleware('can:user_management.users.update');
+    Route::delete('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'destroy'])->name('employees.destroy')->middleware('can:user_management.users.delete');
+    Route::post('/employees/{id}/reset-password', [App\Http\Controllers\UserManagement\UserManagementController::class, 'resetPassword'])->name('employees.reset-password')->middleware('can:user_management.users.reset_password');
+    Route::post('/employees/{id}/toggle-lock', [App\Http\Controllers\UserManagement\UserManagementController::class, 'toggleLock'])->name('employees.toggle-lock')->middleware('can:user_management.users.update');
 
     // Roles
-    Route::get('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'roles'])->name('roles');
-    Route::get('/roles/create', [App\Http\Controllers\UserManagement\RoleController::class, 'create'])->name('roles.create');
-    Route::post('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'store'])->name('roles.store');
-    Route::get('/roles/{id}/edit', [App\Http\Controllers\UserManagement\RoleController::class, 'edit'])->name('roles.edit');
-    Route::put('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'destroy'])->name('roles.destroy');
+    Route::get('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'roles'])->name('roles')->middleware('can:user_management.roles.read');
+    Route::get('/roles/create', [App\Http\Controllers\UserManagement\RoleController::class, 'create'])->name('roles.create')->middleware('can:user_management.roles.create');
+    Route::post('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'store'])->name('roles.store')->middleware('can:user_management.roles.create');
+    Route::get('/roles/{id}/edit', [App\Http\Controllers\UserManagement\RoleController::class, 'edit'])->name('roles.edit')->middleware('can:user_management.roles.update');
+    Route::put('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'update'])->name('roles.update')->middleware('can:user_management.roles.update');
+    Route::delete('/roles/{id}', [App\Http\Controllers\UserManagement\RoleController::class, 'destroy'])->name('roles.destroy')->middleware('can:user_management.roles.delete');
 });
 
 Route::get('quotes', function () {
@@ -72,30 +72,51 @@ Route::get('quotes/{id}/edit', function ($id) {
     return Inertia::render('Quotes/Create', ['id' => $id]);
 })->middleware(['auth', 'verified'])->name('quotes.edit');
 
-Route::middleware(['auth', 'verified', 'can:marketing.read'])->prefix('marketing')->name('marketing.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('marketing')->name('marketing.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('marketing.sequences');
     })->name('index');
+
+    // Campaigns (Unprotected by specific permission as marketing.read is removed, falling back to auth)
     Route::get('/campaigns', [App\Http\Controllers\Marketing\MarketingController::class, 'campaigns'])->name('campaigns');
     Route::get('/campaigns/create', [App\Http\Controllers\Marketing\MarketingController::class, 'campaignView'])->name('campaigns.create');
     Route::get('/campaigns/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'campaignView'])->name('campaigns.edit');
-    Route::get('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'sequences'])->name('sequences');
-    Route::get('/sequences/create', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.create');
-    Route::post('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'storeSequence'])->name('sequences.store');
-    Route::get('/sequences/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.edit');
-    Route::put('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'updateSequence'])->name('sequences.update');
-    Route::delete('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'destroySequence'])->name('sequences.destroy');
-    Route::post('/sequences/{id}/test-batch', [App\Http\Controllers\Marketing\MarketingController::class, 'sendBatchTestEmails'])->name('sequences.test-batch');
-    Route::post('/email-templates/{id}/test', [App\Http\Controllers\Marketing\MarketingController::class, 'sendTestEmail'])->name('email-templates.test');
+
+    // Sequences
+    Route::middleware(['can:marketing.sequences.read'])->group(function () {
+        Route::get('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'sequences'])->name('sequences');
+        Route::post('/sequences/{id}/test-batch', [App\Http\Controllers\Marketing\MarketingController::class, 'sendBatchTestEmails'])->name('sequences.test-batch');
+        Route::post('/email-templates/{id}/test', [App\Http\Controllers\Marketing\MarketingController::class, 'sendTestEmail'])->name('email-templates.test');
+    });
+
+    Route::middleware(['can:marketing.sequences.create'])->group(function () {
+        Route::get('/sequences/create', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.create');
+        Route::post('/sequences', [App\Http\Controllers\Marketing\MarketingController::class, 'storeSequence'])->name('sequences.store');
+        Route::get('/workflows/create', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.create'); // Assuming workflows fall under similar creation restrictions or just left here
+    });
+
+    Route::middleware(['can:marketing.sequences.update'])->group(function () {
+        Route::get('/sequences/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'sequenceView'])->name('sequences.edit');
+        Route::put('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'updateSequence'])->name('sequences.update');
+        Route::get('/workflows/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.edit');
+    });
+
+    Route::delete('/sequences/{id}', [App\Http\Controllers\Marketing\MarketingController::class, 'destroySequence'])
+        ->middleware('can:marketing.sequences.delete')
+        ->name('sequences.destroy');
+
     Route::get('/workflows', [App\Http\Controllers\Marketing\MarketingController::class, 'workflows'])->name('workflows');
-    Route::get('/workflows/create', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.create');
-    Route::get('/workflows/{id}/edit', [App\Http\Controllers\Marketing\MarketingController::class, 'workflowView'])->name('workflows.edit');
     Route::get('/tracking', [App\Http\Controllers\Marketing\MarketingController::class, 'tracking'])->name('tracking');
 
     // System Templates
-    Route::get('/system-templates', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'index'])->name('system-templates.index');
-    Route::get('/system-templates/{id}/edit', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'edit'])->name('system-templates.edit');
-    Route::put('/system-templates/{id}', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'update'])->name('system-templates.update');
+    Route::middleware(['can:marketing.system_templates.read'])->group(function () {
+        Route::get('/system-templates', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'index'])->name('system-templates.index');
+    });
+
+    Route::middleware(['can:marketing.system_templates.update'])->group(function () {
+        Route::get('/system-templates/{id}/edit', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'edit'])->name('system-templates.edit');
+        Route::put('/system-templates/{id}', [App\Http\Controllers\Marketing\SystemTemplateController::class, 'update'])->name('system-templates.update');
+    });
 });
 
 Route::middleware(['auth', 'verified'])->prefix('api')->name('api.')->group(function () {
@@ -112,34 +133,69 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
     Route::get('/analytics/view', [App\Http\Controllers\Finance\FinanceController::class, 'analyticsView'])->name('analytics.view');
 });
 
-Route::middleware(['auth', 'verified', 'can:e-commerce.read'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index');
+Route::middleware(['auth', 'verified'])->prefix('ecommerce')->name('ecommerce.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'index'])->name('index')->middleware('can:ecommerce.overview.read');
 
     // Products
-    Route::get('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'products'])->name('products');
-    Route::get('/products/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.create');
-    Route::post('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeProduct'])->name('products.store');
-    Route::get('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productView'])->name('products.view');
-    Route::get('/products/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.edit');
-    Route::put('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateProduct'])->name('products.update');
-    Route::delete('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyProduct'])->name('products.destroy');
+    // Products
+    Route::middleware(['can:ecommerce.product_catalog.read'])->group(function () {
+        Route::get('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'products'])->name('products');
+        Route::get('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productView'])->name('products.view');
+    });
+
+    Route::middleware(['can:ecommerce.product_catalog.create'])->group(function () {
+        Route::get('/products/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.create');
+        Route::post('/products', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeProduct'])->name('products.store');
+    });
+
+    Route::middleware(['can:ecommerce.product_catalog.update'])->group(function () {
+        Route::get('/products/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'productForm'])->name('products.edit');
+        Route::put('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateProduct'])->name('products.update');
+    });
+
+    Route::delete('/products/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyProduct'])
+        ->middleware('can:ecommerce.product_catalog.delete')
+        ->name('products.destroy');
 
     // Bundles
-    Route::get('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundles'])->name('bundles');
-    Route::get('/bundles/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.create');
-    Route::post('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeBundle'])->name('bundles.store');
-    Route::get('/bundles/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.edit');
-    Route::put('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateBundle'])->name('bundles.update');
-    Route::delete('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyBundle'])->name('bundles.destroy');
+    // Bundles
+    Route::middleware(['can:ecommerce.bundle_offers.read'])->group(function () {
+        Route::get('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundles'])->name('bundles');
+    });
+
+    Route::middleware(['can:ecommerce.bundle_offers.create'])->group(function () {
+        Route::get('/bundles/create', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.create');
+        Route::post('/bundles', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeBundle'])->name('bundles.store');
+    });
+
+    Route::middleware(['can:ecommerce.bundle_offers.update'])->group(function () {
+        Route::get('/bundles/{id}/edit', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'bundleForm'])->name('bundles.edit');
+        Route::put('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateBundle'])->name('bundles.update');
+    });
+
+    Route::delete('/bundles/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'destroyBundle'])
+        ->middleware('can:ecommerce.bundle_offers.delete')
+        ->name('bundles.destroy');
 
     // Cart
-    Route::get('/cart', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'cart'])->name('cart');
+    Route::get('/cart', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'cart'])
+        ->middleware('can:ecommerce.shopping_cart.read')
+        ->name('cart');
 
     // Orders
-    Route::get('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orders'])->name('orders');
-    Route::post('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeOrder'])->name('orders.store');
-    Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
-    Route::put('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateOrder'])->name('orders.update');
+    // Orders
+    Route::middleware(['can:ecommerce.orders.read'])->group(function () {
+        Route::get('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orders'])->name('orders');
+        Route::get('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'orderView'])->name('orders.view');
+    });
+
+    Route::post('/orders', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'storeOrder'])
+        ->middleware('can:ecommerce.orders.create')
+        ->name('orders.store');
+
+    Route::put('/orders/{id}', [App\Http\Controllers\Ecommerce\EcommerceController::class, 'updateOrder'])
+        ->middleware('can:ecommerce.orders.update')
+        ->name('orders.update');
 });
 
 Route::middleware(['auth', 'verified'])->prefix('api/ecommerce')->name('api.ecommerce.')->group(function () {
@@ -149,37 +205,37 @@ Route::middleware(['auth', 'verified'])->prefix('api/ecommerce')->name('api.ecom
     Route::delete('/cart', [App\Http\Controllers\Api\CartController::class, 'clear'])->name('cart.clear');
 });
 
-Route::middleware(['auth', 'verified', 'can:subscription_management.read'])->prefix('subscription')->name('subscription.')->group(function () {
-    Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index');
+Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index'); // Logic for data filtering should be in Controller
 
     // Features
-    Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store');
-    Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update');
-    Route::delete('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyFeature'])->name('features.destroy');
+    Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store')->middleware('can:subscription_management.features.create');
+    Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update')->middleware('can:subscription_management.features.update');
+    Route::delete('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyFeature'])->name('features.destroy')->middleware('can:subscription_management.features.delete');
 
     // Packages
-    Route::post('/packages', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePackage'])->name('packages.store');
-    Route::put('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackage'])->name('packages.update');
-    Route::delete('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPackage'])->name('packages.destroy');
+    Route::post('/packages', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePackage'])->name('packages.store')->middleware('can:subscription_management.packages.create');
+    Route::put('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackage'])->name('packages.update')->middleware('can:subscription_management.packages.update');
+    Route::delete('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPackage'])->name('packages.destroy')->middleware('can:subscription_management.packages.delete');
 
     // Package Configuration
-    Route::get('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackageConfiguration'])->name('packages.configuration.get');
-    Route::put('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackageConfiguration'])->name('packages.configuration.update');
+    Route::get('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackageConfiguration'])->name('packages.configuration.get')->middleware('can:subscription_management.configuration.read');
+    Route::put('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackageConfiguration'])->name('packages.configuration.update')->middleware('can:subscription_management.configuration.update');
 
     // Pricing
-    Route::get('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackagePricing'])->name('packages.pricing.get');
-    Route::post('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePricing'])->name('packages.pricing.store');
-    Route::put('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePricing'])->name('packages.pricing.update');
-    Route::delete('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPricing'])->name('packages.pricing.destroy');
+    Route::get('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackagePricing'])->name('packages.pricing.get')->middleware('can:subscription_management.pricing.read');
+    Route::post('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePricing'])->name('packages.pricing.store')->middleware('can:subscription_management.pricing.create');
+    Route::put('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePricing'])->name('packages.pricing.update')->middleware('can:subscription_management.pricing.update');
+    Route::delete('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPricing'])->name('packages.pricing.destroy')->middleware('can:subscription_management.pricing.delete');
 
     // Coupons
-    Route::post('/coupons', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeCoupon'])->name('coupons.store');
-    Route::put('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateCoupon'])->name('coupons.update');
-    Route::delete('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyCoupon'])->name('coupons.destroy');
-    Route::get('/coupons/{coupon}/usage', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getCouponUsage'])->name('coupons.usage');
+    Route::post('/coupons', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeCoupon'])->name('coupons.store')->middleware('can:subscription_management.coupons.create');
+    Route::put('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateCoupon'])->name('coupons.update')->middleware('can:subscription_management.coupons.update');
+    Route::delete('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyCoupon'])->name('coupons.destroy')->middleware('can:subscription_management.coupons.delete');
+    Route::get('/coupons/{coupon}/usage', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getCouponUsage'])->name('coupons.usage')->middleware('can:subscription_management.coupons.read');
 
     // Preview
-    Route::get('/preview', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPreviewData'])->name('preview');
+    Route::get('/preview', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPreviewData'])->name('preview')->middleware('can:subscription_management.preview.read');
 });
 
 require __DIR__ . '/settings.php';

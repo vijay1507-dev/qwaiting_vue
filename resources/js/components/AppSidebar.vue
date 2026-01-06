@@ -37,6 +37,10 @@ const page = usePage();
 const permissions = computed(() => page.props.auth.permissions);
 
 const hasPermission = (permission: string) => {
+    if (permission.endsWith('.*')) {
+        const prefix = permission.replace('.*', '.');
+        return permissions.value.some((p: string) => p.startsWith(prefix));
+    }
     return permissions.value.includes(permission);
 };
 
@@ -67,7 +71,7 @@ const allMainNavItems: (NavItem & { permission?: string })[] = [
         title: 'Marketing',
         href: marketingSequences(),
         icon: Mail,
-        permission: 'marketing.read',
+        permission: 'marketing.*',
     },
     /* {
         title: 'Finance & Analytics',
@@ -78,38 +82,55 @@ const allMainNavItems: (NavItem & { permission?: string })[] = [
         title: 'E-Commerce',
         href: ecommerceIndex(),
         icon: ShoppingBag,
-        permission: 'e-commerce.read',
+        permission: 'ecommerce.*',
     },
     {
         title: 'Subscription Management',
         href: subscriptionIndex(),
         icon: CreditCard,
-        permission: 'subscription_management.read',
+        permission: 'subscription_management.*',
     },
     {
         title: 'User Management',
         icon: Users2,
-        permission: 'user_management.read',
+        permission: 'user_management.*',
         children: [
             {
                 title: 'Users',
                 href: userManagementEmployees(),
+                permission: 'user_management.users.read',
             },
             {
                 title: 'Role',
                 href: userManagementRoles().url,
+                permission: 'user_management.roles.read',
             },
         ],
     },
 ];
 
 const mainNavItems = computed(() => {
-    return allMainNavItems.filter((item) => {
-        if (item.permission) {
-            return hasPermission(item.permission);
-        }
-        return true;
-    });
+    return allMainNavItems
+        .filter((item) => {
+            if (item.permission) {
+                return hasPermission(item.permission);
+            }
+            return true;
+        })
+        .map((item) => {
+            if (item.children) {
+                return {
+                    ...item,
+                    children: item.children.filter((child: any) => {
+                        if (child.permission) {
+                            return hasPermission(child.permission);
+                        }
+                        return true;
+                    }),
+                };
+            }
+            return item;
+        });
 });
 
 const footerNavItems: NavItem[] = [];

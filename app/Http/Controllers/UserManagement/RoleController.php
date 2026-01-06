@@ -163,41 +163,130 @@ class RoleController extends Controller
         $permissions = Permission::orderBy('name')->get();
 
         $grouped = [];
+        $actionMap = [
+            'read' => 'View',
+            'create' => 'Add',
+            'update' => 'Edit',
+            'delete' => 'Delete',
+        ];
+
         foreach ($permissions as $permission) {
             $parts = explode('.', $permission->name);
-            if (count($parts) === 2) {
+            $count = count($parts);
+
+            if ($count === 2 || $count === 3) {
                 $module = ucwords(str_replace('_', ' ', $parts[0]));
-                $action = $parts[1];
 
-                if (! isset($grouped[$module])) {
-                    $grouped[$module] = [];
+                if ($count === 3) {
+                    $submodule = ucwords(str_replace('_', ' ', $parts[1]));
+                    $action = $parts[2];
+
+                    if (! isset($grouped[$module])) {
+                        $grouped[$module] = [];
+                    }
+                    if (! isset($grouped[$module][$submodule])) {
+                        $grouped[$module][$submodule] = [];
+                    }
+
+                    $displayAction = $actionMap[$action] ?? ucfirst($action);
+                    // Specific overrides if needed
+                    if ($submodule === 'Sequences' && $action === 'read') {
+                        $displayAction = 'View Sequences';
+                    }
+                    if ($submodule === 'System Templates' && $action === 'read') {
+                        $displayAction = 'View System Templates';
+                    }
+
+                    $grouped[$module][$submodule][] = [
+                        'name' => $permission->name,
+                        'action' => $displayAction,
+                    ];
+                } else {
+                    $action = $parts[1];
+
+                    if (! isset($grouped[$module])) {
+                        $grouped[$module] = [];
+                    }
+
+                    $displayAction = $actionMap[$action] ?? ucfirst($action);
+
+                    // Specific override for Clients Read (legacy)
+                    if ($module === 'Clients' && $action === 'read') {
+                        $displayAction = 'View Clients';
+                    }
+
+                    $grouped[$module][] = [
+                        'name' => $permission->name,
+                        'action' => $displayAction,
+                    ];
                 }
-
-                // Map action names to display format
-                $actionMap = [
-                    'read' => 'Read',
-                    'create' => 'Add',
-                    'update' => 'Edit',
-                    'delete' => 'Delete',
-                ];
-
-                $grouped[$module][] = [
-                    'name' => $permission->name,
-                    'action' => $actionMap[$action] ?? ucfirst($action),
-                ];
             }
         }
 
+        // Fix for mixed content (both flat permissions and submodules in same module)
+        foreach ($grouped as $module => &$content) {
+            $hasStringKeys = false;
+            $hasIntKeys = false;
+            foreach (array_keys($content) as $k) {
+                if (is_string($k)) $hasStringKeys = true;
+                else $hasIntKeys = true;
+            }
+
+            if ($hasStringKeys && $hasIntKeys) {
+                // Move flat permissions (int keys) to 'General' submodule
+                if (! isset($content['General'])) {
+                    $content['General'] = [];
+                }
+                foreach ($content as $k => $v) {
+                    if (is_int($k)) {
+                        $content['General'][] = $v;
+                        unset($content[$k]);
+                    }
+                }
+            }
+        }
+        unset($content); // Break reference
+
         // Sort modules and actions
         ksort($grouped);
-        foreach ($grouped as &$actions) {
-            usort($actions, function ($a, $b) {
-                $order = ['read' => 1, 'create' => 2, 'update' => 3, 'delete' => 4];
-                $aOrder = $order[strtolower($a['action'])] ?? 99;
-                $bOrder = $order[strtolower($b['action'])] ?? 99;
 
-                return $aOrder <=> $bOrder;
-            });
+        // Helper to sort actions
+        $sortActions = function ($a, $b) {
+            $getOrder = function ($str) {
+                if (stripos($str, 'View') !== false || stripos($str, 'Read') !== false) return 1;
+                if (stripos($str, 'Add') !== false || stripos($str, 'Create') !== false) return 2;
+                if (stripos($str, 'Edit') !== false || stripos($str, 'Update') !== false) return 3;
+                if (stripos($str, 'Delete') !== false) return 4;
+                return 99;
+            };
+
+            return $getOrder($a['action']) <=> $getOrder($b['action']);
+        };
+
+        foreach ($grouped as $module => &$content) {
+            // Check if it's an associative array (Nested Submodules)
+            // Associative arrays will have string keys (Submodule names) or gaps in keys if we unset some but didn't reindex? 
+            // Actually after our fix, if it was mixed, it's now purely string keys (submodules).
+            // If it was flat, it's purely int keys.
+
+            $isAssociative = false;
+            foreach (array_keys($content) as $k) {
+                if (is_string($k)) {
+                    $isAssociative = true;
+                    break;
+                }
+            }
+
+            if ($isAssociative) {
+                // Nested Submodules
+                ksort($content); // Sort submodules alphabetically
+                foreach ($content as &$subActions) {
+                    usort($subActions, $sortActions);
+                }
+            } else {
+                // Flat Actions
+                usort($content, $sortActions);
+            }
         }
 
         return $grouped;
