@@ -19,10 +19,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
-import { create as userManagementEmployeesCreate } from '@/routes/user-management/employees';
+import { users as userManagementUsers } from '@/routes/user-management';
+import {
+    create as userManagementUsersCreate,
+    destroy as userManagementUsersDestroy,
+    edit as userManagementUsersEdit,
+} from '@/routes/user-management/users';
+
 import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import {
     ChevronDown as ChevronDownIcon,
     Download,
@@ -89,11 +94,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Users',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
 ];
 
@@ -146,12 +151,15 @@ const handleDelete = () => {
         return;
     }
 
-    deleteForm.delete(`/user-management/employees/${selectedUser.value.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            closeDeleteDialog();
+    deleteForm.delete(
+        userManagementUsersDestroy({ id: selectedUser.value.id }).url,
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeDeleteDialog();
+            },
         },
-    });
+    );
 };
 
 const openResetPasswordDialog = (user: User) => {
@@ -172,22 +180,12 @@ const handleResetPassword = () => {
     }
 
     resetPasswordForm.post(
-        `/user-management/employees/${selectedUser.value.id}/reset-password`,
+        userManagementUsersResetPassword({ id: selectedUser.value.id }).url,
         {
             preserveScroll: true,
             onSuccess: () => {
                 closeResetPasswordDialog();
             },
-        },
-    );
-};
-
-const handleToggleLock = (user: User) => {
-    router.post(
-        `/user-management/employees/${user.id}/toggle-lock`,
-        {},
-        {
-            preserveScroll: true,
         },
     );
 };
@@ -537,7 +535,7 @@ const exportToPDF = async () => {
                         <!-- Add User Button -->
                         <Link
                             v-if="hasPermission('user_management.users.create')"
-                            :href="userManagementEmployeesCreate().url"
+                            :href="userManagementUsersCreate().url"
                         >
                             <Button
                                 class="bg-purple-600 text-white hover:bg-purple-700"
@@ -661,7 +659,11 @@ const exportToPDF = async () => {
                                                 'user_management.users.update',
                                             )
                                         "
-                                        :href="`/user-management/employees/${user.id}/edit`"
+                                        :href="
+                                            userManagementUsersEdit({
+                                                id: user.id,
+                                            }).url
+                                        "
                                         class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                                         title="Edit"
                                     >

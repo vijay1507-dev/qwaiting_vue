@@ -16,8 +16,8 @@ import { index as clientsIndex } from '@/routes/clients';
 import { index as ecommerceIndex } from '@/routes/ecommerce';
 import { index as subscriptionIndex } from '@/routes/subscription';
 import {
-    employees as userManagementEmployees,
     roles as userManagementRoles,
+    users as userManagementUsers,
 } from '@/routes/user-management';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -96,7 +96,7 @@ const allMainNavItems: (NavItem & { permission?: string })[] = [
         children: [
             {
                 title: 'Users',
-                href: userManagementEmployees(),
+                href: userManagementUsers().url,
                 permission: 'user_management.users.read',
             },
             {

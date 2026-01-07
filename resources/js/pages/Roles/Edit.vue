@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
+import { roles as userManagementRoles } from '@/routes/user-management';
+import { update as userManagementRolesUpdate } from '@/routes/user-management/roles';
+
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -39,11 +40,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Role',
-        href: '/user-management/roles',
+        href: userManagementRoles().url,
     },
     {
         title: 'Edit Role',
@@ -160,7 +161,7 @@ const toggleSubModulePermissions = (
 };
 
 const submit = () => {
-    form.put(`/user-management/roles/${props.role.id}`, {
+    form.put(userManagementRolesUpdate({ id: props.role.id }).url, {
         preserveScroll: true,
         onSuccess: () => {
             success('Role updated successfully');
@@ -521,7 +522,7 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                     <Button
                         type="button"
                         variant="outline"
-                        @click="router.visit('/user-management/roles')"
+                        @click="router.visit(userManagementRoles().url)"
                     >
                         Cancel
                     </Button>

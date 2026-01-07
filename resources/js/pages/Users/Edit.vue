@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
+import { users as userManagementUsers } from '@/routes/user-management';
+import { update as userManagementUsersUpdate } from '@/routes/user-management/users';
+
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 
@@ -37,11 +38,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Users',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Edit User',
@@ -59,7 +60,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.put(`/user-management/employees/${props.user.id}`, {
+    form.put(userManagementUsersUpdate({ id: props.user.id }).url, {
         preserveScroll: true,
         onSuccess: () => {
             success('User updated successfully');
@@ -199,7 +200,7 @@ const submit = () => {
                     <Button
                         type="button"
                         variant="outline"
-                        @click="router.visit(userManagementEmployees().url)"
+                        @click="router.visit(userManagementUsers().url)"
                     >
                         Cancel
                     </Button>

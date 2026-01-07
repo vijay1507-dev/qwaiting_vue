@@ -18,7 +18,13 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
+import { users as userManagementUsers } from '@/routes/user-management';
+import {
+    create as userManagementRolesCreate,
+    destroy as userManagementRolesDestroy,
+    edit as userManagementRolesEdit,
+} from '@/routes/user-management/roles';
+
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { Edit, MoreHorizontal, Plus, Search, Trash2 } from 'lucide-vue-next';
@@ -76,7 +82,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Role',
@@ -116,17 +122,20 @@ const deleteRole = () => {
         return;
     }
 
-    deleteForm.delete(`/user-management/roles/${selectedRole.value.id}`, {
-        preserveScroll: true,
-        onSuccess: () => {
-            showDeleteDialog.value = false;
-            selectedRole.value = null;
-            success('Role deleted successfully');
+    deleteForm.delete(
+        userManagementRolesDestroy({ id: selectedRole.value.id }).url,
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                showDeleteDialog.value = false;
+                selectedRole.value = null;
+                success('Role deleted successfully');
+            },
+            onError: () => {
+                showError('Failed to delete role. Please try again.');
+            },
         },
-        onError: () => {
-            showError('Failed to delete role. Please try again.');
-        },
-    });
+    );
 };
 
 const getStatusBadgeClass = (status: string) => {
@@ -164,7 +173,7 @@ const getStatusText = (status: string) => {
                 </div>
                 <Link
                     v-if="hasPermission('user_management.roles.create')"
-                    href="/user-management/roles/create"
+                    :href="userManagementRolesCreate().url"
                 >
                     <Button
                         class="bg-purple-600 text-white hover:bg-purple-700"
@@ -236,7 +245,11 @@ const getStatusText = (status: string) => {
                                                     'user_management.roles.update',
                                                 )
                                             "
-                                            :href="`/user-management/roles/${role.id}/edit`"
+                                            :href="
+                                                userManagementRolesEdit({
+                                                    id: role.id,
+                                                }).url
+                                            "
                                         >
                                             <Button
                                                 variant="ghost"

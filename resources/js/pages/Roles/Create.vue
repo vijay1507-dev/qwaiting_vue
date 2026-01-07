@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
+import { roles as userManagementRoles } from '@/routes/user-management';
+import { store as userManagementRolesStore } from '@/routes/user-management/roles';
+
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -30,11 +31,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Role',
-        href: '/user-management/roles',
+        href: userManagementRoles().url,
     },
     {
         title: 'Add Role',
@@ -151,7 +152,7 @@ const toggleSubModulePermissions = (
 };
 
 const submit = () => {
-    form.post('/user-management/roles', {
+    form.post(userManagementRolesStore().url, {
         preserveScroll: true,
         onSuccess: () => {
             success('Role created successfully');
@@ -169,7 +170,7 @@ const permissionModules = computed(() => {
 });
 
 const allPermissions = computed(() => {
-    let all: string[] = [];
+    const all: string[] = [];
     Object.values(props.permissions).forEach((content) => {
         if (Array.isArray(content)) {
             content.forEach((p) => all.push(p.name));
@@ -487,7 +488,7 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                     <Button
                         type="button"
                         variant="outline"
-                        @click="router.visit('/user-management/roles')"
+                        @click="router.visit(userManagementRoles().url)"
                     >
                         Cancel
                     </Button>

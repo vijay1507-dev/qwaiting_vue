@@ -43,14 +43,14 @@ Route::middleware(['auth', 'verified', 'can:clients.read'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->prefix('user-management')->name('user-management.')->group(function () {
-    Route::get('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('employees')->middleware('can:user_management.users.read');
-    Route::get('/employees/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('employees.create')->middleware('can:user_management.users.create');
-    Route::post('/employees', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('employees.store')->middleware('can:user_management.users.create');
-    Route::get('/employees/{id}/edit', [App\Http\Controllers\UserManagement\UserManagementController::class, 'edit'])->name('employees.edit')->middleware('can:user_management.users.update');
-    Route::put('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'update'])->name('employees.update')->middleware('can:user_management.users.update');
-    Route::delete('/employees/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'destroy'])->name('employees.destroy')->middleware('can:user_management.users.delete');
-    Route::post('/employees/{id}/reset-password', [App\Http\Controllers\UserManagement\UserManagementController::class, 'resetPassword'])->name('employees.reset-password')->middleware('can:user_management.users.reset_password');
-    Route::post('/employees/{id}/toggle-lock', [App\Http\Controllers\UserManagement\UserManagementController::class, 'toggleLock'])->name('employees.toggle-lock')->middleware('can:user_management.users.update');
+    Route::get('/users', [App\Http\Controllers\UserManagement\UserManagementController::class, 'employees'])->name('users')->middleware('can:user_management.users.read');
+    Route::get('/users/create', [App\Http\Controllers\UserManagement\UserManagementController::class, 'create'])->name('users.create')->middleware('can:user_management.users.create');
+    Route::post('/users', [App\Http\Controllers\UserManagement\UserManagementController::class, 'store'])->name('users.store')->middleware('can:user_management.users.create');
+    Route::get('/users/{id}/edit', [App\Http\Controllers\UserManagement\UserManagementController::class, 'edit'])->name('users.edit')->middleware('can:user_management.users.update');
+    Route::put('/users/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'update'])->name('users.update')->middleware('can:user_management.users.update');
+    Route::delete('/users/{id}', [App\Http\Controllers\UserManagement\UserManagementController::class, 'destroy'])->name('users.destroy')->middleware('can:user_management.users.delete');
+    Route::post('/users/{id}/reset-password', [App\Http\Controllers\UserManagement\UserManagementController::class, 'resetPassword'])->name('users.reset-password')->middleware('can:user_management.users.reset_password');
+    Route::post('/users/{id}/toggle-lock', [App\Http\Controllers\UserManagement\UserManagementController::class, 'toggleLock'])->name('users.toggle-lock')->middleware('can:user_management.users.update');
 
     // Roles
     Route::get('/roles', [App\Http\Controllers\UserManagement\RoleController::class, 'roles'])->name('roles')->middleware('can:user_management.roles.read');
@@ -266,7 +266,7 @@ Route::get('/reseller-partner-program', function () {
 });
 
 Route::get('/contact', function () {
-    return view('auth.request-demo');
+    return view('website.auth.request-demo');
 });
 
 Route::get('/refund-cancellation-policy', function () {
