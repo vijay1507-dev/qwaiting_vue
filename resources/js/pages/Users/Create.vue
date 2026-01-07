@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
 import { users as userManagementUsers } from '@/routes/user-management';
 import { store as userManagementUsersStore } from '@/routes/user-management/users';
 

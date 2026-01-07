@@ -110,47 +110,6 @@ const isModulePartiallySelected = (module: string) => {
     return selectedCount > 0 && selectedCount < modulePermissions.length;
 };
 
-const isSubModuleAllSelected = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-) => {
-    return permissions.every((p) => form.permissions.includes(p.name));
-};
-
-const isSubModulePartiallySelected = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-) => {
-    const selectedCount = permissions.filter((p) =>
-        form.permissions.includes(p.name),
-    ).length;
-    return selectedCount > 0 && selectedCount < permissions.length;
-};
-
-const toggleSubModulePermissions = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-    checked: boolean,
-) => {
-    const permissionNames = permissions.map((p) => p.name);
-
-    if (checked) {
-        // Add all permissions from this submodule
-        const newPermissions = permissionNames.filter(
-            (name) => !form.permissions.includes(name),
-        );
-        form.permissions.push(...newPermissions);
-    } else {
-        // Remove all permissions from this submodule
-        form.permissions = form.permissions.filter(
-            (name) => !permissionNames.includes(name),
-        );
-    }
-};
-
 const submit = () => {
     form.post(userManagementRolesStore().url, {
         preserveScroll: true,
@@ -168,43 +127,6 @@ const submit = () => {
 const permissionModules = computed(() => {
     return Object.keys(props.permissions).sort();
 });
-
-const allPermissions = computed(() => {
-    const all: string[] = [];
-    Object.values(props.permissions).forEach((content) => {
-        if (Array.isArray(content)) {
-            content.forEach((p) => all.push(p.name));
-        } else {
-            Object.values(content).forEach((sub) =>
-                sub.forEach((p) => all.push(p.name)),
-            );
-        }
-    });
-    return all;
-});
-
-const isAllSelected = computed(() => {
-    return (
-        allPermissions.value.length > 0 &&
-        allPermissions.value.length === form.permissions.length &&
-        allPermissions.value.every((p) => form.permissions.includes(p))
-    );
-});
-
-const isPartiallySelected = computed(() => {
-    return (
-        form.permissions.length > 0 &&
-        form.permissions.length < allPermissions.value.length
-    );
-});
-
-const toggleGlobalSelectAll = (checked: boolean | undefined) => {
-    if (checked === undefined || checked === true) {
-        form.permissions = [...allPermissions.value];
-    } else {
-        form.permissions = [];
-    }
-};
 </script>
 
 <template>
@@ -401,37 +323,11 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                                         <div
                                             class="mb-2 flex items-center gap-2"
                                         >
-                                            <Checkbox
-                                                :id="`${module}-${subModule}-all`"
-                                                :checked="
-                                                    isSubModuleAllSelected(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                    )
-                                                "
-                                                :indeterminate="
-                                                    isSubModulePartiallySelected(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                    )
-                                                "
-                                                @update:checked="
-                                                    toggleSubModulePermissions(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                        $event,
-                                                    )
-                                                "
-                                            />
-                                            <Label
-                                                :for="`${module}-${subModule}-all`"
+                                            <span
                                                 class="text-sm font-medium text-muted-foreground"
                                             >
                                                 {{ subModule }}
-                                            </Label>
+                                            </span>
                                         </div>
                                         <div
                                             class="grid grid-cols-2 gap-3 pl-4 md:grid-cols-4"

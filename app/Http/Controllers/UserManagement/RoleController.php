@@ -168,6 +168,7 @@ class RoleController extends Controller
             'create' => 'Add',
             'update' => 'Edit',
             'delete' => 'Delete',
+            'reset_password' => 'Reset Password',
         ];
 
         foreach ($permissions as $permission) {

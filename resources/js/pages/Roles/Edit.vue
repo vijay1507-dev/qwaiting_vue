@@ -4,7 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { roles as userManagementRoles } from '@/routes/user-management';
+import { dashboard } from '@/routes';
+import {
+    roles as userManagementRoles,
+    users as userManagementUsers,
+} from '@/routes/user-management';
 import { update as userManagementRolesUpdate } from '@/routes/user-management/roles';
 
 import { type BreadcrumbItem } from '@/types';
@@ -117,47 +121,6 @@ const isModulePartiallySelected = (module: string) => {
         form.permissions.includes(p.name),
     ).length;
     return selectedCount > 0 && selectedCount < modulePermissions.length;
-};
-
-const isSubModuleAllSelected = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-) => {
-    return permissions.every((p) => form.permissions.includes(p.name));
-};
-
-const isSubModulePartiallySelected = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-) => {
-    const selectedCount = permissions.filter((p) =>
-        form.permissions.includes(p.name),
-    ).length;
-    return selectedCount > 0 && selectedCount < permissions.length;
-};
-
-const toggleSubModulePermissions = (
-    module: string,
-    subModule: string,
-    permissions: Permission[],
-    checked: boolean,
-) => {
-    const permissionNames = permissions.map((p) => p.name);
-
-    if (checked) {
-        // Add all permissions from this submodule
-        const newPermissions = permissionNames.filter(
-            (name) => !form.permissions.includes(name),
-        );
-        form.permissions.push(...newPermissions);
-    } else {
-        // Remove all permissions from this submodule
-        form.permissions = form.permissions.filter(
-            (name) => !permissionNames.includes(name),
-        );
-    }
 };
 
 const submit = () => {
@@ -435,37 +398,11 @@ const toggleGlobalSelectAll = (checked: boolean | undefined) => {
                                         <div
                                             class="mb-2 flex items-center gap-2"
                                         >
-                                            <Checkbox
-                                                :id="`${module}-${subModule}-all`"
-                                                :checked="
-                                                    isSubModuleAllSelected(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                    )
-                                                "
-                                                :indeterminate="
-                                                    isSubModulePartiallySelected(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                    )
-                                                "
-                                                @update:checked="
-                                                    toggleSubModulePermissions(
-                                                        module,
-                                                        subModule,
-                                                        subPermissions,
-                                                        $event,
-                                                    )
-                                                "
-                                            />
-                                            <Label
-                                                :for="`${module}-${subModule}-all`"
+                                            <span
                                                 class="text-sm font-medium text-muted-foreground"
                                             >
                                                 {{ subModule }}
-                                            </Label>
+                                            </span>
                                         </div>
                                         <div
                                             class="grid grid-cols-2 gap-3 pl-4 md:grid-cols-4"
