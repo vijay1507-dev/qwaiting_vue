@@ -13,8 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/composables/useToast';
-
-const page = usePage();
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
 import { preview as subscriptionPreview } from '@/routes/subscription';
@@ -75,6 +73,8 @@ import {
 } from 'lucide-vue-next';
 import { computed, nextTick, ref, watch } from 'vue';
 
+const page = usePage();
+
 interface Feature {
     id: string;
     name: string;
@@ -97,6 +97,7 @@ interface Package {
     creditCardRequired: boolean;
     displaySequence?: number;
     featuresDisplayLimit?: number | null;
+    isEnquiry?: boolean;
 }
 
 interface Coupon {
@@ -465,11 +466,11 @@ const newPackage = ref({
     description: '',
     monthlyEnabled: true,
     annualEnabled: false,
-    enableTrial: false,
     creditCardRequired: true,
     status: 'active',
     displaySequence: 0,
     featuresDisplayLimit: null,
+    packageType: 'none' as 'none' | 'trial' | 'enquiry',
 });
 
 const packageStatusOptions = ['active', 'inactive'];
@@ -483,11 +484,11 @@ const editPackage = ref({
     description: '',
     monthlyEnabled: true,
     annualEnabled: false,
-    enableTrial: false,
     creditCardRequired: true,
     status: 'active',
     displaySequence: 0,
     featuresDisplayLimit: null,
+    packageType: 'none' as 'none' | 'trial' | 'enquiry',
 });
 
 const handleCreatePackage = () => {
@@ -503,11 +504,11 @@ const handleClosePackageModal = () => {
         description: '',
         monthlyEnabled: true,
         annualEnabled: false,
-        enableTrial: false,
         creditCardRequired: true,
         status: 'active',
         displaySequence: 0,
         featuresDisplayLimit: null,
+        packageType: 'none',
     };
 };
 
@@ -532,7 +533,8 @@ const handleSubmitPackage = () => {
             description: newPackage.value.description,
             monthly_enabled: newPackage.value.monthlyEnabled,
             annual_enabled: newPackage.value.annualEnabled,
-            trial_days: newPackage.value.enableTrial ? 14 : null,
+            trial_days: newPackage.value.packageType === 'trial' ? 14 : null,
+            is_enquiry: newPackage.value.packageType === 'enquiry',
             credit_card_required: newPackage.value.creditCardRequired,
             status: newPackage.value.status,
             display_sequence: newPackage.value.displaySequence || 0,
@@ -561,11 +563,15 @@ const handleEditPackage = (packageId: string) => {
             description: pkg.description || '',
             monthlyEnabled: pkg.monthlyEnabled,
             annualEnabled: pkg.annualEnabled,
-            enableTrial: pkg.trialDays ? pkg.trialDays > 0 : false,
             creditCardRequired: pkg.creditCardRequired,
             status: pkg.status,
             displaySequence: pkg.displaySequence || 0,
             featuresDisplayLimit: pkg.featuresDisplayLimit ?? null,
+            packageType: pkg.isEnquiry
+                ? 'enquiry'
+                : pkg.trialDays && pkg.trialDays > 0
+                  ? 'trial'
+                  : 'none',
         };
         showEditPackageModal.value = true;
     }
@@ -580,11 +586,11 @@ const handleCloseEditPackageModal = () => {
         description: '',
         monthlyEnabled: true,
         annualEnabled: false,
-        enableTrial: false,
         creditCardRequired: true,
         status: 'active',
         displaySequence: 0,
         featuresDisplayLimit: null,
+        packageType: 'none',
     };
 };
 
@@ -604,9 +610,10 @@ const handleUpdatePackage = () => {
     }
 
     // Preserve existing trial days if trial is enabled, otherwise set to null
-    const trialDays = editPackage.value.enableTrial
-        ? editingPackage.value.trialDays || 14
-        : null;
+    const trialDays =
+        editPackage.value.packageType === 'trial'
+            ? editingPackage.value.trialDays || 14
+            : null;
 
     router.put(
         updatePackage(editingPackage.value.id).url,
@@ -619,6 +626,7 @@ const handleUpdatePackage = () => {
             monthly_enabled: editPackage.value.monthlyEnabled,
             annual_enabled: editPackage.value.annualEnabled,
             trial_days: trialDays,
+            is_enquiry: editPackage.value.packageType === 'enquiry',
             credit_card_required: editPackage.value.creditCardRequired,
             status: editPackage.value.status,
             display_sequence: editPackage.value.displaySequence || 0,
@@ -4016,18 +4024,64 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         </p>
                     </div>
 
-                    <!-- Enable Trial Period -->
-                    <div class="flex items-center space-x-2">
-                        <Checkbox
-                            id="enable-trial"
-                            v-model:checked="newPackage.enableTrial"
-                        />
-                        <Label
-                            for="enable-trial"
-                            class="cursor-pointer text-sm font-medium text-foreground"
-                        >
-                            Enable Trial Period
+                    <!-- Package Type (Toggle Options) -->
+                    <div class="space-y-2">
+                        <Label class="text-sm font-medium text-foreground">
+                            Package Type
                         </Label>
+                        <div class="flex items-center gap-6">
+                            <label
+                                class="flex cursor-pointer items-center gap-2"
+                                @click.prevent="
+                                    newPackage.packageType =
+                                        newPackage.packageType === 'trial'
+                                            ? 'none'
+                                            : 'trial'
+                                "
+                            >
+                                <div
+                                    class="flex h-4 w-4 items-center justify-center rounded-full border border-primary ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                                    :class="{
+                                        'bg-primary text-primary-foreground':
+                                            newPackage.packageType === 'trial',
+                                    }"
+                                >
+                                    <div
+                                        v-if="
+                                            newPackage.packageType === 'trial'
+                                        "
+                                        class="h-2.5 w-2.5 rounded-full bg-current"
+                                    ></div>
+                                </div>
+                                <span class="text-sm">Trial Period</span>
+                            </label>
+                            <label
+                                class="flex cursor-pointer items-center gap-2"
+                                @click.prevent="
+                                    newPackage.packageType =
+                                        newPackage.packageType === 'enquiry'
+                                            ? 'none'
+                                            : 'enquiry'
+                                "
+                            >
+                                <div
+                                    class="flex h-4 w-4 items-center justify-center rounded-full border border-primary ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                                    :class="{
+                                        'bg-primary text-primary-foreground':
+                                            newPackage.packageType ===
+                                            'enquiry',
+                                    }"
+                                >
+                                    <div
+                                        v-if="
+                                            newPackage.packageType === 'enquiry'
+                                        "
+                                        class="h-2.5 w-2.5 rounded-full bg-current"
+                                    ></div>
+                                </div>
+                                <span class="text-sm">Enquiry</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Credit Card Required -->
@@ -4251,19 +4305,65 @@ const getFeatureDisplay = (feature: PreviewPackage['features'][0]): string => {
                         </p>
                     </div>
 
-                    <!-- Enable Trial Period -->
-                    <div class="flex items-center space-x-2">
-                        <Checkbox
-                            id="edit-enable-trial"
-                            :checked="editPackage.enableTrial"
-                            v-model="editPackage.enableTrial"
-                        />
-                        <Label
-                            for="edit-enable-trial"
-                            class="cursor-pointer text-sm font-medium text-foreground"
-                        >
-                            Enable Trial Period
+                    <!-- Package Type (Toggle Options) -->
+                    <div class="space-y-2">
+                        <Label class="text-sm font-medium text-foreground">
+                            Package Type
                         </Label>
+                        <div class="flex items-center gap-6">
+                            <label
+                                class="flex cursor-pointer items-center gap-2"
+                                @click.prevent="
+                                    editPackage.packageType =
+                                        editPackage.packageType === 'trial'
+                                            ? 'none'
+                                            : 'trial'
+                                "
+                            >
+                                <div
+                                    class="flex h-4 w-4 items-center justify-center rounded-full border border-primary ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                                    :class="{
+                                        'bg-primary text-primary-foreground':
+                                            editPackage.packageType === 'trial',
+                                    }"
+                                >
+                                    <div
+                                        v-if="
+                                            editPackage.packageType === 'trial'
+                                        "
+                                        class="h-2.5 w-2.5 rounded-full bg-current"
+                                    ></div>
+                                </div>
+                                <span class="text-sm">Trial Period</span>
+                            </label>
+                            <label
+                                class="flex cursor-pointer items-center gap-2"
+                                @click.prevent="
+                                    editPackage.packageType =
+                                        editPackage.packageType === 'enquiry'
+                                            ? 'none'
+                                            : 'enquiry'
+                                "
+                            >
+                                <div
+                                    class="flex h-4 w-4 items-center justify-center rounded-full border border-primary ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
+                                    :class="{
+                                        'bg-primary text-primary-foreground':
+                                            editPackage.packageType ===
+                                            'enquiry',
+                                    }"
+                                >
+                                    <div
+                                        v-if="
+                                            editPackage.packageType ===
+                                            'enquiry'
+                                        "
+                                        class="h-2.5 w-2.5 rounded-full bg-current"
+                                    ></div>
+                                </div>
+                                <span class="text-sm">Enquiry</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Credit Card Required -->

@@ -220,29 +220,29 @@ Route::middleware(['auth', 'verified'])->prefix('subscription')->name('subscript
     Route::get('/', [App\Http\Controllers\Subscription\SubscriptionController::class, 'index'])->name('index'); // Logic for data filtering should be in Controller
 
     // Features
-    Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store')->middleware('can:subscription_management.features.create');
-    Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update')->middleware('can:subscription_management.features.update');
-    Route::delete('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyFeature'])->name('features.destroy')->middleware('can:subscription_management.features.delete');
+    Route::post('/features', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeFeature'])->name('features.store')->middleware('can:subscription_management.features.read');
+    Route::put('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateFeature'])->name('features.update')->middleware('can:subscription_management.features.read');
+    Route::delete('/features/{feature}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyFeature'])->name('features.destroy')->middleware('can:subscription_management.features.read');
 
     // Packages
-    Route::post('/packages', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePackage'])->name('packages.store')->middleware('can:subscription_management.packages.create');
-    Route::put('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackage'])->name('packages.update')->middleware('can:subscription_management.packages.update');
-    Route::delete('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPackage'])->name('packages.destroy')->middleware('can:subscription_management.packages.delete');
+    Route::post('/packages', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePackage'])->name('packages.store')->middleware('can:subscription_management.packages.read');
+    Route::put('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackage'])->name('packages.update')->middleware('can:subscription_management.packages.read');
+    Route::delete('/packages/{package}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPackage'])->name('packages.destroy')->middleware('can:subscription_management.packages.read');
 
     // Package Configuration
     Route::get('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackageConfiguration'])->name('packages.configuration.get')->middleware('can:subscription_management.configuration.read');
-    Route::put('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackageConfiguration'])->name('packages.configuration.update')->middleware('can:subscription_management.configuration.update');
+    Route::put('/packages/{package}/configuration', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePackageConfiguration'])->name('packages.configuration.update')->middleware('can:subscription_management.configuration.read');
 
     // Pricing
     Route::get('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getPackagePricing'])->name('packages.pricing.get')->middleware('can:subscription_management.pricing.read');
-    Route::post('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePricing'])->name('packages.pricing.store')->middleware('can:subscription_management.pricing.create');
-    Route::put('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePricing'])->name('packages.pricing.update')->middleware('can:subscription_management.pricing.update');
-    Route::delete('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPricing'])->name('packages.pricing.destroy')->middleware('can:subscription_management.pricing.delete');
+    Route::post('/packages/{package}/pricing', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storePricing'])->name('packages.pricing.store')->middleware('can:subscription_management.pricing.read');
+    Route::put('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updatePricing'])->name('packages.pricing.update')->middleware('can:subscription_management.pricing.read');
+    Route::delete('/packages/{package}/pricing/{pricing}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyPricing'])->name('packages.pricing.destroy')->middleware('can:subscription_management.pricing.read');
 
     // Coupons
-    Route::post('/coupons', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeCoupon'])->name('coupons.store')->middleware('can:subscription_management.coupons.create');
-    Route::put('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateCoupon'])->name('coupons.update')->middleware('can:subscription_management.coupons.update');
-    Route::delete('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyCoupon'])->name('coupons.destroy')->middleware('can:subscription_management.coupons.delete');
+    Route::post('/coupons', [App\Http\Controllers\Subscription\SubscriptionController::class, 'storeCoupon'])->name('coupons.store')->middleware('can:subscription_management.coupons.read');
+    Route::put('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'updateCoupon'])->name('coupons.update')->middleware('can:subscription_management.coupons.read');
+    Route::delete('/coupons/{coupon}', [App\Http\Controllers\Subscription\SubscriptionController::class, 'destroyCoupon'])->name('coupons.destroy')->middleware('can:subscription_management.coupons.read');
     Route::get('/coupons/{coupon}/usage', [App\Http\Controllers\Subscription\SubscriptionController::class, 'getCouponUsage'])->name('coupons.usage')->middleware('can:subscription_management.coupons.read');
 
     // Preview

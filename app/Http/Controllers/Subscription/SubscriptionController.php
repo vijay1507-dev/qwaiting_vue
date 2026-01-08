@@ -59,6 +59,7 @@ class SubscriptionController extends Controller
                     'creditCardRequired' => $package->credit_card_required,
                     'displaySequence' => $package->display_sequence ?? 0,
                     'featuresDisplayLimit' => $package->features_display_limit ?? null,
+                    'isEnquiry' => (bool) $package->is_enquiry,
                 ];
             });
 
@@ -83,7 +84,7 @@ class SubscriptionController extends Controller
                     'usageLimit' => $coupon->usage_limit,
                     'status' => $coupon->status,
                     'applicablePackages' => $coupon->applicable_packages ?? 'all',
-                    'packageIds' => $coupon->packages->pluck('id')->map(fn ($id) => (string) $id)->toArray(),
+                    'packageIds' => $coupon->packages->pluck('id')->map(fn($id) => (string) $id)->toArray(),
                 ];
             });
 
