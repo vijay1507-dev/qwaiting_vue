@@ -124,7 +124,8 @@
                         </button>
                     </a>
                     @else
-                    <a href="/signup">
+
+                    <a :href="'/signup?package_id={{ $package['id'] }}&billing_cycle=' + (annual ? 'annual' : 'monthly')">
                         <button class="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition cursor-pointer">
                             Sign Up
                         </button>

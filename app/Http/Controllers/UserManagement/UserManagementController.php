@@ -92,7 +92,7 @@ class UserManagementController extends Controller
 
             $user->assignRole($validated['role']);
 
-            return redirect()->route('user-management.employees')->with('success', 'User created successfully');
+            return redirect()->route('user-management.users')->with('success', 'User created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -153,7 +153,7 @@ class UserManagementController extends Controller
 
             $user->syncRoles([$validated['role']]);
 
-            return redirect()->route('user-management.employees')->with('success', 'User updated successfully');
+            return redirect()->route('user-management.users')->with('success', 'User updated successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -178,7 +178,7 @@ class UserManagementController extends Controller
 
             $user->delete();
 
-            return redirect()->route('user-management.employees')->with('success', 'User deleted successfully');
+            return redirect()->route('user-management.users')->with('success', 'User deleted successfully');
         } catch (\Exception $e) {
             Log::error('Error deleting user: ' . $e->getMessage());
 
@@ -200,7 +200,7 @@ class UserManagementController extends Controller
             $user->password = Hash::make($validated['password']);
             $user->save();
 
-            return redirect()->route('user-management.employees')->with('success', 'Password reset successfully');
+            return redirect()->route('user-management.users')->with('success', 'Password reset successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
@@ -233,7 +233,7 @@ class UserManagementController extends Controller
             }
             $user->save();
 
-            return redirect()->route('user-management.employees')->with('success', $message);
+            return redirect()->route('user-management.users')->with('success', $message);
         } catch (\Exception $e) {
             Log::error('Error toggling lock: ' . $e->getMessage());
 

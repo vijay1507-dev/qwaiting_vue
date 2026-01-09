@@ -426,12 +426,20 @@ Route::post('/signup/step{step}', [SignupController::class, 'storeStep'])
     ->where('step', '[1-6]')
     ->middleware(\App\Http\Middleware\ValidateSignupStepPost::class)
     ->name('signup.step');
+Route::post('/signup/save-billing-cycle', [SignupController::class, 'saveBillingCycle'])->name('signup.save-billing-cycle');
+Route::post('/signup/apply-coupon', [SignupController::class, 'applyCoupon'])->name('signup.apply-coupon');
+Route::post('/signup/remove-coupon', [SignupController::class, 'removeCoupon'])->name('signup.remove-coupon');
 Route::post('/signup/send-verification', [SignupController::class, 'sendVerificationEmail'])->name('signup.send-verification');
 Route::get('/signup/verify/{id}/{hash}', [SignupController::class, 'verifyEmail'])->name('signup.verify');
 Route::get('/signup/verify-redirect', [SignupController::class, 'verifyRedirect'])->name('signup.verify-redirect');
 Route::get('/signup/verify-email-sent', [SignupController::class, 'showVerifyEmailSent'])->name('signup.verify-email-sent');
 Route::post('/signup/resend-verification', [SignupController::class, 'resendVerificationEmail'])->name('signup.resend-verification');
 Route::post('/signup/clear-session', [SignupController::class, 'clearSession'])->name('signup.clear-session');
+
+Route::post('/signup/process-payment', [SignupController::class, 'processPayment'])->name('signup.process-payment');
+Route::post('/signup/create-checkout-session', [SignupController::class, 'createCheckoutSession'])->name('signup.create-checkout-session');
+Route::get('/signup/payment/success', [SignupController::class, 'paymentSuccess'])->name('signup.payment.success');
+Route::get('/signup/payment/cancel', [SignupController::class, 'paymentCancel'])->name('signup.payment.cancel');
 
 Route::get('/website-login', function () {
     return view('website.auth.login');
@@ -640,3 +648,5 @@ Route::prefix('industries')->group(function () {
         return view('website.industries.barbershop');
     });
 });
+
+Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');

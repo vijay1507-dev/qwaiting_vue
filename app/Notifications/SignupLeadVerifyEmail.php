@@ -20,7 +20,7 @@ class SignupLeadVerifyEmail extends Notification
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(public ?int $packageId = null)
     {
         //
     }
@@ -43,7 +43,7 @@ class SignupLeadVerifyEmail extends Notification
         $verificationUrl = URL::temporarySignedRoute(
             'signup.verify',
             now()->addMinutes(60),
-            ['id' => $notifiable->id, 'hash' => sha1($notifiable->email)]
+            ['id' => $notifiable->id, 'hash' => sha1($notifiable->email), 'package_id' => $this->packageId]
         );
 
         // Get system template for email verification
@@ -74,7 +74,7 @@ class SignupLeadVerifyEmail extends Notification
         // Get name from signup form data in session or from notifiable
         $sessionData = session('signup_form_data', []);
         $name = $sessionData['name'] ?? $notifiable->name ?? 'User';
-        
+
         // Split name into first and last name
         $nameParts = explode(' ', $name, 2);
         $firstName = $nameParts[0] ?? 'User';
@@ -90,13 +90,13 @@ class SignupLeadVerifyEmail extends Notification
             'email' => $notifiable->email,
             'verification_url' => $verificationUrl,
             'company_name' => $companyName,
-            'dashboard_url' => rtrim(config('app.url'), '/').'/dashboard',
+            'dashboard_url' => rtrim(config('app.url'), '/') . '/dashboard',
             'support_email' => config('mail.support_email', 'support@qwaiting.com'),
             'website_url' => config('mail.website_url', 'https://www.qwaiting.com'),
         ];
 
         foreach ($variables as $key => $value) {
-            $text = str_replace('{{'.$key.'}}', (string) $value, $text);
+            $text = str_replace('{{' . $key . '}}', (string) $value, $text);
         }
 
         return $text;

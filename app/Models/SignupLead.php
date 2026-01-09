@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use App\Models\SubscriptionPackage;
 
 class SignupLead extends Model
 {
@@ -15,6 +16,7 @@ class SignupLead extends Model
         'name',
         'email',
         'phone_number',
+        'country_code',
         'password',
         'temp_password',
         'company_name',
@@ -28,6 +30,9 @@ class SignupLead extends Model
         'signup_step',
         'email_verified_at',
         'email_verification_token',
+        'package_id',
+        'billing_cycle',
+        'stripe_customer_id',
     ];
 
     protected $casts = [
@@ -58,5 +63,9 @@ class SignupLead extends Model
     public function routeNotificationForMail($notification)
     {
         return $this->email;
+    }
+    public function package()
+    {
+        return $this->belongsTo(SubscriptionPackage::class, 'package_id');
     }
 }

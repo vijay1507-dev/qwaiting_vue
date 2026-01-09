@@ -48,7 +48,9 @@ class SendSequenceEmailsCommand extends Command
             $sequenceQuery->where('id', $this->option('sequence-id'));
         }
 
-        $sequences = $sequenceQuery->with('emailTemplates')->get();
+        $sequences = $sequenceQuery->with(['emailTemplates' => function ($query) {
+            $query->withoutTrashed();
+        }])->get();
 
         if ($sequences->isEmpty()) {
             $this->warn('No active sequences found.');

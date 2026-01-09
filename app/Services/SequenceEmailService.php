@@ -22,6 +22,7 @@ class SequenceEmailService
             ->where('target_user_type', 'incomplete_signups')
             ->with(['emailTemplates' => function ($query) use ($event) {
                 $query->where('status', 'active')
+                    ->withoutTrashed()
                     ->where('timing_unit', $event);
             }])
             ->get();
@@ -32,6 +33,7 @@ class SequenceEmailService
             $completionSequences = Sequence::where('status', 'active')
                 ->with(['emailTemplates' => function ($query) use ($event) {
                     $query->where('status', 'active')
+                        ->withoutTrashed()
                         ->where('type', 'registeration_complete')
                         ->where(function ($q) use ($event) {
                             if ($event === 'immediate') {
