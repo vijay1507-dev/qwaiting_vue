@@ -1012,6 +1012,7 @@ const handleSave = () => {
 
     // Prepare email data for submission
     const emails = sequence.value.emails.map((email, index) => ({
+        id: email.id,
         sequence_number: email.number || index + 1,
         timing_value:
             email.timingUnit === 'immediate' ||
