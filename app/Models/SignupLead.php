@@ -33,6 +33,10 @@ class SignupLead extends Model
         'package_id',
         'billing_cycle',
         'stripe_customer_id',
+        'package_start_date',
+        'package_end_date',
+        'is_paid',
+        'payment_response',
     ];
 
     protected $casts = [

@@ -714,8 +714,9 @@ class SendSequenceEmailsCommand extends Command
         // Also check if email is not too far in the past (optional: only send if within 30 days of target)
         $daysPastTarget = $daysSinceRegistration - $targetDay;
 
-        // Only send if we're at or past the target day, and not more than 30 days past (to avoid sending very old emails)
-        if ($daysSinceRegistration >= $targetDay && $daysPastTarget <= 30) {
+        // Only send if we're at the target day exactly
+        // This prevents "bunching" where old emails are sent all at once
+        if ($daysSinceRegistration === $targetDay) {
             return true;
         }
 

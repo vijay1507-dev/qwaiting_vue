@@ -829,6 +829,10 @@
                 @csrf
                 <input type="hidden" name="package_id" id="selected_package_id" value="{{ $preselected_package_id }}">
                 <input type="hidden" name="billing_cycle" id="selected_billing_cycle" value="{{ $selectedBillingCycle }}">
+                @if(isset($selectedPackage))
+                <input type="hidden" id="selected-pkg-price-monthly" value="{{ $selectedPackage['monthly_price'] ?? 0 }}">
+                <input type="hidden" id="selected-pkg-price-annual" value="{{ $selectedPackage['annual_price'] ?? 0 }}">
+                @endif
 
                 @if($hasSelectedPackage && $selectedPackage && $lead)
                 <!-- Checkout Summary Card -->
@@ -952,10 +956,16 @@
                                 </div>
 
                                 <!-- Detailed Breakdown -->
+                                @php
+                                $sessionCoupon = session('selected_coupon');
+                                $hasCoupon = !empty($sessionCoupon);
+                                $discountAmount = $hasCoupon ? $sessionCoupon['discount_amount'] : 0;
+                                $finalPrice = $hasCoupon ? max(0, ($displayPrice - $discountAmount)) : $displayPrice;
+                                @endphp
                                 <div class="space-y-3 mb-2">
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="text-slate-500">Subtotal</span>
-                                        <span class="font-medium text-slate-900">${{ number_format($displayPrice ?? 0, 2) }}</span>
+                                        <span class="font-medium text-slate-900" id="summary-subtotal">${{ number_format($displayPrice ?? 0, 2) }}</span>
                                     </div>
 
                                     @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
@@ -971,20 +981,22 @@
                                     @endif
 
                                     <!-- Discount Row (Hidden if no coupon) -->
-                                    <div id="summary-discount-row" class="flex justify-between items-center text-sm hidden">
+                                    <div id="summary-discount-row" class="flex justify-between items-center text-sm {{ $hasCoupon ? '' : 'hidden' }}">
                                         <span class="text-green-600 font-medium">Coupon Discount</span>
-                                        <span class="font-bold text-green-600" id="summary-discount-amount">- $0.00</span>
+                                        <span class="font-bold text-green-600" id="summary-discount-amount">- ${{ number_format($discountAmount ?? 0, 2) }}</span>
                                     </div>
+                                    <input type="hidden" id="active-coupon-discount" value="{{ $discountAmount ?? 0 }}">
 
                                     <div class="flex justify-between items-center text-sm">
                                         <span class="text-slate-500">Taxes</span>
                                         <span class="text-xs text-slate-400 italic">Calculated at payment</span>
                                     </div>
 
-                                    <!-- Coupon Input Section -->
                                     <div class="pt-4 border-t border-slate-100 mt-2">
                                         <div id="coupon-section">
-                                            <button type="button" id="toggle-coupon-btn" onclick="toggleCouponInput()" class="text-sm text-primary font-medium hover:underline flex items-center gap-1 focus:outline-none">
+
+                                            <button type="button" id="toggle-coupon-btn" onclick="toggleCouponInput()"
+                                                class="text-sm text-primary font-medium hover:underline flex items-center gap-1 focus:outline-none {{ $hasCoupon ? 'hidden' : '' }}">
                                                 Have a coupon code?
                                             </button>
 
@@ -998,13 +1010,13 @@
                                                 <p id="coupon-message" class="text-xs mt-2 font-medium hidden"></p>
                                             </div>
 
-                                            <div id="applied-coupon-container" class="mt-3 hidden bg-green-50 border border-green-100 rounded-lg p-3 flex justify-between items-center">
+                                            <div id="applied-coupon-container" class="mt-3 {{ $hasCoupon ? '' : 'hidden' }} bg-green-50 border border-green-100 rounded-lg p-3 flex justify-between items-center">
                                                 <div class="flex flex-col">
                                                     <span class="text-sm text-green-700 font-bold flex items-center gap-1">
                                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        <span id="applied-coupon-code-display"></span>
+                                                        <span id="applied-coupon-code-display">{{ $hasCoupon ? $sessionCoupon['code'] : '' }}</span>
                                                     </span>
                                                     <span class="text-xs text-green-600">Coupon applied successfully</span>
                                                 </div>
@@ -1023,7 +1035,7 @@
                                         @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
                                         $0.00
                                         @else
-                                        ${{ number_format($displayPrice ?? 0, 2) }}
+                                        ${{ number_format($finalPrice ?? $displayPrice ?? 0, 2) }}
                                         @endif
                                     </span>
                                 </div>
@@ -1101,122 +1113,6 @@
                 @php
                 $showPaymentSection = $hasSelectedPackage && $selectedPackage && ($selectedPackage['credit_card_required'] ?? false);
                 @endphp
-
-
-
-                <!-- Billing Toggle -->
-                <div class="{{ $hasSelectedPackage ? 'hidden' : '' }} mt-4 flex justify-center items-center space-x-4 mb-8">
-                    <span class="text-base font-medium text-gray-900" id="billing-label-monthly">Monthly</span>
-                    <button type="button" class="relative rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7C69EF]"
-                        id="billing-toggle-btn">
-                        <div class="w-16 h-8 transition bg-[#7C69EF] rounded-full shadow-md outline-none"></div>
-                        <div class="absolute inline-flex items-center justify-center w-5 h-5 transition-all duration-200 ease-in-out transform bg-white rounded-full shadow-sm top-1 left-1 translate-x-8"
-                            id="billing-toggle-thumb"></div>
-                    </button>
-                    <span class="text-base font-medium text-gray-500" id="billing-label-annual">
-                        Yearly
-                    </span>
-                </div>
-                <p class="{{ $hasSelectedPackage ? 'hidden' : '' }} text-center text-gray-600 mb-10 font-bold">Bill monthly / Bill annually and get 2 months free!</p>
-
-                <!-- Package Selection Grid -->
-                <div class="{{ $hasSelectedPackage ? 'hidden' : '' }} grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 text-left" id="package-grid">
-                    @foreach($packages as $package)
-                    <div class="package-card bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all border border-slate-200 flex flex-col relative group {{ $package['is_most_popular'] ? 'relative border-2 border-purple-500 shadow-xl hover:shadow-2xl' : '' }}"
-                        data-id="{{ $package['id'] }}"
-                        data-price-monthly="{{ $package['monthly_price'] }}"
-                        data-price-annual="{{ $package['annual_price'] }}"
-                        data-trial="{{ $package['trial_days'] }}"
-                        data-credit-card-required="{{ $package['credit_card_required'] ? 1 : 0 }}"
-                        data-enquiry="{{ $package['is_enquiry'] }}"
-                        onclick="selectPackage(this)">
-
-                        @if($package['is_most_popular'])
-                        <span class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-600 text-white text-xs font-semibold py-1 px-4 rounded-full shadow">
-                            Popular Choice
-                        </span>
-                        @endif
-
-                        <!-- Selection Indicator (Hidden by default, shown when selected) -->
-                        <div class="absolute top-4 right-4 w-6 h-6 border-2 border-slate-200 rounded-full flex items-center justify-center transition-all package-radio">
-                            <div class="w-3 h-3 bg-[#7C69EF] rounded-full opacity-0 transition-opacity"></div>
-                        </div>
-
-                        <h3 class="font-bold text-xl mb-2 text-center text-gray-800">{{ $package['name'] }}</h3>
-
-                        @if($package['subtitle'])
-                        <p class="text-center text-gray-600 mb-4">{{ $package['subtitle'] }}</p>
-                        @endif
-
-                        @if($package['trial_days'] && $package['trial_days'] > 0)
-                        <div class="mb-4 text-center">
-                            <span class="inline-flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-semibold border border-green-200">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ $package['trial_days'] }} Day{{ $package['trial_days'] > 1 ? 's' : '' }} Free Trial
-                            </span>
-                        </div>
-                        @endif
-
-                        <div class="mb-6 text-center">
-                            @if($package['monthly_price'] || $package['annual_price'])
-                            <div class="price-display-monthly hidden">
-                                @if($package['monthly_price'])
-                                <span class="text-3xl font-bold text-gray-900">$ {{ number_format($package['monthly_price'], 2) }}</span>
-                                <span class="text-gray-500">/mo</span>
-                                @else
-                                <span class="text-gray-400 text-3xl font-bold">N/A</span>
-                                @endif
-                            </div>
-                            <div class="price-display-annual">
-                                @if($package['annual_price'])
-                                <span class="text-3xl font-bold text-gray-900">$ {{ number_format($package['annual_price'], 2) }}</span>
-                                <span class="text-gray-500">/yr</span>
-                                @else
-                                <span class="text-gray-400 text-3xl font-bold">N/A</span>
-                                @endif
-                            </div>
-                            @else
-                            <div class="text-3xl font-bold text-gray-900">Contact Us</div>
-                            @endif
-                        </div>
-
-                        <ul class="space-y-4 text-gray-700 mb-8 text-left">
-                            @foreach($package['features'] as $feature)
-                            <li class="flex items-center gap-2">
-                                <span class="flex items-center justify-center w-5 h-5 rounded-full bg-[#7C69EF] shrink-0">
-                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </span>
-                                <span class="text-sm">
-                                    {{ $feature['name'] }}
-                                    @if($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Number' && is_numeric($feature['limit_value']) && $feature['limit_value'] > 0)
-                                    upto {{ $feature['limit_value'] }}
-                                    @elseif($feature['limit_type'] === 'limited' && $feature['data_type'] === 'Text' && !empty($feature['limit_value']))
-                                    {{ $feature['limit_value'] }}
-                                    @endif
-                                </span>
-                            </li>
-                            @endforeach
-                        </ul>
-
-                        <button type="button" class="w-full bg-[#7C69EF] text-white py-3 rounded-xl font-semibold hover:bg-[#6352D1] transition cursor-pointer mt-auto select-plan-btn">
-                            Select Plan
-                        </button>
-                    </div>
-                    @endforeach
-                </div>
-
-                <div class="hidden text-red-500 text-xs font-medium mb-4" data-error="package_id"></div>
-
-
-
-
-                <!-- Payment Section -->
-                <!-- Only show if package is selected AND credit card is required -->
-
 
 
             </form>
@@ -1842,6 +1738,32 @@
                             window.location.href = data.redirect;
                         } else {
                             // Normal flow - proceed to next step
+
+                            // Check for Trial Flow (Step 6 -> Step 7 transition with NO package selected)
+                            if (stepNum === 6) {
+                                const selectedPackageId = $('#selected_package_id').val();
+                                if (!selectedPackageId) {
+                                    // STOP! Do not go to Step 7. Show Modal.
+                                    $('#trial-success-modal').removeClass('hidden');
+
+                                    // Start Countdown and Redirect
+                                    let seconds = 5;
+                                    const $countdown = $('#countdown-value');
+                                    const redirectUrl = data.redirect_url || '/dashboard'; // Fallback
+
+                                    const timer = setInterval(() => {
+                                        seconds--;
+                                        $countdown.text(seconds);
+                                        if (seconds <= 0) {
+                                            clearInterval(timer);
+                                            window.location.href = redirectUrl;
+                                        }
+                                    }, 1000);
+
+                                    return;
+                                }
+                            }
+
                             goToStep(data.next_step);
                         }
                     } else {
@@ -1917,7 +1839,16 @@
 
         // Billing Toggle Logic
         // Initialize from saved value or default to annual
-        const savedBillingCycle = $('#selected_billing_cycle').val() || 'annual';
+        // Try localStorage first as fallback for session loss on refresh
+        let savedBillingCycle = $('#selected_billing_cycle').val();
+        if (!savedBillingCycle || savedBillingCycle === '') {
+            savedBillingCycle = localStorage.getItem('signup_billing_cycle') || 'annual';
+            // Update hidden input with localStorage value
+            $('#selected_billing_cycle').val(savedBillingCycle);
+        } else {
+            // Store in localStorage for future refreshes
+            localStorage.setItem('signup_billing_cycle', savedBillingCycle);
+        }
         let isAnnual = savedBillingCycle === 'annual';
 
         const $toggleBtn = $('#billing-toggle-btn');
@@ -1963,8 +1894,10 @@
             isAnnual = !isAnnual;
             updateBillingUI();
 
-            // Save billing cycle to session via AJAX
+            // Save billing cycle to session and localStorage
             const billingCycle = isAnnual ? 'annual' : 'monthly';
+            localStorage.setItem('signup_billing_cycle', billingCycle);
+
             $.ajax({
                 url: '/signup/save-billing-cycle',
                 method: 'POST',
@@ -1976,7 +1909,7 @@
                     'Accept': 'application/json'
                 },
                 success: function(data) {
-                    console.log('Billing cycle saved:', data.billing_cycle);
+                    console.log('Billing cycle saved to session and localStorage:', billingCycle);
                 },
                 error: function(xhr) {
                     console.error('Failed to save billing cycle:', xhr.responseJSON);
@@ -1995,7 +1928,7 @@
         });
 
         // Package Selection Logic
-        window.selectPackage = function(element) {
+        window.selectPackage = function(element, ignoreCoupon = false) {
             // Remove active state from all cards
             $('.package-card').removeClass('border-[#7C69EF] ring-2 ring-[#7C69EF]/20').addClass('border-slate-200');
             $('.package-card .package-radio div').addClass('opacity-0');
@@ -2012,6 +1945,10 @@
             $('#selected_package_id').val(packageId);
 
             // Determine price based on current toggle state
+            // Determine price based on current toggle state
+            // Refresh isAnnual from DOM to be safe
+            isAnnual = $('#billing-toggle-thumb').hasClass('translate-x-8');
+
             let price = 0;
             if (isAnnual) {
                 price = parseFloat($card.data('price-annual'));
@@ -2019,6 +1956,8 @@
                 price = parseFloat($card.data('price-monthly'));
             }
             if (isNaN(price)) price = 0;
+
+            console.log('selectPackage: Selected Package ID:', packageId, 'isAnnual:', isAnnual, 'Price:', price);
 
             const isTrial = parseInt($card.data('trial')) > 0;
             const isEnquiry = parseInt($card.data('enquiry')) === 1;
@@ -2045,16 +1984,33 @@
                 }
             } else if (price > 0) {
                 $paymentSection.removeClass('hidden');
-                // Format price for display
+
+                // Calculate Final Price with Coupon if applicable
+                let finalPrice = price;
+                let activeDiscount = 0;
+
+                // Check if coupon is applied (container is visible)
+                if (!ignoreCoupon && !$('#applied-coupon-container').hasClass('hidden')) {
+                    // Start by checking the hidden input we populated from PHP
+                    const inputVal = $('#active-coupon-discount').val();
+                    const serverDiscount = parseFloat(inputVal) || 0;
+                    console.log('selectPackage: Coupon container visible. Input value:', inputVal, 'Parsed:', serverDiscount);
+                    activeDiscount = serverDiscount;
+
+                    finalPrice = Math.max(0, price - activeDiscount);
+                }
+
                 // Format price for display
                 const formattedPrice = price.toFixed(2);
+                const formattedFinalPrice = finalPrice.toFixed(2);
 
                 // Update Summary Prices
                 if ($('#summary-subtotal').length) $('#summary-subtotal').text('$' + formattedPrice);
-                if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedPrice);
+                // Total Due uses final price
+                if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedFinalPrice);
 
                 const billingText = isAnnual ? '/yr' : '/mo';
-                $checkoutBtnText.text(`Proceed To Pay ($${formattedPrice}${billingText})`);
+                $checkoutBtnText.text(`Proceed To Pay ($${formattedFinalPrice}${billingText})`);
 
                 // Scroll to top of step 7 to ensure context is visible
                 setTimeout(() => {
@@ -2159,7 +2115,8 @@
             const code = $('#coupon-code-input').val().trim();
             const packageId = $('#selected_package_id').val();
 
-            // Determine billing cycle from toggle state
+            // Determine billing cycle from toggle state (Visual truth)
+            // This ensures we send exactly what the user sees
             let currentCycle = 'monthly';
             if ($('#billing-toggle-thumb').hasClass('translate-x-8')) {
                 currentCycle = 'annual';
@@ -2180,7 +2137,9 @@
                     _token: "{{ csrf_token() }}",
                     coupon_code: code,
                     package_id: packageId,
-                    billing_cycle: currentCycle
+                    billing_cycle: currentCycle,
+                    currency: 'USD',
+                    lead_id: leadId
                 },
                 success: function(response) {
                     $btn.prop('disabled', false).text('Apply');
@@ -2320,37 +2279,12 @@
             // Apply Coupon logic moved to global window.applyCoupon
 
             // Remove Coupon Logic
-            window.removeCoupon = function(silent = false) {
-                $.ajax({
-                    url: "{{ route('signup.remove-coupon') }}",
-                    method: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Reset UI
-                            $('#applied-coupon-container').addClass('hidden');
-                            $('#toggle-coupon-btn').removeClass('hidden');
-                            $('#summary-discount-row').addClass('hidden');
-
-                            if (!silent) {
-                                // Trigger package re-selection to reset prices
-                                const selectedId = $('#selected_package_id').val();
-                                const $card = $(`.package-card[data-id="${selectedId}"]`);
-                                if ($card.length) {
-                                    selectPackage($card[0]);
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-
             // Auto-remove coupon when changing package or billing cycle
             $('.package-card, #billing-toggle-btn').on('click', function() {
                 if (!$('#applied-coupon-container').hasClass('hidden')) {
-                    window.removeCoupon(true); // Silent remove from backend
+                    if (typeof window.removeCoupon === 'function') {
+                        window.removeCoupon(true); // Silent remove from backend
+                    }
                 }
             });
 
@@ -2410,6 +2344,7 @@
     </script>
 
     <script>
+        window.leadId = {{ $lead?->id ?? 'null' }};
         // Emergency Fallback - Isolated Script
         window.toggleCouponInput = function() {
             var container = document.getElementById('coupon-input-container');
@@ -2452,7 +2387,8 @@
                     _token: "{{ csrf_token() }}",
                     coupon_code: code,
                     package_id: packageId,
-                    billing_cycle: currentCycle
+                    billing_cycle: currentCycle,
+                    lead_id: leadId
                 },
                 success: function(response) {
                     $btn.prop('disabled', false).text('Apply');
@@ -2471,12 +2407,22 @@
                         // Update Total
                         $('#total-due-today').text('$' + parseFloat(response.coupon.final_price).toFixed(2));
 
-                        // Re-hide input value
-                        $('#coupon-code-input').val('');
+                        // Update hidden input for active coupon in case of subsequent re-selection
+                        $('#active-coupon-discount').val(response.coupon.discount_amount);
 
-                        // Update Complete Payment Button Text
-                        const billingText = currentCycle === 'annual' ? '/yr' : '/mo';
-                        $('#checkout-btn-text').text(`Proceed To Pay ($${parseFloat(response.coupon.final_price).toFixed(2)}${billingText})`);
+                        // Trigger package re-selection to correctly format everything
+                        const selectedId = $('#selected_package_id').val();
+                        if (selectedId) {
+                            const $card = $(`.package-card[data-id="${selectedId}"]`);
+                            if ($card.length) {
+                                // Call selection logic again to ensure consistency (it will now use the hidden val)
+                                // We avoid a loop because selectPackage doesn't call applyCoupon
+                                // But perform manual update to button text to be safe
+                                const finalPrice = parseFloat(response.coupon.final_price);
+                                const billingText = currentCycle === 'annual' ? '/yr' : '/mo';
+                                $('#checkout-btn-text').text(`Proceed To Pay ($${finalPrice.toFixed(2)}${billingText})`);
+                            }
+                        }
 
                     } else {
                         $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text(response.message);
@@ -2505,29 +2451,51 @@
                         $('#toggle-coupon-btn').removeClass('hidden');
                         $('#summary-discount-row').addClass('hidden');
 
+                        // Reset active discount input to 0
+                        $('#active-coupon-discount').val(0);
+                        console.log('removeCoupon: Reset #active-coupon-discount to 0');
+
                         if (!silent) {
                             // Manual UI Reset for robustness
                             const selectedId = $('#selected_package_id').val();
+                            console.log('removeCoupon: Triggering reset for package:', selectedId);
+
                             const $card = $(`.package-card[data-id="${selectedId}"]`);
+                            let price = 0;
+                            let isAnnual = $('#selected_billing_cycle').val() === 'annual';
 
-                            if ($card.length) {
-                                let isAnnual = $('#billing-toggle-thumb').hasClass('translate-x-8');
-                                let price = isAnnual ? parseFloat($card.data('price-annual')) : parseFloat($card.data('price-monthly'));
+                            // Check hidden inputs first (Step 7 context)
+                            const hiddenMonthly = parseFloat($('#selected-pkg-price-monthly').val());
+                            const hiddenAnnual = parseFloat($('#selected-pkg-price-annual').val());
 
-                                if (!isNaN(price)) {
-                                    const formattedPrice = price.toFixed(2);
-                                    if ($('#summary-subtotal').length) $('#summary-subtotal').text('$' + formattedPrice);
-                                    if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedPrice);
-
-                                    // Also update button text
-                                    const billingText = isAnnual ? '/yr' : '/mo';
-                                    $('#checkout-btn-text').text(`Proceed To Pay ($${formattedPrice}${billingText})`);
+                            if (!isNaN(hiddenMonthly) && !isNaN(hiddenAnnual)) {
+                                price = isAnnual ? hiddenAnnual : hiddenMonthly;
+                                console.log('removeCoupon: Using hidden input prices. isAnnual:', isAnnual, 'Price:', price);
+                            } else if ($card.length) {
+                                // Fallback to card if visible
+                                const toggleBtn = $('#billing-toggle-thumb');
+                                if (toggleBtn.length) {
+                                    isAnnual = toggleBtn.hasClass('translate-x-8');
                                 }
+                                price = isAnnual ? parseFloat($card.data('price-annual')) : parseFloat($card.data('price-monthly'));
+                                console.log('removeCoupon: Using card prices. isAnnual:', isAnnual, 'Price:', price);
+                            } else {
+                                console.error('removeCoupon: Unable to determine original price. Inputs missing and card not found.');
+                            }
 
-                                // Trigger package re-selection to ensure state consistency
-                                if (typeof selectPackage === 'function') {
-                                    selectPackage($card[0]);
-                                }
+                            if (!isNaN(price) && price > 0) {
+                                const formattedPrice = price.toFixed(2);
+                                if ($('#summary-subtotal').length) $('#summary-subtotal').text('$' + formattedPrice);
+                                if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedPrice);
+
+                                // Also update button text
+                                const billingText = isAnnual ? '/yr' : '/mo';
+                                $('#checkout-btn-text').text(`Proceed To Pay ($${formattedPrice}${billingText})`);
+                            }
+
+                            // Trigger package re-selection ONLY if card exists to ensure state consistency
+                            if ($card.length && typeof selectPackage === 'function') {
+                                selectPackage($card[0], true);
                             }
                         }
                     }
@@ -2535,6 +2503,30 @@
             });
         };
     </script>
+
+    <!-- Trial Success Modal -->
+    <div id="trial-success-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full p-6">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                    <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2" id="modal-title">Success!</h3>
+                    <p class="text-gray-500 mb-4">Your trial account is successfully activated.</p>
+                    <p class="text-sm text-gray-400 mb-8">You will be redirected to dashboard in <span id="countdown-value" class="font-bold text-gray-600">5</span> seconds.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

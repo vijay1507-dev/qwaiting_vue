@@ -53,6 +53,7 @@ class SignupController extends Controller
         // Always clear session on refresh, unless it's from verification redirect
         if ($isRefresh && ! $isFromVerification) {
             Session::forget('signup_form_data');
+            Session::forget('selected_coupon'); // Clear coupon on refresh
             // Don't clear signup_lead_id on refresh if email is verified
             // This allows user to continue from where they left off
             $leadId = Session::get('signup_lead_id');
@@ -348,12 +349,29 @@ class SignupController extends Controller
         $request->validate([
             'coupon_code' => 'required|string',
             'package_id' => 'required|integer',
-            'billing_cycle' => 'required|string|in:monthly,annual'
+            'billing_cycle' => 'required|string|in:monthly,annual',
+            'currency' => 'nullable|string', 
+            'lead_id'       => 'required|integer'
         ]);
 
         $code = $request->coupon_code;
         $packageId = $request->package_id;
         $billingCycle = $request->billing_cycle;
+        $currency = $request->input('currency', 'USD');
+
+        // FORCE CHECK: Use Database Billing Cycle if available
+       $lead = SignupLead::find($request->lead_id);
+
+            if (! $lead || ! $lead->billing_cycle) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to determine billing cycle.'
+                ]);
+            }
+
+            $billingCycle = $lead->billing_cycle;
+
+
 
         $coupon = SubscriptionCoupon::where('code', $code)->first();
 
@@ -388,7 +406,7 @@ class SignupController extends Controller
         if ($coupon->hasReachedUsageLimit()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This coupon has reached its usage limit.'
+                'message' => 'This coupon is not applicable.'
             ]);
         }
 
@@ -404,14 +422,16 @@ class SignupController extends Controller
         }
 
         // Calculate discount (Rule 5 setup)
+        // Check pricing for SPECIFIC currency to ensure we don't compare USD discount against INR price
         $pricing = SubscriptionPricing::where('package_id', $packageId)
             ->where('billing_cycle', $billingCycle)
+            ->where('currency', $currency)
             ->first();
 
         if (!$pricing) {
             return response()->json([
                 'success' => false,
-                'message' => 'Price validation failed for the selected package and billing cycle.'
+                'message' => 'This coupon is not applicable.'
             ]);
         }
 
@@ -423,7 +443,7 @@ class SignupController extends Controller
             if ($coupon->discount_value < 1 || $coupon->discount_value > 100) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid discount configuration.'
+                    'message' => 'This coupon is not applicable'
                 ]);
             }
             $discountAmount = ($price * $coupon->discount_value) / 100;
@@ -431,7 +451,7 @@ class SignupController extends Controller
             if ($coupon->discount_value <= 0 || $coupon->discount_value > $price) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid discount configuration.'
+                    'message' => 'This coupon is not applicable'
                 ]);
             }
             $discountAmount = $coupon->discount_value;
@@ -446,13 +466,8 @@ class SignupController extends Controller
         $finalPrice = max(0, $finalPrice); // Data integrity fallback
 
         // Store in session
-        Session::put('selected_coupon', [
-            'code' => $coupon->code,
-            'discount_amount' => $discountAmount,
-            'discount_type' => $coupon->discount_type,
-            'discount_value' => $coupon->discount_value,
-            'id' => $coupon->id
-        ]);
+        // Session storage removed per request
+        // Session::put('selected_coupon', ...);
 
         return response()->json([
             'success' => true,
@@ -813,13 +828,87 @@ class SignupController extends Controller
 
                 // Check if package_id exists in session and save it to lead
                 $packageId = Session::get('selected_package_id');
+                // Fallback: If session is empty, check if lead already has a package_id (e.g. from Pricing page/Index)
+                if (!$packageId && $lead->package_id) {
+                    $packageId = $lead->package_id;
+                }
+
                 $billingCycle = Session::get('selected_billing_cycle', 'annual'); // Default to annual
+                // Fallback for billing cycle too
+                if ($lead->billing_cycle && (!Session::has('selected_billing_cycle'))) {
+                    $billingCycle = $lead->billing_cycle;
+                }
 
                 if ($packageId) {
                     $lead->update([
                         'package_id' => $packageId,
                         'billing_cycle' => $billingCycle
                     ]);
+                } else {
+                    // Trial Flow (No package selected) - Auto-activate Package 1
+                    $package = SubscriptionPackage::find(1);
+                    if ($package) {
+                        $startDate = Carbon::now();
+                        $trialDays = $package->trial_days ?? 14;
+                        $endDate = $startDate->copy()->addDays($trialDays);
+
+                        $lead->update([
+                            'package_id' => 1,
+                            'billing_cycle' => 'annual',
+                            'package_start_date' => $startDate,
+                            'package_end_date' => $endDate
+                        ]);
+
+                        // Provision the tenant immediately
+                        $provisionResult = $this->provisionExternalTenant($lead);
+
+                        if (!$provisionResult['success']) {
+                            Log::error('Trial Provision Failed', ['msg' => $provisionResult['message']]);
+                            // We don't return error to user to avoid blocking them, but we log it.
+                            // Or should we return error? user says "Account Activated". 
+                            // If it failed, it's NOT activated.
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Activation failed. Please try again or contact support.'
+                            ], 500);
+                        }
+
+                        // Calculate Redirect URL
+                        $redirectUrl = 'https://' . $lead->domain_name . '.qwaiting.com'; // Default fallback
+                        try {
+                            // Try to find the domain in the external domains table
+                            $externalDomain = DB::connection('mysql_external')
+                                ->table('domains')
+                                ->where('domain', $lead->domain_name)
+                                ->orWhere('domain', $lead->domain_name . '.qwaiting.com')
+                                ->orWhere('domain', $lead->domain_name . '.localhost')
+                                ->first();
+
+                            if ($externalDomain) {
+                                $dbDomain = $externalDomain->domain;
+                                if (str_starts_with($dbDomain, 'http')) {
+                                    $redirectUrl = $dbDomain;
+                                } else {
+                                    $redirectUrl = (app()->isLocal() ? 'http://' : 'https://') . $dbDomain;
+                                }
+                            } else {
+                                if (app()->isLocal()) {
+                                    $redirectUrl = 'http://' . $lead->domain_name . '.localhost';
+                                } else {
+                                    $redirectUrl = 'https://' . $lead->domain_name . '.qwaiting.com';
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Failed to fetch domain for redirection (Step 6)', ['error' => $e->getMessage()]);
+                        }
+
+                        // Return success with redirect URL for Modal Countdown
+                        return response()->json([
+                            'success' => true,
+                            'redirect_url' => $redirectUrl,
+                            'message' => 'Trial Account Activated'
+                        ]);
+                    }
                 }
 
                 // Return success and move to Step 7 (Checkout)
@@ -1432,6 +1521,18 @@ class SignupController extends Controller
 
         if (str_starts_with($sessionId, 'free_pass_')) {
             $leadId = str_replace('free_pass_', '', $sessionId);
+            $lead = SignupLead::with('package')->find($leadId);
+            if ($lead) {
+                // Set dates for trial/free package
+                $startDate = Carbon::now();
+                $trialDays = $lead->package->trial_days ?? 14;
+                $endDate = $startDate->copy()->addDays($trialDays);
+
+                $lead->update([
+                    'package_start_date' => $startDate,
+                    'package_end_date' => $endDate
+                ]);
+            }
             return $this->finalizeSignup($leadId, null, 0);
         }
 
@@ -1453,6 +1554,9 @@ class SignupController extends Controller
                 if ($lead) {
                     DB::transaction(function () use ($lead, $intent) {
                         $lead->is_paid = true;
+                        if ($intent->customer) {
+                            $lead->stripe_customer_id = $intent->customer;
+                        }
                         $lead->payment_response = json_encode($intent);
 
                         // Record Coupon Usage
@@ -1494,6 +1598,9 @@ class SignupController extends Controller
                 if ($lead) {
                     DB::transaction(function () use ($lead, $session) {
                         $lead->is_paid = true;
+                        if ($session->customer) {
+                            $lead->stripe_customer_id = $session->customer;
+                        }
                         $lead->payment_response = json_encode($session);
 
                         // Record Coupon Usage
@@ -1619,13 +1726,32 @@ class SignupController extends Controller
         try {
             $paymentMethodId = $request->input('payment_method_id');
 
+            // Ensure Stripe Customer exists
+            if (!$lead->stripe_customer_id) {
+                try {
+                    $customer = Customer::create([
+                        'email' => $lead->email,
+                        'name' => $lead->name,
+                        'metadata' => [
+                            'lead_id' => $lead->id,
+                        ],
+                    ]);
+                    $lead->update(['stripe_customer_id' => $customer->id]);
+                } catch (\Exception $e) {
+                    Log::error('Stripe Customer Creation Failed in processPayment', ['error' => $e->getMessage()]);
+                    // Proceed without customer? Or fail? Best to fail for subscription
+                    return response()->json(['success' => false, 'message' => 'Failed to initialize customer.'], 500);
+                }
+            }
+
             // Create PaymentIntent
             $intent = PaymentIntent::create([
                 'amount' => (int) round($amount * 100),
                 'currency' => strtolower($currency),
+                'customer' => $lead->stripe_customer_id, // Attach Customer
                 'payment_method' => $paymentMethodId,
                 'confirmation_method' => 'manual',
-                'confirm' => true,
+                'confirm' => true, // Attempt to confirm immediately
                 'description' => "Subscription for {$package->name} ({$billingCycle})",
                 'metadata' => [
                     'lead_id' => $leadId,
@@ -1634,6 +1760,7 @@ class SignupController extends Controller
                 ],
                 'receipt_email' => $lead->email,
                 'return_url' => route('signup.payment.success'),
+                'setup_future_usage' => 'off_session', // Optimized for subscriptions
             ]);
 
             return $this->generatePaymentResponse($intent);
