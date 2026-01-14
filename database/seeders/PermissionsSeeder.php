@@ -51,6 +51,10 @@ class PermissionsSeeder extends Seeder
                 'roles.update',
                 'roles.delete',
             ],
+            'Package Enquiries' => [
+                'view',
+                'change_status',
+            ],
         ];
 
         foreach ($modules as $module => $actions) {

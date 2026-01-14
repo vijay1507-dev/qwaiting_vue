@@ -20,6 +20,18 @@ Route::get('leads', function () {
     return Inertia::render('Leads/Index');
 })->middleware(['auth', 'verified'])->name('leads.index');
 
+Route::get('package-enquiries', [App\Http\Controllers\EnquiryController::class, 'index'])
+    ->middleware(['auth', 'verified', 'can:package_enquiries.view'])
+    ->name('package-enquiries.index');
+
+Route::get('package-enquiries/{id}', [App\Http\Controllers\EnquiryController::class, 'show'])
+    ->middleware(['auth', 'verified', 'can:package_enquiries.view'])
+    ->name('package-enquiries.show');
+
+Route::put('package-enquiries/{id}/status', [App\Http\Controllers\EnquiryController::class, 'updateStatus'])
+    ->middleware(['auth', 'verified', 'can:package_enquiries.change_status'])
+    ->name('package-enquiries.update-status');
+
 Route::get('leads/create', function () {
     return Inertia::render('Leads/Create');
 })->middleware(['auth', 'verified'])->name('leads.create');
@@ -290,6 +302,8 @@ Route::get('/terms-and-condition', function () {
 });
 
 Route::get('/pricing', [App\Http\Controllers\website\PricingController::class, 'index'])->name('pricing');
+Route::get('/package-enquiry', [App\Http\Controllers\EnquiryController::class, 'create'])->name('package.enquiry.create');
+Route::post('/package-enquiry', [App\Http\Controllers\EnquiryController::class, 'store'])->name('package.enquiry.store');
 
 Route::get('/roi-calculator-for-queue-system', function () {
     return view('website.roi-calculator.index');

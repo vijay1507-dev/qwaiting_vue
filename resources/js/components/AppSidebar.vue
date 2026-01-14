@@ -56,6 +56,12 @@ const allMainNavItems: (NavItem & { permission?: string })[] = [
         icon: Users,
     }, */
     {
+        title: 'Package Enquiries',
+        href: '/package-enquiries',
+        icon: Users2,
+        permission: 'package_enquiries.view',
+    },
+    {
         title: 'Clients',
         href: clientsIndex(),
         icon: Briefcase,

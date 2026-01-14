@@ -118,10 +118,9 @@
                     </ul>
 
                     @if($package['is_enquiry'])
-                    <a href="/contact">
-                        <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition cursor-pointer">
-                            Enquiry
-                        </button>
+                    <a href="{{ route('package.enquiry.create', ['package' => $package['name']]) }}"
+                        class="block w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition cursor-pointer text-center">
+                        Enquiry
                     </a>
                     @else
 
