@@ -1650,7 +1650,8 @@ class SignupController extends Controller
         }
 
         $packageId = $request->input('package_id');
-        $billingCycle = $request->input('billing_cycle', 'annual');
+        // Prefer lead's stored billing cycle if available, otherwise fallback to request or default
+        $billingCycle = $lead->billing_cycle ?? $request->input('billing_cycle', 'annual');
         $package = SubscriptionPackage::with('pricings')->find($packageId);
 
         if (!$package) return response()->json(['success' => false, 'message' => 'Invalid package.'], 400);
@@ -1982,6 +1983,24 @@ class SignupController extends Controller
                     }
                 }
 
+                // Store Subscription Details in External DB
+                Log::info('Checking payment response for external storage', [
+                    'lead_id' => $lead->id,
+                    'has_payment_response' => !empty($lead->payment_response)
+                ]);
+
+                if ($lead->payment_response) {
+                    $paymentData = json_decode($lead->payment_response, true);
+                    if ($paymentData) {
+                        Log::info('Calling storeSubscriptionDetailsInExternalDb');
+                        $this->storeSubscriptionDetailsInExternalDb($lead, $paymentData);
+                    } else {
+                        Log::warning('Payment response decode failed', ['response' => $lead->payment_response]);
+                    }
+                } else {
+                    Log::warning('No payment response found on lead during provisioning', ['lead_id' => $lead->id]);
+                }
+
                 // Send registration complete email
                 try {
                     $sequenceService = new SequenceEmailService;
@@ -2125,5 +2144,207 @@ class SignupController extends Controller
                 'current_solution' => $lead->current_solution,
             ]
         ]);
+    }
+
+    private function storeSubscriptionDetailsInExternalDb($lead, $paymentData)
+    {
+        try {
+            // 1. Get Domain and Team ID from External DB
+            $domainRecord = DB::connection('mysql_external')
+                ->table('domains')
+                ->where(function ($query) use ($lead) {
+                    $query->where('domain', $lead->domain_name)
+                        ->orWhere('domain', $lead->domain_name . '.qwaiting.com')
+                        ->orWhere('domain', $lead->domain_name . '.localhost');
+                })
+                ->first();
+
+            if (!$domainRecord) {
+                Log::error('Domain not found in external DB for subscription storage', ['lead_id' => $lead->id]);
+                return;
+            }
+
+            $teamId = $domainRecord->team_id ?? null;
+            $domainId = $domainRecord->id;
+
+            if (!$teamId) {
+                Log::error('Team ID not found for domain in external DB', ['domain_id' => $domainId]);
+                return;
+            }
+
+            // --- Stripe Logic Start ---
+            \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+
+            $package = $lead->package;
+            $billingCycle = $lead->billing_cycle;
+            $currency = $paymentData['currency'] ?? 'USD'; // Default or from payment
+
+            // Determine Price and Interval
+            // Note: We need the original package price for the Plan creation, even if user paid discounted amount
+            // The subscription will charge this price in future.
+
+            $pricing = $package->pricings->where('currency', strtoupper($currency))->where('billing_cycle', $billingCycle)->first();
+            $price = $pricing ? $pricing->price : 0;
+
+            $interval = $billingCycle === 'annual' ? 'year' : 'month'; // 'annual' is the value in DB usually? Check BuySubscription logic: it checks 'yearly'
+            // In SignupController Step 6/7, we use 'annual' or 'monthly'.
+            // BuySubscription uses 'yearly'. Let's normalize.
+            if ($billingCycle === 'annual' || $billingCycle === 'yearly') {
+                $interval = 'year';
+            } else {
+                $interval = 'month';
+            }
+
+            // Find or Create Plan
+            $existingPlans = \Stripe\Plan::all(['limit' => 100]);
+            $plan = null;
+            foreach ($existingPlans->data as $existingPlan) {
+                if (
+                    $existingPlan->amount == ($price * 100) &&
+                    $existingPlan->interval === $interval &&
+                    strtolower($existingPlan->currency) === strtolower($currency)
+                ) {
+                    $plan = $existingPlan;
+                    break;
+                }
+            }
+
+            if (!$plan) {
+                Log::info('Creating New Stripe Product and Plan');
+                $productName = $package->name . ' ' . ucfirst($interval);
+                $product = \Stripe\Product::create(['name' => $productName]);
+                $plan = \Stripe\Plan::create([
+                    'amount' => (int)($price * 100),
+                    'interval' => $interval,
+                    'currency' => strtolower($currency),
+                    'product' => $product->id,
+                ]);
+                $productId = $product->id;
+                Log::info('New Plan Created', ['plan_id' => $plan->id, 'product_id' => $productId]);
+            } else {
+                $productId = $plan->product;
+                Log::info('Using Existing Plan', ['plan_id' => $plan->id, 'product_id' => $productId]);
+            }
+
+            // Create Subscription (Trial / Future Billing)
+            // We set trial_end to the package_end_date so it starts billing after the current paid period
+            $trialEnd = $lead->package_end_date ? \Carbon\Carbon::parse($lead->package_end_date)->timestamp : now()->addMonth()->timestamp;
+
+            // Safety check: trial_end must be in future (Stripe requires at least 48 hours for trails usually? No, just future).
+            // Actually Stripe requires 'trial_end' to be at least 48 hours in the future for *Checkout Sessions*, but for API Subscription explicit creation, it just needs to be future > now.
+            // If it's too close, we might skip trial or just set backdate? Use trial_end is safest for "Next Bill Date".
+            if ($trialEnd <= time()) {
+                $trialEnd = time() + 86400; // Force 1 day future if passed
+            }
+
+            Log::info('Attempting to create Subscription', [
+                'customer' => $lead->stripe_customer_id,
+                'plan' => $plan->id,
+                'trial_end' => $trialEnd
+            ]);
+
+            $subscription = \Stripe\Subscription::create([
+                'customer' => $lead->stripe_customer_id,
+                'items' => [['plan' => $plan->id]],
+                'trial_end' => $trialEnd,
+            ]);
+
+            Log::info('Created Stripe Subscription for External DB', ['subscription_id' => $subscription->id, 'plan_id' => $plan->id]);
+
+            // --- Stripe Logic End ---
+
+            // Use Generated Values
+            $subscriptionId = $subscription->id;
+            $stripeStatus = $subscription->status; // likely 'trialing'
+
+            // Fix: For paid packages, we treat 'trialing' (used for deferred billing) as 'active'
+            // Since this function is only called after a successful payment, we can enforce active status.
+            if ($stripeStatus === 'trialing') {
+                $stripeStatus = 'active';
+            }
+
+            $stripePriceId = $plan->id;
+
+            // Payment Transaction (The one-time payment)
+            $transactionId = $paymentData['id'] ?? $subscriptionId;
+            if (isset($paymentData['payment_intent'])) {
+                $transactionId = $paymentData['payment_intent'];
+            }
+
+            $amountPaid = isset($paymentData['amount']) ? $paymentData['amount'] / 100 : 0;
+            if (isset($paymentData['amount_total'])) {
+                $amountPaid = $paymentData['amount_total'] / 100;
+            }
+
+            // Invoice Number
+            // Retrieve real invoice from subscription
+            $invoiceNumber = null;
+            if (!empty($subscription->latest_invoice)) {
+                try {
+                    $invoiceObj = \Stripe\Invoice::retrieve($subscription->latest_invoice);
+                    $invoiceNumber = $invoiceObj->number;
+                } catch (\Exception $e) {
+                    Log::warning('Failed to retrieve invoice details from Stripe', ['error' => $e->getMessage()]);
+                }
+            }
+
+            if (!$invoiceNumber) {
+                $invoiceNumber = $paymentData['invoice'] ?? ('INV-' . strtoupper(uniqid()));
+            }
+
+            // Status
+            $dbStatus = 'active'; // Since they paid and sub is created
+
+            // Insert into queue_panel_upgrades
+            DB::connection('mysql_external')->table('queue_panel_upgrade')->insert([
+                'team_id'        => $teamId,
+                'inv_num'        => $invoiceNumber,
+                'package_id'     => $lead->package_id,
+                'price'          => $amountPaid,
+                'unit'           => $interval, // Stores 'year' or 'month'
+                'type'           => 'QUEUE',
+                'date'           => now(),
+                'subcription_id' => $subscriptionId,
+                'status'         => $dbStatus,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            // Insert into subscriptions
+            $dbSubId = DB::connection('mysql_external')->table('subscriptions')->insertGetId([
+                'domain_id'       => $domainId,
+                'type'            => 'QUEUE',
+                'stripe_id'       => $subscriptionId,
+                'stripe_status'   => $stripeStatus,
+                'stripe_price'    => $stripePriceId, // Plan ID
+                'quantity'        => 1,
+                'trial_ends_at'   => Carbon::createFromTimestamp($trialEnd),
+                'ends_at'         => Carbon::createFromTimestamp($trialEnd), // Next billing matches end
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+
+            // Insert Subscription Item
+            // Get item ID from subscription object
+            $stripeItemId = $subscription->items->data[0]->id ?? 'si_fallback';
+
+            DB::connection('mysql_external')->table('subscription_items')->insert([
+                'subscription_id' => $dbSubId,
+                'stripe_id'       => $stripeItemId,
+                'stripe_product'  => $productId, // Product ID
+                'stripe_price'    => $stripePriceId, // Plan ID
+                'quantity'        => 1,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+
+            Log::info('Stored subscription details in external DB', ['team_id' => $teamId, 'domain_id' => $domainId]);
+        } catch (\Exception $e) {
+            Log::error('Failed to store subscription details in external DB', [
+                'error' => $e->getMessage(),
+                'lead_id' => $lead->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 }
