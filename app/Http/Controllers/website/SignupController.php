@@ -1937,18 +1937,66 @@ class SignupController extends Controller
                         $pmLastFour = null;
 
                         // Try to extract card details from payment response
+                        // Try to extract card details from payment response
                         if (!empty($paymentData)) {
-                            // Check for PaymentIntent structure (charges array)
+                            // 1. Direct extraction from expanded object in response
                             if (isset($paymentData['charges']['data'][0]['payment_method_details']['card'])) {
                                 $card = $paymentData['charges']['data'][0]['payment_method_details']['card'];
                                 $pmType = $card['brand'] ?? null;
                                 $pmLastFour = $card['last4'] ?? null;
-                            }
-                            // Check for Checkout Session structure (if method details expanded)
-                            elseif (isset($paymentData['payment_method_details']['card'])) {
+                            } elseif (isset($paymentData['payment_method_details']['card'])) {
                                 $card = $paymentData['payment_method_details']['card'];
                                 $pmType = $card['brand'] ?? null;
                                 $pmLastFour = $card['last4'] ?? null;
+                            }
+
+                            // 2. If extraction failed, try fetching via Stripe API
+                            if (!$pmType || !$pmLastFour) {
+                                try {
+                                    \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+
+                                    $paymentMethodId = null;
+
+                                    // Identify Payment Method ID from response
+                                    if (isset($paymentData['payment_method']) && is_string($paymentData['payment_method'])) {
+                                        $paymentMethodId = $paymentData['payment_method'];
+                                    } elseif (isset($paymentData['payment_intent']) && is_string($paymentData['payment_intent'])) {
+                                        // It's a Session or similar with a PI reference
+                                        $pi = \Stripe\PaymentIntent::retrieve($paymentData['payment_intent']);
+                                        if ($pi && $pi->payment_method) {
+                                            $paymentMethodId = $pi->payment_method;
+                                        }
+                                    } elseif (isset($paymentData['object']) && $paymentData['object'] === 'payment_intent' && isset($paymentData['id'])) {
+                                        // It's a PaymentIntent object itself but maybe without expanded method
+                                        $pi = \Stripe\PaymentIntent::retrieve($paymentData['id']);
+                                        if ($pi && $pi->payment_method) {
+                                            $paymentMethodId = $pi->payment_method;
+                                        }
+                                    }
+
+                                    // Fetch PaymentMethod details
+                                    if ($paymentMethodId) {
+                                        $pm = \Stripe\PaymentMethod::retrieve($paymentMethodId);
+                                        if ($pm && $pm->card) {
+                                            $pmType = $pm->card->brand;
+                                            $pmLastFour = $pm->card->last4;
+                                        }
+                                    } else {
+                                        // Fallback: Check Customer's default payment method
+                                        if ($lead->stripe_customer_id) {
+                                            $customer = \Stripe\Customer::retrieve($lead->stripe_customer_id);
+                                            if ($customer->invoice_settings->default_payment_method) {
+                                                $pm = \Stripe\PaymentMethod::retrieve($customer->invoice_settings->default_payment_method);
+                                                if ($pm && $pm->card) {
+                                                    $pmType = $pm->card->brand;
+                                                    $pmLastFour = $pm->card->last4;
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (\Exception $e) {
+                                    Log::warning('Failed to fetch PaymentMethod from Stripe API', ['error' => $e->getMessage()]);
+                                }
                             }
                         }
 
