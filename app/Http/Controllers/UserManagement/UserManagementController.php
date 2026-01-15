@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
@@ -19,17 +20,25 @@ class UserManagementController extends Controller
      */
     public function employees(Request $request): Response
     {
+        $allCountries = \App\Models\Country::pluck('name', 'id');
+
         $users = User::orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($user) {
+            ->map(function ($user) use ($allCountries) {
+                $countryNames = collect($user->countries ?? [])
+                    ->map(fn($id) => $allCountries[$id] ?? null)
+                    ->filter()
+                    ->join(', ');
+
                 return [
                     'id' => (string) $user->id,
-                    'userId' => 'User'.str_pad((string) $user->id, 4, '0', STR_PAD_LEFT),
+                    'userId' => 'User' . str_pad((string) $user->id, 4, '0', STR_PAD_LEFT),
                     'name' => $user->name,
                     'mobileNumber' => $user->phone ?? '-',
                     'emailAddress' => $user->email,
                     'accountStatus' => $user->status ?? 'Active',
                     'role' => $user->role ?? 'Employee',
+                    'assignedCountries' => $countryNames ?: '-',
                 ];
             });
 
@@ -43,9 +52,17 @@ class UserManagementController extends Controller
      */
     public function create(Request $request): Response
     {
-        return Inertia::render('Users/Create');
+        $roles = Role::pluck('name');
+        $countries = \App\Models\Country::all();
+        return Inertia::render('Users/Create', [
+            'roles' => $roles,
+            'countries' => $countries,
+        ]);
     }
 
+    /**
+     * Store a newly created user.
+     */
     /**
      * Store a newly created user.
      */
@@ -57,8 +74,10 @@ class UserManagementController extends Controller
                 'email' => 'required|email|max:255|unique:users,email',
                 'password' => ['required', 'string', Password::min(8)->mixedCase()->letters(), 'confirmed'],
                 'phone' => 'nullable|string|max:20',
-                'role' => 'required|string|in:Employee,Administrator',
+                'role' => 'required|string|exists:roles,name',
                 'status' => 'required|string|in:Active,Inactive',
+                'countries' => 'nullable|array',
+                'countries.*' => 'exists:countries,id',
             ]);
 
             $user = User::create([
@@ -68,13 +87,16 @@ class UserManagementController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'role' => $validated['role'],
                 'status' => $validated['status'],
+                'countries' => $validated['countries'] ?? [],
             ]);
 
-            return redirect()->route('user-management.employees')->with('success', 'User created successfully');
+            $user->assignRole($validated['role']);
+
+            return redirect()->route('user-management.users')->with('success', 'User created successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error creating user: '.$e->getMessage());
+            Log::error('Error creating user: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to create user. Please try again.'])->withInput();
         }
@@ -95,7 +117,10 @@ class UserManagementController extends Controller
                 'phone' => $user->phone ?? '',
                 'role' => $user->role ?? 'Employee',
                 'status' => $user->status ?? 'Active',
+                'countries' => $user->countries ?? [],
             ],
+            'roles' => Role::pluck('name'),
+            'countries' => \App\Models\Country::all(),
         ]);
     }
 
@@ -107,20 +132,32 @@ class UserManagementController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255|unique:users,email,'.$id,
+                'email' => 'required|email|max:255|unique:users,email,' . $id,
                 'phone' => 'nullable|string|max:20',
-                'role' => 'required|string|in:Employee,Administrator',
+                'role' => 'required|string|exists:roles,name',
                 'status' => 'required|string|in:Active,Inactive',
+                'countries' => 'nullable|array',
+                'countries.*' => 'exists:countries,id',
             ]);
 
             $user = User::findOrFail($id);
-            $user->update($validated);
 
-            return redirect()->route('user-management.employees')->with('success', 'User updated successfully');
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'role' => $validated['role'],
+                'status' => $validated['status'],
+                'countries' => $validated['countries'] ?? [],
+            ]);
+
+            $user->syncRoles([$validated['role']]);
+
+            return redirect()->route('user-management.users')->with('success', 'User updated successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error updating user: '.$e->getMessage());
+            Log::error('Error updating user: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.'])->withInput();
         }
@@ -141,9 +178,9 @@ class UserManagementController extends Controller
 
             $user->delete();
 
-            return redirect()->route('user-management.employees')->with('success', 'User deleted successfully');
+            return redirect()->route('user-management.users')->with('success', 'User deleted successfully');
         } catch (\Exception $e) {
-            Log::error('Error deleting user: '.$e->getMessage());
+            Log::error('Error deleting user: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to delete user. Please try again.']);
         }
@@ -163,11 +200,11 @@ class UserManagementController extends Controller
             $user->password = Hash::make($validated['password']);
             $user->save();
 
-            return redirect()->route('user-management.employees')->with('success', 'Password reset successfully');
+            return redirect()->route('user-management.users')->with('success', 'Password reset successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error resetting password: '.$e->getMessage());
+            Log::error('Error resetting password: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to reset password. Please try again.'])->withInput();
         }
@@ -196,9 +233,9 @@ class UserManagementController extends Controller
             }
             $user->save();
 
-            return redirect()->route('user-management.employees')->with('success', $message);
+            return redirect()->route('user-management.users')->with('success', $message);
         } catch (\Exception $e) {
-            Log::error('Error toggling lock: '.$e->getMessage());
+            Log::error('Error toggling lock: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to toggle lock status. Please try again.']);
         }

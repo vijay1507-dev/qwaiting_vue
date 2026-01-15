@@ -29,7 +29,7 @@ class ClientsController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+            $teamIds = $domains->pluck('team_id')->map(fn($id) => (int) $id)->unique()->filter()->toArray();
 
             if (empty($teamIds)) {
                 return Inertia::render('Clients/Index', [
@@ -38,10 +38,45 @@ class ClientsController extends Controller
             }
 
             // Fetch users from external database, ordered by created_at descending
-            $users = DB::connection('mysql_external')
+            $usersQuery = DB::connection('mysql_external')
                 ->table('users')
                 ->whereIn('team_id', $teamIds)
-                ->whereNull('deleted_at')
+                ->whereNull('deleted_at');
+
+            // Apply Country Access Filter
+            $user = auth()->user();
+            if ($user && !$user->hasRole('Super Admin')) {
+                // Get user's assigned countries (IDs)
+                // Cast to array ensuring not null
+                $assignedCountryIds = $user->countries ?? [];
+
+                if (!empty($assignedCountryIds)) {
+                    // Fetch corresponding phone codes
+                    $allowedPhoneCodes = \App\Models\Country::whereIn('id', $assignedCountryIds)
+                        ->pluck('phonecode')
+                        ->toArray();
+
+                    if (!empty($allowedPhoneCodes)) {
+                        $usersQuery->where(function ($query) use ($allowedPhoneCodes) {
+                            foreach ($allowedPhoneCodes as $code) {
+                                $query->orWhere('phone', 'LIKE', "+{$code}%")
+                                    ->orWhere('phone', 'LIKE', "{$code}%");
+                            }
+                        });
+                    } else {
+                        // User has countries assigned but no valid phone codes found? 
+                        // Or if assignedCountries is empty but we want to restrict?
+                        // If logic is "Only show designated countries", and phone codes are missing, show nothing.
+                        $usersQuery->whereRaw('1 = 0');
+                    }
+                } else {
+                    // User is not Super Admin and has NO countries assigned.
+                    // Assume "No Access".
+                    $usersQuery->whereRaw('1 = 0');
+                }
+            }
+
+            $users = $usersQuery
                 ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -103,13 +138,12 @@ class ClientsController extends Controller
 
                     return $client;
                 });
-
             return Inertia::render('Clients/Index', [
                 'clients' => $clients,
             ]);
         } catch (\Exception $e) {
             // Log error and return empty array
-            Log::error('Error fetching clients from external database: '.$e->getMessage());
+            Log::error('Error fetching clients from external database: ' . $e->getMessage());
 
             return Inertia::render('Clients/Index', [
                 'clients' => [],
@@ -294,7 +328,7 @@ class ClientsController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching client for view: '.$e->getMessage());
+            Log::error('Error fetching client for view: ' . $e->getMessage());
             abort(404, 'Client not found');
         }
     }
@@ -418,7 +452,7 @@ class ClientsController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching email logs for client: '.$e->getMessage());
+            Log::error('Error fetching email logs for client: ' . $e->getMessage());
             abort(404, 'Client not found');
         }
     }
@@ -479,7 +513,7 @@ class ClientsController extends Controller
                 'client' => $client,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching client for edit: '.$e->getMessage());
+            Log::error('Error fetching client for edit: ' . $e->getMessage());
             abort(404, 'Client not found');
         }
     }
@@ -527,9 +561,70 @@ class ClientsController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error updating client: '.$e->getMessage());
+            Log::error('Error updating client: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['error' => 'Failed to update client. Please try again.'])->withInput();
+        }
+    }
+
+    /**
+     * Show the form for resetting client password.
+     */
+    public function resetPasswordForm(Request $request, string $id): Response
+    {
+        try {
+            // Fetch user from external database
+            $user = DB::connection('mysql_external')
+                ->table('users')
+                ->where('id', $id)
+                ->whereNull('deleted_at')
+                ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'address')
+                ->first();
+
+            if (! $user) {
+                abort(404, 'Client not found');
+            }
+
+            // Fetch domain for this user's team
+            $domain = DB::connection('mysql_external')
+                ->table('domains')
+                ->where('team_id', (string) $user->team_id)
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->first();
+
+            // Determine plan based on trial_ends_at
+            $plan = 'Free'; // Default
+            if ($domain && $domain->trial_ends_at) {
+                $trialEndsAt = strtotime($domain->trial_ends_at);
+                $now = time();
+                if ($trialEndsAt > $now) {
+                    $plan = 'Trial'; // Trial is still active
+                } else {
+                    $plan = 'Paid'; // Trial expired, now paid
+                }
+            } elseif ($domain && ! $domain->trial_ends_at) {
+                $plan = 'Paid'; // No trial, must be paid
+            }
+
+            $client = [
+                'id' => (string) $user->id,
+                'domain' => $domain->domain ?? '',
+                'ownerName' => $user->name ?? '',
+                'ownerEmail' => $user->email ?? '',
+                'ownerPhone' => $user->phone ?? '',
+                'ownerAddress' => $user->address ?? '',
+                'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'status' => $user->is_active ? 'active' : 'inactive',
+                'plan' => $plan,
+            ];
+
+            return Inertia::render('Clients/ResetPassword', [
+                'client' => $client,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching client for password reset: ' . $e->getMessage());
+            abort(404, 'Client not found');
         }
     }
 
@@ -555,20 +650,53 @@ class ClientsController extends Controller
                 return redirect()->back()->withErrors(['password' => 'Client not found']);
             }
 
+            $hashedPassword = Hash::make($validated['password']);
+
             // Update password
             DB::connection('mysql_external')
                 ->table('users')
-                ->where('id', $id)
+                ->where('id', $user->id)
                 ->update([
-                    'password' => Hash::make($validated['password']),
+                    'password' => $hashedPassword,
                     'updated_at' => now(),
                 ]);
 
-            return redirect()->back()->with('success', 'Password reset successfully');
+            // Update password in internal DB (signup_leads)
+            $signupLead = SignupLead::withTrashed()->where('email', $user->email)->first();
+            // Fallback: try to find by domain if email mismatch
+            if (! $signupLead) {
+                // Fetch domain for this user's team to check domain name
+                $domainRecord = DB::connection('mysql_external')
+                    ->table('domains')
+                    ->where('team_id', (string) $user->team_id)
+                    ->first();
+
+                if ($domainRecord && $domainRecord->domain) {
+                    // Try exact match first
+                    $signupLead = SignupLead::withTrashed()->where('domain_name', $domainRecord->domain)->first();
+
+                    // If not found, try subdomain
+                    if (! $signupLead) {
+                        $domainParts = explode('.', $domainRecord->domain);
+                        $subdomain = $domainParts[0] ?? '';
+                        if ($subdomain) {
+                            $signupLead = SignupLead::withTrashed()->where('domain_name', $subdomain)->first();
+                        }
+                    }
+                }
+            }
+
+            if ($signupLead) {
+                $signupLead->update([
+                    'password' => $hashedPassword,
+                ]);
+            }
+
+            return redirect()->route('clients.index')->with('success', 'Password reset successfully');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            Log::error('Error resetting client password: '.$e->getMessage());
+            Log::error('Error resetting client password: ' . $e->getMessage());
 
             return redirect()->back()->withErrors(['password' => 'Failed to reset password. Please try again.'])->withInput();
         }

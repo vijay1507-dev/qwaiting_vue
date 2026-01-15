@@ -22,17 +22,19 @@ class SequenceEmailService
             ->where('target_user_type', 'incomplete_signups')
             ->with(['emailTemplates' => function ($query) use ($event) {
                 $query->where('status', 'active')
+                    ->withoutTrashed()
                     ->where('timing_unit', $event);
             }])
             ->get();
 
-        // Also get sequences with completion_reminder emails for registration complete
+        // Also get sequences with registeration_complete emails for registration complete
         // This handles cases where registration complete email is in a different sequence
-        if ($event === 'after_verification' || $event === 'immediate') {
+        if (($event === 'after_verification' || $event === 'immediate') && $signupLead->signup_step === 6) {
             $completionSequences = Sequence::where('status', 'active')
                 ->with(['emailTemplates' => function ($query) use ($event) {
                     $query->where('status', 'active')
-                        ->where('type', 'completion_reminder')
+                        ->withoutTrashed()
+                        ->where('type', 'registeration_complete')
                         ->where(function ($q) use ($event) {
                             if ($event === 'immediate') {
                                 $q->where('timing_unit', 'immediate');
@@ -63,14 +65,14 @@ class SequenceEmailService
 
         foreach ($sequences as $sequence) {
             foreach ($sequence->emailTemplates as $emailTemplate) {
-                // Check if email was already sent
+                // Check if email was already sent or is queued
                 $alreadySent = \App\Models\EmailSend::where('email_template_id', $emailTemplate->id)
                     ->where('external_user_id', $signupLead->id)
-                    ->where('status', 'sent')
+                    ->whereIn('status', ['sent', 'success', 'queued'])
                     ->exists();
 
                 if ($alreadySent) {
-                    Log::info('Event-based email already sent, skipping', [
+                    Log::info('Event-based email already sent or queued, skipping', [
                         'event' => $event,
                         'email_template_id' => $emailTemplate->id,
                         'signup_lead_id' => $signupLead->id,
@@ -89,6 +91,17 @@ class SequenceEmailService
                     // Skip on_verification emails for unverified users
                     continue;
                 }
+
+                // Mark as queued immediately to prevent race conditions
+                \App\Models\EmailSend::create([
+                    'sequence_id' => $sequence->id,
+                    'email_template_id' => $emailTemplate->id,
+                    'external_user_id' => $signupLead->id,
+                    'user_email' => $signupLead->email,
+                    'days_after_registration' => $daysSinceRegistration,
+                    'status' => 'queued',
+                    'scheduled_at' => now()->addSeconds(5),
+                ]);
 
                 // Dispatch email job
                 SendSequenceEmailToUserJob::dispatch(

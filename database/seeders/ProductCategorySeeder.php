@@ -17,13 +17,15 @@ class ProductCategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            ProductCategory::create([
-                'name' => $category['name'],
-                'slug' => Str::slug($category['name']),
-                'description' => $category['description'],
-                'is_active' => true,
-                'display_order' => $category['display_order'],
-            ]);
+            ProductCategory::firstOrCreate(
+                ['slug' => Str::slug($category['name'])], // Check for existing slug
+                [
+                    'name' => $category['name'],
+                    'description' => $category['description'],
+                    'is_active' => true,
+                    'display_order' => $category['display_order'],
+                ]
+            );
         }
     }
 }

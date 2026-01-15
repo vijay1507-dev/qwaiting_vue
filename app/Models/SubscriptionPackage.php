@@ -25,6 +25,7 @@ class SubscriptionPackage extends Model
         'display_sequence',
         'features_display_limit',
         'is_most_popular',
+        'is_enquiry',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class SubscriptionPackage extends Model
             'monthly_enabled' => 'boolean',
             'annual_enabled' => 'boolean',
             'is_most_popular' => 'boolean',
+            'is_enquiry' => 'boolean',
             'trial_days' => 'integer',
             'sort_order' => 'integer',
             'display_sequence' => 'integer',

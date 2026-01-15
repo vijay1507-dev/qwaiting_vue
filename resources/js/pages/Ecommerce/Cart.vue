@@ -1,14 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { index as ecommerceIndex, products, bundles, orders } from '@/routes/ecommerce';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Tag, Loader2 } from 'lucide-vue-next';
 import { useToast } from '@/composables/useToast';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import {
+    bundles,
+    index as ecommerceIndex,
+    orders,
+    products,
+} from '@/routes/ecommerce';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    ArrowRight,
+    Loader2,
+    Minus,
+    Plus,
+    ShoppingCart,
+    Tag,
+    Trash2,
+} from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface CartItem {
     id: string;
@@ -70,9 +83,9 @@ const updateQuantity = async (itemId: string, newQuantity: number) => {
     }
 
     if (updatingItems.value.has(itemId)) return;
-    
+
     updatingItems.value.add(itemId);
-    
+
     try {
         // URL encode the item ID to handle special characters like underscores
         const encodedId = encodeURIComponent(itemId);
@@ -80,8 +93,11 @@ const updateQuantity = async (itemId: string, newQuantity: number) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                'Accept': 'application/json',
+                'X-CSRF-TOKEN':
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') || '',
+                Accept: 'application/json',
             },
             credentials: 'same-origin',
             body: JSON.stringify({
@@ -93,13 +109,19 @@ const updateQuantity = async (itemId: string, newQuantity: number) => {
 
         if (response.ok && data.success) {
             success('Cart updated successfully!');
-            router.reload({ only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'] });
+            router.reload({
+                only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'],
+            });
         } else {
             throw new Error(data.message || 'Failed to update cart item');
         }
     } catch (err) {
         console.error('Error updating cart item:', err);
-        showError(err instanceof Error ? err.message : 'Failed to update cart item. Please try again.');
+        showError(
+            err instanceof Error
+                ? err.message
+                : 'Failed to update cart item. Please try again.',
+        );
     } finally {
         updatingItems.value.delete(itemId);
     }
@@ -117,17 +139,20 @@ const decrementQuantity = (item: CartItem) => {
 
 const removeItem = async (itemId: string) => {
     if (removingItems.value.has(itemId)) return;
-    
+
     removingItems.value.add(itemId);
-    
+
     try {
         // URL encode the item ID to handle special characters like underscores
         const encodedId = encodeURIComponent(itemId);
         const response = await fetch(`/api/ecommerce/cart/${encodedId}`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                'Accept': 'application/json',
+                'X-CSRF-TOKEN':
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') || '',
+                Accept: 'application/json',
             },
             credentials: 'same-origin',
         });
@@ -136,13 +161,19 @@ const removeItem = async (itemId: string) => {
 
         if (response.ok && data.success) {
             success('Item removed from cart');
-            router.reload({ only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'] });
+            router.reload({
+                only: ['cartItems', 'subtotal', 'tax', 'shipping', 'total'],
+            });
         } else {
             throw new Error(data.message || 'Failed to remove item from cart');
         }
     } catch (err) {
         console.error('Error removing cart item:', err);
-        showError(err instanceof Error ? err.message : 'Failed to remove item from cart. Please try again.');
+        showError(
+            err instanceof Error
+                ? err.message
+                : 'Failed to remove item from cart. Please try again.',
+        );
     } finally {
         removingItems.value.delete(itemId);
     }
@@ -158,45 +189,74 @@ const applyCoupon = () => {
     <Head title="Shopping Cart" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2">
+        <div
+            class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2"
+        >
             <!-- Header Section -->
             <div class="flex flex-col gap-2">
                 <div>
-                    <h1 class="text-base font-semibold text-foreground">Shopping Cart</h1>
+                    <h1 class="text-base font-semibold text-foreground">
+                        Shopping Cart
+                    </h1>
                 </div>
 
                 <!-- Navigation Tabs -->
                 <div class="flex gap-0 border-b border-border">
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'ecommerce.overview.read',
+                            )
+                        "
                         :href="ecommerceIndex().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        class="cursor-pointer border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                         Overview
                     </Link>
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'ecommerce.product_catalog.read',
+                            )
+                        "
                         :href="products().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        class="cursor-pointer border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                         Product Catalog
                     </Link>
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'ecommerce.bundle_offers.read',
+                            )
+                        "
                         :href="bundles().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        class="cursor-pointer border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                         Bundle Offers
                     </Link>
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'ecommerce.shopping_cart.read',
+                            )
+                        "
                         :href="'/ecommerce/cart'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
-                            'border-blue-600 text-foreground'
+                            'cursor-pointer border-b-2 px-4 py-2 text-sm font-medium transition-colors',
+                            'border-blue-600 text-foreground',
                         ]"
                     >
                         Shopping Cart
                     </Link>
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'ecommerce.orders.read',
+                            )
+                        "
                         :href="orders().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        class="cursor-pointer border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                         Orders
                     </Link>
@@ -204,10 +264,17 @@ const applyCoupon = () => {
 
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <!-- Cart Items -->
-                    <div class="lg:col-span-2 flex flex-col gap-4">
-                        <div v-if="cartItems.length === 0" class="rounded-lg border border-border bg-card p-12 text-center">
-                            <ShoppingCart class="size-12 text-muted-foreground mx-auto mb-4" />
-                            <p class="text-sm text-muted-foreground mb-2">Your cart is empty</p>
+                    <div class="flex flex-col gap-4 lg:col-span-2">
+                        <div
+                            v-if="cartItems.length === 0"
+                            class="rounded-lg border border-border bg-card p-12 text-center"
+                        >
+                            <ShoppingCart
+                                class="mx-auto mb-4 size-12 text-muted-foreground"
+                            />
+                            <p class="mb-2 text-sm text-muted-foreground">
+                                Your cart is empty
+                            </p>
                             <Link :href="products().url">
                                 <Button variant="outline" size="sm">
                                     Continue Shopping
@@ -222,48 +289,108 @@ const applyCoupon = () => {
                                 class="rounded-lg border border-border bg-card p-4"
                             >
                                 <div class="flex items-center gap-4">
-                                    <div class="flex size-16 items-center justify-center rounded-md bg-muted overflow-hidden shrink-0">
+                                    <div
+                                        class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted"
+                                    >
                                         <img
                                             v-if="item.image"
-                                            :src="item.image.startsWith('http') || item.image.startsWith('/') ? item.image : `/storage/${item.image}`"
+                                            :src="
+                                                item.image.startsWith('http') ||
+                                                item.image.startsWith('/')
+                                                    ? item.image
+                                                    : `/storage/${item.image}`
+                                            "
                                             :alt="item.name"
-                                            class="w-full h-full object-cover"
+                                            class="h-full w-full object-cover"
                                         />
-                                        <ShoppingCart v-else class="size-8 text-muted-foreground" />
+                                        <ShoppingCart
+                                            v-else
+                                            class="size-8 text-muted-foreground"
+                                        />
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="text-sm font-medium text-foreground">{{ item.name }}</h3>
-                                        <p class="text-xs text-muted-foreground font-mono">{{ item.sku }}</p>
-                                        <p class="text-sm font-medium text-foreground mt-1">{{ formatCurrency(item.price) }}</p>
+                                        <h3
+                                            class="text-sm font-medium text-foreground"
+                                        >
+                                            {{ item.name }}
+                                        </h3>
+                                        <p
+                                            class="font-mono text-xs text-muted-foreground"
+                                        >
+                                            {{ item.sku }}
+                                        </p>
+                                        <p
+                                            class="mt-1 text-sm font-medium text-foreground"
+                                        >
+                                            {{ formatCurrency(item.price) }}
+                                        </p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <button 
-                                            class="p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                            :disabled="updatingItems.has(item.id) || item.quantity <= 1"
+                                        <button
+                                            class="rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                            :disabled="
+                                                updatingItems.has(item.id) ||
+                                                item.quantity <= 1
+                                            "
                                             @click="decrementQuantity(item)"
                                         >
-                                            <Loader2 v-if="updatingItems.has(item.id)" class="size-4 text-muted-foreground animate-spin" />
-                                            <Minus v-else class="size-4 text-muted-foreground" />
+                                            <Loader2
+                                                v-if="
+                                                    updatingItems.has(item.id)
+                                                "
+                                                class="size-4 animate-spin text-muted-foreground"
+                                            />
+                                            <Minus
+                                                v-else
+                                                class="size-4 text-muted-foreground"
+                                            />
                                         </button>
-                                        <span class="text-sm font-medium text-foreground w-8 text-center">{{ item.quantity }}</span>
-                                        <button 
-                                            class="p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                            :disabled="updatingItems.has(item.id)"
+                                        <span
+                                            class="w-8 text-center text-sm font-medium text-foreground"
+                                            >{{ item.quantity }}</span
+                                        >
+                                        <button
+                                            class="rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                            :disabled="
+                                                updatingItems.has(item.id)
+                                            "
                                             @click="incrementQuantity(item)"
                                         >
-                                            <Loader2 v-if="updatingItems.has(item.id)" class="size-4 text-muted-foreground animate-spin" />
-                                            <Plus v-else class="size-4 text-muted-foreground" />
+                                            <Loader2
+                                                v-if="
+                                                    updatingItems.has(item.id)
+                                                "
+                                                class="size-4 animate-spin text-muted-foreground"
+                                            />
+                                            <Plus
+                                                v-else
+                                                class="size-4 text-muted-foreground"
+                                            />
                                         </button>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-semibold text-foreground">{{ formatCurrency(item.subtotal) }}</p>
-                                        <button 
-                                            class="mt-1 p-1 hover:bg-muted rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                            :disabled="removingItems.has(item.id)"
+                                        <p
+                                            class="text-sm font-semibold text-foreground"
+                                        >
+                                            {{ formatCurrency(item.subtotal) }}
+                                        </p>
+                                        <button
+                                            class="mt-1 rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+                                            :disabled="
+                                                removingItems.has(item.id)
+                                            "
                                             @click="removeItem(item.id)"
                                         >
-                                            <Loader2 v-if="removingItems.has(item.id)" class="size-4 text-red-600 dark:text-red-400 animate-spin" />
-                                            <Trash2 v-else class="size-4 text-red-600 dark:text-red-400" />
+                                            <Loader2
+                                                v-if="
+                                                    removingItems.has(item.id)
+                                                "
+                                                class="size-4 animate-spin text-red-600 dark:text-red-400"
+                                            />
+                                            <Trash2
+                                                v-else
+                                                class="size-4 text-red-600 dark:text-red-400"
+                                            />
                                         </button>
                                     </div>
                                 </div>
@@ -273,53 +400,109 @@ const applyCoupon = () => {
 
                     <!-- Order Summary -->
                     <div class="lg:col-span-1">
-                        <div class="rounded-lg border border-border bg-card p-4 sticky top-4">
-                            <h2 class="text-base font-semibold text-foreground mb-4">Order Summary</h2>
-                            
+                        <div
+                            class="sticky top-4 rounded-lg border border-border bg-card p-4"
+                        >
+                            <h2
+                                class="mb-4 text-base font-semibold text-foreground"
+                            >
+                                Order Summary
+                            </h2>
+
                             <!-- Coupon Code -->
                             <div class="mb-4">
                                 <div class="flex items-center gap-2">
                                     <Input
                                         v-model="couponInput"
                                         placeholder="Coupon code"
-                                        class="flex-1 h-8 text-sm"
+                                        class="h-8 flex-1 text-sm"
                                     />
-                                    <Button size="sm" class="h-8" @click="applyCoupon">
+                                    <Button
+                                        size="sm"
+                                        class="h-8"
+                                        @click="applyCoupon"
+                                    >
                                         <Tag class="size-3.5" />
                                     </Button>
                                 </div>
-                                <p v-if="couponDiscount > 0" class="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    Coupon applied: -{{ formatCurrency(couponDiscount) }}
+                                <p
+                                    v-if="couponDiscount > 0"
+                                    class="mt-1 text-xs text-green-600 dark:text-green-400"
+                                >
+                                    Coupon applied: -{{
+                                        formatCurrency(couponDiscount)
+                                    }}
                                 </p>
                             </div>
 
                             <!-- Totals -->
                             <div class="space-y-2 border-t border-border pt-4">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">Subtotal</span>
-                                    <span class="text-foreground">{{ formatCurrency(subtotal) }}</span>
+                                <div
+                                    class="flex items-center justify-between text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >Subtotal</span
+                                    >
+                                    <span class="text-foreground">{{
+                                        formatCurrency(subtotal)
+                                    }}</span>
                                 </div>
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">Tax</span>
-                                    <span class="text-foreground">{{ formatCurrency(tax) }}</span>
+                                <div
+                                    class="flex items-center justify-between text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >Tax</span
+                                    >
+                                    <span class="text-foreground">{{
+                                        formatCurrency(tax)
+                                    }}</span>
                                 </div>
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">Shipping</span>
-                                    <span class="text-foreground">{{ shipping > 0 ? formatCurrency(shipping) : 'Free' }}</span>
+                                <div
+                                    class="flex items-center justify-between text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >Shipping</span
+                                    >
+                                    <span class="text-foreground">{{
+                                        shipping > 0
+                                            ? formatCurrency(shipping)
+                                            : 'Free'
+                                    }}</span>
                                 </div>
-                                <div v-if="couponDiscount > 0" class="flex items-center justify-between text-sm">
-                                    <span class="text-green-600 dark:text-green-400">Discount</span>
-                                    <span class="text-green-600 dark:text-green-400">-{{ formatCurrency(couponDiscount) }}</span>
+                                <div
+                                    v-if="couponDiscount > 0"
+                                    class="flex items-center justify-between text-sm"
+                                >
+                                    <span
+                                        class="text-green-600 dark:text-green-400"
+                                        >Discount</span
+                                    >
+                                    <span
+                                        class="text-green-600 dark:text-green-400"
+                                        >-{{
+                                            formatCurrency(couponDiscount)
+                                        }}</span
+                                    >
                                 </div>
-                                <div class="flex items-center justify-between border-t border-border pt-2">
-                                    <span class="text-base font-semibold text-foreground">Total</span>
-                                    <span class="text-lg font-bold text-foreground">{{ formatCurrency(total) }}</span>
+                                <div
+                                    class="flex items-center justify-between border-t border-border pt-2"
+                                >
+                                    <span
+                                        class="text-base font-semibold text-foreground"
+                                        >Total</span
+                                    >
+                                    <span
+                                        class="text-lg font-bold text-foreground"
+                                        >{{ formatCurrency(total) }}</span
+                                    >
                                 </div>
                             </div>
 
-                            <Button class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button
+                                class="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700"
+                            >
                                 Proceed to Checkout
-                                <ArrowRight class="size-4 ml-2" />
+                                <ArrowRight class="ml-2 size-4" />
                             </Button>
                         </div>
                     </div>
@@ -328,4 +511,3 @@ const applyCoupon = () => {
         </div>
     </AppLayout>
 </template>
-

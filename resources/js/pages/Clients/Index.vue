@@ -1,23 +1,41 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { index as clientsIndex, edit as clientsEdit, show as clientsShow } from '@/routes/clients';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Filter, Edit, Eye, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown, Calendar, Download, ChevronDown as ChevronDownIcon } from 'lucide-vue-next';
-import flatpickr from 'flatpickr';
-import 'flatpickr/dist/flatpickr.css';
-import type { Instance } from 'flatpickr/dist/types/instance';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/composables/useToast';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import {
+    edit as clientsEdit,
+    index as clientsIndex,
+    show as clientsShow,
+} from '@/routes/clients';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.css';
+import type { Instance } from 'flatpickr/dist/types/instance';
+import {
+    Calendar,
+    ChevronDown,
+    ChevronDown as ChevronDownIcon,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    Download,
+    Edit,
+    Eye,
+    Filter,
+    Lock,
+    Search,
+    X,
+} from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Client {
     id: string;
@@ -80,11 +98,15 @@ const { success } = useToast();
 
 // Handle flash messages from backend
 const page = usePage();
-watch(() => (page.props as any).flash?.success, (message) => {
-    if (message) {
-        success(message);
-    }
-}, { immediate: true });
+watch(
+    () => (page.props as any).flash?.success,
+    (message) => {
+        if (message) {
+            success(message);
+        }
+    },
+    { immediate: true },
+);
 
 // Date pickers for filters
 const createdPicker = ref<Instance | null>(null);
@@ -95,7 +117,7 @@ const expiresInputRef = ref<HTMLInputElement | null>(null);
 // Filter clients based on search query and filters
 const filteredClients = computed(() => {
     let data = props.clients || [];
-    
+
     // Apply search query
     if (searchQuery.value.trim()) {
         const query = searchQuery.value.toLowerCase();
@@ -105,27 +127,27 @@ const filteredClients = computed(() => {
                 (client.ownerName || '').toLowerCase().includes(query) ||
                 (client.ownerEmail || '').toLowerCase().includes(query) ||
                 (client.ownerPhone || '').toLowerCase().includes(query) ||
-                (client.ownerAddress || '').toLowerCase().includes(query)
+                (client.ownerAddress || '').toLowerCase().includes(query),
         );
     }
 
     // Apply filters
     if (filterForm.value.status) {
-        data = data.filter(client =>
-            client.status === filterForm.value.status
+        data = data.filter(
+            (client) => client.status === filterForm.value.status,
         );
     }
     if (filterForm.value.plan) {
-        data = data.filter(client => client.plan === filterForm.value.plan);
+        data = data.filter((client) => client.plan === filterForm.value.plan);
     }
     if (filterForm.value.created) {
-        data = data.filter(client =>
-            (client.created || '').includes(filterForm.value.created)
+        data = data.filter((client) =>
+            (client.created || '').includes(filterForm.value.created),
         );
     }
     if (filterForm.value.expires) {
-        data = data.filter(client =>
-            (client.expires || '').includes(filterForm.value.expires)
+        data = data.filter((client) =>
+            (client.expires || '').includes(filterForm.value.expires),
         );
     }
 
@@ -145,7 +167,10 @@ const totalPages = computed(() => {
 
 const paginationInfo = computed(() => {
     const start = (currentPage.value - 1) * perPage.value + 1;
-    const end = Math.min(currentPage.value * perPage.value, filteredClients.value.length);
+    const end = Math.min(
+        currentPage.value * perPage.value,
+        filteredClients.value.length,
+    );
     return `${start} - ${end} of ${filteredClients.value.length}`;
 });
 
@@ -156,9 +181,13 @@ const goToPage = (page: number) => {
 };
 
 // Reset to page 1 when search query, per page, or filters change
-watch([searchQuery, perPage, filterForm], () => {
-    currentPage.value = 1;
-}, { deep: true });
+watch(
+    [searchQuery, perPage, filterForm],
+    () => {
+        currentPage.value = 1;
+    },
+    { deep: true },
+);
 
 // Ensure current page is valid when filtered results change
 watch(filteredClients, () => {
@@ -166,7 +195,6 @@ watch(filteredClients, () => {
         currentPage.value = totalPages.value;
     }
 });
-
 
 const openFilters = () => {
     showFilters.value = true;
@@ -217,7 +245,7 @@ const resetFilters = () => {
         created: '',
         expires: '',
     };
-    
+
     // Reset date pickers
     if (createdPicker.value) {
         createdPicker.value.clear();
@@ -225,17 +253,17 @@ const resetFilters = () => {
     if (expiresPicker.value) {
         expiresPicker.value.clear();
     }
-    
+
     // Close dropdowns
     closeAllDropdowns();
-    
+
     // Reset to first page
     currentPage.value = 1;
 };
 
 const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    
+
     if (!target.closest('.dropdown-container')) {
         showStatusDropdown.value = false;
         showPlanDropdown.value = false;
@@ -301,11 +329,22 @@ watch(showFilters, (isOpen) => {
 // Export functions
 const exportToCSV = () => {
     const data = filteredClients.value;
-    const headers = ['SR NO', 'Domain', 'Owner Name', 'Owner Email', 'Owner Phone', 'Owner Address', 'Created', 'Expires', 'Status', 'Plan'];
-    
+    const headers = [
+        'SR NO',
+        'Domain',
+        'Owner Name',
+        'Owner Email',
+        'Owner Phone',
+        'Owner Address',
+        'Created',
+        'Expires',
+        'Status',
+        'Plan',
+    ];
+
     // Create CSV content
     let csvContent = headers.join(',') + '\n';
-    
+
     data.forEach((client) => {
         const row = [
             client.srNo,
@@ -321,13 +360,16 @@ const exportToCSV = () => {
         ];
         csvContent += row.join(',') + '\n';
     });
-    
+
     // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `clients_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+        'download',
+        `clients_${new Date().toISOString().split('T')[0]}.csv`,
+    );
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -336,18 +378,30 @@ const exportToCSV = () => {
 
 const exportToExcel = () => {
     const data = filteredClients.value;
-    const headers = ['SR NO', 'Domain', 'Owner Name', 'Owner Email', 'Owner Phone', 'Owner Address', 'Created', 'Expires', 'Status', 'Plan'];
-    
+    const headers = [
+        'SR NO',
+        'Domain',
+        'Owner Name',
+        'Owner Email',
+        'Owner Phone',
+        'Owner Address',
+        'Created',
+        'Expires',
+        'Status',
+        'Plan',
+    ];
+
     // Create HTML table for Excel
-    let htmlContent = '<html><head><meta charset="utf-8"></head><body><table border="1">';
-    
+    let htmlContent =
+        '<html><head><meta charset="utf-8"></head><body><table border="1">';
+
     // Add headers
     htmlContent += '<tr>';
     headers.forEach((header) => {
         htmlContent += `<th>${header}</th>`;
     });
     htmlContent += '</tr>';
-    
+
     // Add data rows
     data.forEach((client) => {
         htmlContent += '<tr>';
@@ -363,15 +417,18 @@ const exportToExcel = () => {
         htmlContent += `<td>${client.plan || ''}</td>`;
         htmlContent += '</tr>';
     });
-    
+
     htmlContent += '</table></body></html>';
-    
+
     // Create blob and download
     const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `clients_${new Date().toISOString().split('T')[0]}.xls`);
+    link.setAttribute(
+        'download',
+        `clients_${new Date().toISOString().split('T')[0]}.xls`,
+    );
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -380,94 +437,113 @@ const exportToExcel = () => {
 
 const exportToPDF = async () => {
     const data = filteredClients.value;
-    
+
     // Dynamically import jsPDF
     const { jsPDF } = await import('jspdf');
     const pdf = new jsPDF('landscape', 'mm', 'a4');
-    
+
     // Page dimensions in landscape
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const startX = margin;
     let startY = margin + 10;
-    
+
     // Calculate available width (full page width minus margins)
-    const availableWidth = pageWidth - (margin * 2);
-    
+    const availableWidth = pageWidth - margin * 2;
+
     // Set font for title
     pdf.setFontSize(16);
     pdf.text('Clients List', startX, startY);
     startY += 10;
-    
+
     // Table headers and proportional column widths (using full available width)
-    const headers = ['SR', 'Domain', 'Owner Name', 'Email', 'Phone', 'Address', 'Created', 'Expires', 'Status', 'Plan'];
+    const headers = [
+        'SR',
+        'Domain',
+        'Owner Name',
+        'Email',
+        'Phone',
+        'Address',
+        'Created',
+        'Expires',
+        'Status',
+        'Plan',
+    ];
     // Define relative widths (proportions)
-    const relativeWidths = [0.04, 0.12, 0.12, 0.15, 0.11, 0.13, 0.09, 0.09, 0.08, 0.07];
+    const relativeWidths = [
+        0.04, 0.12, 0.12, 0.15, 0.11, 0.13, 0.09, 0.09, 0.08, 0.07,
+    ];
     // Calculate actual column widths based on available width
-    const colWidths = relativeWidths.map(rel => rel * availableWidth);
+    const colWidths = relativeWidths.map((rel) => rel * availableWidth);
     const baseRowHeight = 7;
     const fontSize = 8;
     const cellPadding = 1;
-    
+
     pdf.setFontSize(fontSize);
-    
+
     // Helper function to split text to fit column width
     const splitTextToFit = (text: string, maxWidth: number): string[] => {
         if (!text) return [''];
         const textStr = String(text);
         // Use jsPDF's built-in splitTextToSize method
-        return pdf.splitTextToSize(textStr, maxWidth - (cellPadding * 2));
+        return pdf.splitTextToSize(textStr, maxWidth - cellPadding * 2);
     };
-    
+
     // Helper function to add cell with text wrapping
-    const addCell = (text: string, x: number, y: number, width: number, isHeader: boolean = false): number => {
+    const addCell = (
+        text: string,
+        x: number,
+        y: number,
+        width: number,
+        isHeader: boolean = false,
+    ): number => {
         pdf.setFont(undefined, isHeader ? 'bold' : 'normal');
-        
+
         const lines = splitTextToFit(text, width);
         let currentY = y + baseRowHeight - 2;
-        
+
         lines.forEach((line) => {
             pdf.text(line, x + cellPadding, currentY);
             currentY += baseRowHeight * 0.8;
         });
-        
+
         return Math.max(lines.length * (baseRowHeight * 0.8), baseRowHeight);
     };
-    
+
     // Add headers
     let xPos = startX;
     headers.forEach((header, index) => {
         addCell(header, xPos, startY, colWidths[index], true);
         xPos += colWidths[index];
     });
-    
+
     // Draw header line (using full available width)
     startY += baseRowHeight + 2;
     pdf.setLineWidth(0.5);
     pdf.line(startX, startY, startX + availableWidth, startY);
     startY += 3;
-    
+
     // Add data rows
     data.forEach((client) => {
         // Check if we need a new page
         if (startY + baseRowHeight * 3 > pageHeight - margin) {
             pdf.addPage();
             startY = margin;
-            
+
             // Redraw headers on new page
             xPos = startX;
             headers.forEach((header, hIndex) => {
                 addCell(header, xPos, startY, colWidths[hIndex], true);
                 xPos += colWidths[hIndex];
             });
-            
+
             startY += baseRowHeight + 2;
             pdf.setLineWidth(0.5);
             pdf.line(startX, startY, startX + availableWidth, startY);
             startY += 3;
         }
-        
+
         // Prepare row data
         const rowData = [
             String(client.srNo),
@@ -481,29 +557,32 @@ const exportToPDF = async () => {
             client.status || '-',
             client.plan || '-',
         ];
-        
+
         // Calculate max height needed for this row (for multi-line cells)
         let maxCellHeight = baseRowHeight;
         rowData.forEach((cell, cellIndex) => {
             const lines = splitTextToFit(cell, colWidths[cellIndex]);
-            const cellHeight = Math.max(lines.length * (baseRowHeight * 0.8), baseRowHeight);
+            const cellHeight = Math.max(
+                lines.length * (baseRowHeight * 0.8),
+                baseRowHeight,
+            );
             maxCellHeight = Math.max(maxCellHeight, cellHeight);
         });
-        
+
         // Add cells
         xPos = startX;
         rowData.forEach((cell, cellIndex) => {
             addCell(cell, xPos, startY, colWidths[cellIndex]);
             xPos += colWidths[cellIndex];
         });
-        
+
         // Draw row separator (using full available width)
         startY += maxCellHeight + 2;
         pdf.setLineWidth(0.1);
         pdf.line(startX, startY, startX + availableWidth, startY);
         startY += 1;
     });
-    
+
     // Save PDF
     pdf.save(`clients_${new Date().toISOString().split('T')[0]}.pdf`);
 };
@@ -522,27 +601,36 @@ onUnmounted(() => {
     <Head title="Clients" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2">
+        <div
+            class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2"
+        >
             <!-- Header Section -->
             <div class="flex flex-col gap-2">
                 <div>
-                    <h1 class="text-base font-semibold text-foreground">Clients</h1>
+                    <h1 class="text-base font-semibold text-foreground">
+                        Clients
+                    </h1>
                 </div>
 
                 <!-- Action Bar -->
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex flex-1 items-center gap-2">
-                        <div class="relative flex-1 max-w-xs">
+                        <div class="relative max-w-xs flex-1">
                             <Search
-                                class="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                                class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
                             />
                             <Input
                                 v-model="searchQuery"
                                 placeholder="Search clients"
-                                class="pl-8 h-8 text-sm"
+                                class="h-8 pl-8 text-sm"
                             />
                         </div>
-                        <Button variant="outline" size="sm" class="h-8 text-xs" @click="openFilters">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-8 text-xs"
+                            @click="openFilters"
+                        >
                             <Filter class="size-3.5" />
                             Filter
                         </Button>
@@ -552,31 +640,46 @@ onUnmounted(() => {
                         <!-- Export Button -->
                         <DropdownMenu>
                             <DropdownMenuTrigger>
-                                <Button variant="outline" size="sm" class="h-8 text-xs cursor-pointer">
-                                    <Download class="size-3.5 mr-1.5" />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="h-8 cursor-pointer text-xs"
+                                >
+                                    <Download class="mr-1.5 size-3.5" />
                                     Export
-                                    <ChevronDownIcon class="size-3.5 ml-1.5" />
+                                    <ChevronDownIcon class="ml-1.5 size-3.5" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" class="w-40">
-                                <DropdownMenuItem @click="exportToCSV" class="cursor-pointer">
+                                <DropdownMenuItem
+                                    @click="exportToCSV"
+                                    class="cursor-pointer"
+                                >
                                     Export as CSV
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @click="exportToExcel" class="cursor-pointer">
+                                <DropdownMenuItem
+                                    @click="exportToExcel"
+                                    class="cursor-pointer"
+                                >
                                     Export as Excel
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @click="exportToPDF" class="cursor-pointer">
+                                <DropdownMenuItem
+                                    @click="exportToPDF"
+                                    class="cursor-pointer"
+                                >
                                     Export as PDF
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        
+
                         <!-- Pagination Controls -->
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-muted-foreground">Per Page</span>
+                            <span class="text-xs text-muted-foreground"
+                                >Per Page</span
+                            >
                             <select
                                 v-model="perPage"
-                                class="h-7 rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                                class="h-7 rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-2 focus:ring-ring focus:outline-none"
                             >
                                 <option :value="10">10</option>
                                 <option :value="25">25</option>
@@ -585,23 +688,29 @@ onUnmounted(() => {
                             </select>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-xs text-muted-foreground">{{ paginationInfo }}</span>
+                            <span class="text-xs text-muted-foreground">{{
+                                paginationInfo
+                            }}</span>
                             <div class="flex items-center gap-1">
                                 <button
                                     @click="goToPage(currentPage - 1)"
                                     :disabled="currentPage === 1"
-                                    class="p-1 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    class="cursor-pointer rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                 >
-                                    <ChevronLeft class="size-4 text-muted-foreground" />
+                                    <ChevronLeft
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                                 <button
                                     @click="goToPage(currentPage + 1)"
                                     :disabled="currentPage === totalPages"
-                                    class="p-1 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    class="cursor-pointer rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                 >
-                                    <ChevronRight class="size-4 text-muted-foreground" />
+                                    <ChevronRight
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                             </div>
                         </div>
@@ -610,43 +719,70 @@ onUnmounted(() => {
             </div>
 
             <!-- Error Message -->
-            <div v-if="props.error" class="rounded-md border border-red-200 bg-red-50 dark:bg-red-900/20 p-4 mb-4">
-                <p class="text-sm text-red-800 dark:text-red-200">{{ props.error }}</p>
+            <div
+                v-if="props.error"
+                class="mb-4 rounded-md border border-red-200 bg-red-50 p-4 dark:bg-red-900/20"
+            >
+                <p class="text-sm text-red-800 dark:text-red-200">
+                    {{ props.error }}
+                </p>
             </div>
 
             <!-- Table Section -->
-            <div class="flex-1 overflow-auto rounded-md border border-border bg-card">
+            <div
+                class="flex-1 overflow-auto rounded-md border border-border bg-card"
+            >
                 <table class="w-full text-sm">
                     <thead class="sticky top-0 z-10 bg-muted/50">
                         <tr>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 SR NO
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 DOMAIN
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 OWNER NAME
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 OWNER EMAIL
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 OWNER PHONE
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 OWNER ADDRESS
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 CREATED
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 EXPIRES
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 STATUS
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 ACTION
                             </th>
                         </tr>
@@ -654,10 +790,18 @@ onUnmounted(() => {
                     <tbody>
                         <tr v-if="filteredClients.length === 0">
                             <td colspan="10" class="px-4 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <p class="text-sm text-muted-foreground">No clients found</p>
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2"
+                                >
+                                    <p class="text-sm text-muted-foreground">
+                                        No clients found
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
-                                        {{ searchQuery ? 'Try adjusting your search criteria' : 'Add your first client to get started' }}
+                                        {{
+                                            searchQuery
+                                                ? 'Try adjusting your search criteria'
+                                                : 'Add your first client to get started'
+                                        }}
                                     </p>
                                 </div>
                             </td>
@@ -668,28 +812,44 @@ onUnmounted(() => {
                             class="border-b border-border transition-colors hover:bg-muted/50"
                         >
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.srNo }}</span>
+                                <span class="text-foreground">{{
+                                    client.srNo
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground font-medium">{{ client.domain || '-' }}</span>
+                                <span class="font-medium text-foreground">{{
+                                    client.domain || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.ownerName || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.ownerName || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.ownerEmail || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.ownerEmail || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.ownerPhone || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.ownerPhone || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.ownerAddress || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.ownerAddress || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.created || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.created || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ client.expires || '-' }}</span>
+                                <span class="text-foreground">{{
+                                    client.expires || '-'
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
                                 <span
@@ -700,24 +860,56 @@ onUnmounted(() => {
                                             : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
                                     ]"
                                 >
-                                    {{ client.status === 'active' ? 'Active' : 'Inactive' }}
+                                    {{
+                                        client.status === 'active'
+                                            ? 'Active'
+                                            : 'Inactive'
+                                    }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 align-middle">
                                 <div class="flex items-center gap-2">
                                     <Link
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'clients.read',
+                                            )
+                                        "
                                         :href="clientsShow(client.id).url"
-                                        class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                                         title="View"
                                     >
-                                        <Eye class="size-4 text-muted-foreground" />
+                                        <Eye
+                                            class="size-4 text-muted-foreground"
+                                        />
                                     </Link>
                                     <Link
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'clients.update',
+                                            )
+                                        "
                                         :href="clientsEdit(client.id).url"
-                                        class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                                         title="Edit"
                                     >
-                                        <Edit class="size-4 text-muted-foreground" />
+                                        <Edit
+                                            class="size-4 text-muted-foreground"
+                                        />
+                                    </Link>
+                                    <Link
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'clients.reset_password',
+                                            )
+                                        "
+                                        :href="`/clients/${client.id}/reset-password`"
+                                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
+                                        title="Reset Password"
+                                    >
+                                        <Lock
+                                            class="size-4 text-muted-foreground"
+                                        />
                                     </Link>
                                 </div>
                             </td>
@@ -737,14 +929,20 @@ onUnmounted(() => {
             <div class="absolute inset-0 bg-black/50"></div>
 
             <!-- Filters Panel -->
-            <div class="relative h-full w-full max-w-sm bg-white dark:bg-gray-900 shadow-xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
+            <div
+                class="relative h-full w-full max-w-sm transform overflow-y-auto bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-900"
+            >
                 <!-- Header -->
-                <div class="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white dark:bg-gray-900 px-6 py-4">
-                    <h2 class="text-lg font-semibold text-foreground">Filters</h2>
+                <div
+                    class="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white px-6 py-4 dark:bg-gray-900"
+                >
+                    <h2 class="text-lg font-semibold text-foreground">
+                        Filters
+                    </h2>
                     <button
                         @click="closeFilters"
                         type="button"
-                        class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                         aria-label="Close filters"
                     >
                         <X class="size-5 text-muted-foreground" />
@@ -752,15 +950,19 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Filters Content -->
-                <div class="p-6 space-y-6">
+                <div class="space-y-6 p-6">
                     <!-- Custom Filters Section -->
                     <div>
                         <button
-                            @click="customFiltersExpanded = !customFiltersExpanded"
-                            class="w-full flex items-center justify-between mb-4 cursor-pointer"
+                            @click="
+                                customFiltersExpanded = !customFiltersExpanded
+                            "
+                            class="mb-4 flex w-full cursor-pointer items-center justify-between"
                             type="button"
                         >
-                            <h3 class="text-base font-semibold text-foreground">Custom Filters</h3>
+                            <h3 class="text-base font-semibold text-foreground">
+                                Custom Filters
+                            </h3>
                             <ChevronUp
                                 v-if="customFiltersExpanded"
                                 class="size-4 text-muted-foreground"
@@ -774,40 +976,61 @@ onUnmounted(() => {
                         <div v-if="customFiltersExpanded" class="space-y-4">
                             <!-- Status Dropdown -->
                             <div class="dropdown-container relative">
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Status
                                 </label>
                                 <button
                                     @click.stop="openStatusDropdown"
                                     type="button"
-                                    class="w-full flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
-                                    <span :class="filterForm.status ? 'text-foreground' : 'text-muted-foreground'" class="flex-1 truncate capitalize">
+                                    <span
+                                        :class="
+                                            filterForm.status
+                                                ? 'text-foreground'
+                                                : 'text-muted-foreground'
+                                        "
+                                        class="flex-1 truncate capitalize"
+                                    >
                                         {{ filterForm.status || 'Select' }}
                                     </span>
-                                    <div class="flex items-center gap-1 shrink-0">
+                                    <div
+                                        class="flex shrink-0 items-center gap-1"
+                                    >
                                         <button
-                                            v-if="filterForm.status && !showStatusDropdown"
+                                            v-if="
+                                                filterForm.status &&
+                                                !showStatusDropdown
+                                            "
                                             @click.stop="clearStatus"
                                             type="button"
-                                            class="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer"
+                                            class="cursor-pointer rounded p-0.5 transition-colors hover:bg-muted"
                                             aria-label="Clear status"
                                         >
-                                            <X class="size-3.5 text-muted-foreground hover:text-foreground" />
+                                            <X
+                                                class="size-3.5 text-muted-foreground hover:text-foreground"
+                                            />
                                         </button>
-                                        <ChevronDown class="size-4 text-muted-foreground" />
+                                        <ChevronDown
+                                            class="size-4 text-muted-foreground"
+                                        />
                                     </div>
                                 </button>
                                 <div
                                     v-if="showStatusDropdown"
-                                    class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto"
+                                    class="absolute top-full right-0 left-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-border bg-white shadow-lg dark:bg-gray-800"
                                 >
                                     <button
                                         v-for="option in statusOptions"
                                         :key="option"
-                                        @click="filterForm.status = option; showStatusDropdown = false"
+                                        @click="
+                                            filterForm.status = option;
+                                            showStatusDropdown = false;
+                                        "
                                         type="button"
-                                        class="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors text-foreground cursor-pointer capitalize"
+                                        class="w-full cursor-pointer px-3 py-2 text-left text-sm text-foreground capitalize transition-colors hover:bg-muted"
                                     >
                                         {{ option }}
                                     </button>
@@ -816,40 +1039,61 @@ onUnmounted(() => {
 
                             <!-- Plan Dropdown -->
                             <div class="dropdown-container relative">
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Plan
                                 </label>
                                 <button
                                     @click.stop="openPlanDropdown"
                                     type="button"
-                                    class="w-full flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
-                                    <span :class="filterForm.plan ? 'text-foreground' : 'text-muted-foreground'" class="flex-1 truncate">
+                                    <span
+                                        :class="
+                                            filterForm.plan
+                                                ? 'text-foreground'
+                                                : 'text-muted-foreground'
+                                        "
+                                        class="flex-1 truncate"
+                                    >
                                         {{ filterForm.plan || 'Select' }}
                                     </span>
-                                    <div class="flex items-center gap-1 shrink-0">
+                                    <div
+                                        class="flex shrink-0 items-center gap-1"
+                                    >
                                         <button
-                                            v-if="filterForm.plan && !showPlanDropdown"
+                                            v-if="
+                                                filterForm.plan &&
+                                                !showPlanDropdown
+                                            "
                                             @click.stop="clearPlan"
                                             type="button"
-                                            class="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer"
+                                            class="cursor-pointer rounded p-0.5 transition-colors hover:bg-muted"
                                             aria-label="Clear plan"
                                         >
-                                            <X class="size-3.5 text-muted-foreground hover:text-foreground" />
+                                            <X
+                                                class="size-3.5 text-muted-foreground hover:text-foreground"
+                                            />
                                         </button>
-                                        <ChevronDown class="size-4 text-muted-foreground" />
+                                        <ChevronDown
+                                            class="size-4 text-muted-foreground"
+                                        />
                                     </div>
                                 </button>
                                 <div
                                     v-if="showPlanDropdown"
-                                    class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto"
+                                    class="absolute top-full right-0 left-0 z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-border bg-white shadow-lg dark:bg-gray-800"
                                 >
                                     <button
                                         v-for="option in planOptions"
                                         :key="option"
-                                        @click="filterForm.plan = option; showPlanDropdown = false"
+                                        @click="
+                                            filterForm.plan = option;
+                                            showPlanDropdown = false;
+                                        "
                                         type="button"
-                                        class="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors text-foreground cursor-pointer"
+                                        class="w-full cursor-pointer px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
                                     >
                                         {{ option }}
                                     </button>
@@ -858,7 +1102,9 @@ onUnmounted(() => {
 
                             <!-- Created Field -->
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Created
                                 </label>
                                 <div class="relative">
@@ -868,15 +1114,19 @@ onUnmounted(() => {
                                         placeholder="YYYY-MM-DD"
                                         readonly
                                         :value="filterForm.created"
-                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pr-10 cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                        class="flex h-9 w-full min-w-0 cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                                     />
-                                    <Calendar class="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                                    <Calendar
+                                        class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+                                    />
                                 </div>
                             </div>
 
                             <!-- Expires Field -->
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Expires
                                 </label>
                                 <div class="relative">
@@ -886,9 +1136,11 @@ onUnmounted(() => {
                                         placeholder="YYYY-MM-DD"
                                         readonly
                                         :value="filterForm.expires"
-                                        class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pr-10 cursor-pointer focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                        class="flex h-9 w-full min-w-0 cursor-pointer rounded-md border border-input bg-transparent px-3 py-1 pr-10 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30"
                                     />
-                                    <Calendar class="absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                                    <Calendar
+                                        class="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -896,7 +1148,9 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Footer -->
-                <div class="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-white dark:bg-gray-900 px-6 py-4">
+                <div
+                    class="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-white px-6 py-4 dark:bg-gray-900"
+                >
                     <Button
                         variant="outline"
                         size="sm"
@@ -907,7 +1161,7 @@ onUnmounted(() => {
                     </Button>
                     <Button
                         size="sm"
-                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700"
                         @click="applyFilters"
                     >
                         Apply Filters
@@ -917,4 +1171,3 @@ onUnmounted(() => {
         </div>
     </AppLayout>
 </template>
-

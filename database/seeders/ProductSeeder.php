@@ -171,15 +171,26 @@ class ProductSeeder extends Seeder
             $specifications = $productData['specifications'];
             unset($productData['specifications']);
 
-            $product = Product::create($productData);
+            $product = Product::firstOrCreate(
+                ['sku' => $productData['sku']], // Check uniqueness by SKU
+                $productData
+            );
 
+            // Only add specifications if they don't exist yet (prevent duplicates on re-run)
+            // Or just sync them. Since we don't have a sync method for hasMany efficiently here without relationships loaded,
+            // we'll check if any specs exist, if not, create them. 
+            // Better yet, updateOrCreate them based on key + product_id
             foreach ($specifications as $specIndex => $spec) {
-                ProductSpecification::create([
-                    'product_id' => $product->id,
-                    'spec_key' => $spec['spec_key'],
-                    'spec_value' => $spec['spec_value'],
-                    'display_order' => $specIndex,
-                ]);
+                ProductSpecification::firstOrCreate(
+                    [
+                        'product_id' => $product->id,
+                        'spec_key' => $spec['spec_key'],
+                    ],
+                    [
+                        'spec_value' => $spec['spec_value'],
+                        'display_order' => $specIndex,
+                    ]
+                );
             }
         }
     }

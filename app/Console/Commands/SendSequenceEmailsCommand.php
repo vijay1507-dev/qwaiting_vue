@@ -48,7 +48,9 @@ class SendSequenceEmailsCommand extends Command
             $sequenceQuery->where('id', $this->option('sequence-id'));
         }
 
-        $sequences = $sequenceQuery->with('emailTemplates')->get();
+        $sequences = $sequenceQuery->with(['emailTemplates' => function ($query) {
+            $query->withoutTrashed();
+        }])->get();
 
         if ($sequences->isEmpty()) {
             $this->warn('No active sequences found.');
@@ -165,7 +167,6 @@ class SendSequenceEmailsCommand extends Command
                         continue;
                     }
 
-                    // Handle "if_not_verified" emails for incomplete signups
                     if ($emailTemplate->timing_unit === 'if_not_verified') {
                         // Only process for incomplete_signups target type
                         if ($sequence->target_user_type === 'incomplete_signups') {
@@ -215,6 +216,16 @@ class SendSequenceEmailsCommand extends Command
                         continue;
                     }
 
+                    // Start Fix: Skip "Registration Complete" emails for incomplete signups
+                    if ($sequence->target_user_type === 'incomplete_signups' && $emailTemplate->type === 'registeration_complete') {
+                        if ($isPreview) {
+                            $this->line("  │  ✗ Email #{$emailTemplate->sequence_number}: \"{$emailTemplate->subject}\"");
+                            $this->line("  │    Type: {$emailTemplate->type} | Skipped: Registration Complete email should not go to incomplete signups");
+                        }
+                        continue;
+                    }
+                    // End Fix
+
                     $shouldSend = $this->shouldSendEmail($emailTemplate, $daysSinceRegistration, $user['id'], $user);
 
                     if ($shouldSend) {
@@ -226,6 +237,17 @@ class SendSequenceEmailsCommand extends Command
                             $this->line("  │    Type: {$emailTemplate->type} | {$timingInfo}");
                         } else {
                             $this->info("    Scheduling email #{$emailTemplate->sequence_number} for user {$user['email']} (Day {$daysSinceRegistration})");
+
+                            // Mark as queued immediately to prevent race conditions (double sending)
+                            EmailSend::create([
+                                'sequence_id' => $sequence->id,
+                                'email_template_id' => $emailTemplate->id,
+                                'external_user_id' => $user['id'],
+                                'user_email' => $user['email'],
+                                'days_after_registration' => $daysSinceRegistration,
+                                'status' => 'queued',
+                                'scheduled_at' => now()->addSeconds($totalSent * 5),
+                            ]);
 
                             // Add delay to prevent rate limiting (stagger emails by 5 seconds each)
                             SendSequenceEmailToUserJob::dispatch(
@@ -295,7 +317,7 @@ class SendSequenceEmailsCommand extends Command
             ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('DATEDIFF(trial_ends_at, CURDATE()) as days_left'))
             ->get();
 
-        $teamIds = $trialDomains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+        $teamIds = $trialDomains->pluck('team_id')->map(fn($id) => (int) $id)->unique()->filter()->toArray();
 
         if (empty($teamIds)) {
             return collect([]);
@@ -348,38 +370,44 @@ class SendSequenceEmailsCommand extends Command
      */
     private function getAllUsers(): \Illuminate\Support\Collection
     {
-        $domains = DB::connection('mysql_external')
-            ->table('domains')
-            ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
-            ->get();
-
-        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
-
-        if (empty($teamIds)) {
-            return collect([]);
-        }
-
+        // 1. Get all users directly from external DB
         $users = DB::connection('mysql_external')
             ->table('users')
-            ->whereIn('team_id', $teamIds)
             ->whereNull('deleted_at')
             ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
             ->get();
 
-        // Fetch tenant data to get company names
-        $tenants = DB::connection('mysql_external')
-            ->table('tenants')
-            ->whereIn('id', $teamIds)
-            ->select('id', 'data')
-            ->get()
-            ->mapWithKeys(function ($tenant) {
-                $data = json_decode($tenant->data, true);
-                $companyName = $data['name'] ?? '';
+        if ($users->isEmpty()) {
+            return collect([]);
+        }
 
-                return [$tenant->id => $companyName];
-            });
+        // 2. Get unique team IDs to fetch related data
+        $teamIds = $users->pluck('team_id')->filter()->unique()->toArray();
 
-        // Enrich user data with domain and tenant information
+        $domains = collect();
+        $tenants = collect();
+
+        if (! empty($teamIds)) {
+            $domains = DB::connection('mysql_external')
+                ->table('domains')
+                ->whereIn('team_id', $teamIds)
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
+                ->get();
+
+            $tenants = DB::connection('mysql_external')
+                ->table('tenants')
+                ->whereIn('id', $teamIds)
+                ->select('id', 'data')
+                ->get()
+                ->mapWithKeys(function ($tenant) {
+                    $data = json_decode($tenant->data, true);
+                    $companyName = $data['name'] ?? '';
+
+                    return [$tenant->id => $companyName];
+                });
+        }
+
+        // 3. Enrich user data
         return $users->map(function ($user) use ($domains, $tenants) {
             $domain = $domains->firstWhere('team_id', (string) $user->team_id);
             $companyName = $tenants->get($user->team_id, '');
@@ -392,7 +420,7 @@ class SendSequenceEmailsCommand extends Command
                 'team_id' => $user->team_id,
                 'is_active' => $user->is_active,
                 'created_at' => $user->created_at,
-                'domain' => $domain->domain ?? '',
+                'domain' => $domain->domain ?? '', // Fallback to empty if not found
                 'company_name' => $companyName,
                 'plan_expiry' => $domain->trial_ends_at ?? '',
                 'days_until_expiry' => $domain->days_left ?? '',
@@ -415,7 +443,7 @@ class SendSequenceEmailsCommand extends Command
             ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
             ->get();
 
-        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+        $teamIds = $domains->pluck('team_id')->map(fn($id) => (int) $id)->unique()->filter()->toArray();
 
         if (empty($teamIds)) {
             return collect([]);
@@ -473,7 +501,7 @@ class SendSequenceEmailsCommand extends Command
             ->select('id', 'domain', 'team_id', 'trial_ends_at', DB::raw('CASE WHEN trial_ends_at IS NOT NULL THEN DATEDIFF(trial_ends_at, CURDATE()) ELSE NULL END as days_left'))
             ->get();
 
-        $teamIds = $domains->pluck('team_id')->map(fn ($id) => (int) $id)->unique()->filter()->toArray();
+        $teamIds = $domains->pluck('team_id')->map(fn($id) => (int) $id)->unique()->filter()->toArray();
 
         if (empty($teamIds)) {
             return collect([]);
@@ -656,14 +684,14 @@ class SendSequenceEmailsCommand extends Command
      */
     private function shouldSendEmail(EmailNotificationTemplate $emailTemplate, int $daysSinceRegistration, int $userId, array $user): bool
     {
-        // Check if email was already sent successfully
-        // Allow retrying failed emails by only checking for 'sent' status
-        $alreadySent = EmailSend::where('email_template_id', $emailTemplate->id)
+        // Check if email was already sent successfully or is currently queued
+        // We check for 'sent', 'success', and 'queued' to be safe
+        $alreadySentOrQueued = EmailSend::where('email_template_id', $emailTemplate->id)
             ->where('external_user_id', $userId)
-            ->where('status', 'sent')
+            ->whereIn('status', ['sent', 'success', 'queued'])
             ->exists();
 
-        if ($alreadySent) {
+        if ($alreadySentOrQueued) {
             return false;
         }
 
@@ -686,8 +714,9 @@ class SendSequenceEmailsCommand extends Command
         // Also check if email is not too far in the past (optional: only send if within 30 days of target)
         $daysPastTarget = $daysSinceRegistration - $targetDay;
 
-        // Only send if we're at or past the target day, and not more than 30 days past (to avoid sending very old emails)
-        if ($daysSinceRegistration >= $targetDay && $daysPastTarget <= 30) {
+        // Only send if we're at the target day exactly
+        // This prevents "bunching" where old emails are sent all at once
+        if ($daysSinceRegistration === $targetDay) {
             return true;
         }
 
@@ -775,7 +804,7 @@ class SendSequenceEmailsCommand extends Command
         }
 
         if ($daysSinceRegistration < $targetDay) {
-            return "Will send on day {$targetDay} (in ".($targetDay - $daysSinceRegistration).' days)';
+            return "Will send on day {$targetDay} (in " . ($targetDay - $daysSinceRegistration) . ' days)';
         }
 
         if ($daysPastTarget > 30) {

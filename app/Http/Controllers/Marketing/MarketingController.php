@@ -559,25 +559,55 @@ class MarketingController extends Controller
             'signup_users_days_window' => null,
         ]);
 
-        // Soft delete existing email templates
-        $sequence->emailTemplates()->delete();
+        $existingTemplateIds = $sequence->emailTemplates()->pluck('id')->toArray();
+        $incomingTemplateIds = collect($request->emails)
+            ->pluck('id')
+            ->filter(fn ($id) => !empty($id))
+            ->toArray();
 
-        // Create new email templates
-        foreach ($request->emails as $emailData) {
-            EmailNotificationTemplate::create([
-                'sequence_id' => $sequence->id,
-                'sequence_number' => $emailData['sequence_number'],
-                'timing_value' => $emailData['timing_value'],
-                'timing_unit' => $emailData['timing_unit'],
-                'subject' => $emailData['subject'],
-                'type' => $emailData['type'],
-                'content' => $emailData['content'] ?? null,
-                'status' => $emailData['status'],
-            ]);
+        // Soft delete removed templates
+        $templatesToDelete = array_diff($existingTemplateIds, $incomingTemplateIds);
+        if (!empty($templatesToDelete)) {
+            EmailNotificationTemplate::whereIn('id', $templatesToDelete)->delete();
         }
 
-        return redirect()->route('marketing.sequences')->with('success', 'Sequence updated successfully.');
+        foreach ($request->emails as $emailData) {
+
+            // UPDATE existing template
+            if (!empty($emailData['id'])) {
+                EmailNotificationTemplate::where('id', $emailData['id'])
+                    ->where('sequence_id', $sequence->id)
+                    ->update([
+                        'sequence_number' => $emailData['sequence_number'],
+                        'timing_value' => $emailData['timing_value'],
+                        'timing_unit' => $emailData['timing_unit'],
+                        'subject' => $emailData['subject'],
+                        'type' => $emailData['type'],
+                        'content' => $emailData['content'] ?? null,
+                        'status' => $emailData['status'],
+                    ]);
+            }
+            // CREATE new template
+            else {
+                EmailNotificationTemplate::create([
+                    'sequence_id' => $sequence->id,
+                    'sequence_number' => $emailData['sequence_number'],
+                    'timing_value' => $emailData['timing_value'],
+                    'timing_unit' => $emailData['timing_unit'],
+                    'subject' => $emailData['subject'],
+                    'type' => $emailData['type'],
+                    'content' => $emailData['content'] ?? null,
+                    'status' => $emailData['status'],
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('marketing.sequences')
+            ->with('success', 'Sequence updated successfully.');
     }
+
+
 
     /**
      * Remove the specified sequence.

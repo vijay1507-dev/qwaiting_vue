@@ -48,4 +48,9 @@ return [
         'tenant' => env('MICROSOFT_TENANT_ID', 'common'), // 'common' for multi-tenant, or specific tenant ID
     ],
 
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
 ];

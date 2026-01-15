@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { employees as userManagementEmployees } from '@/routes/user-management';
-import { type BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/composables/useToast';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { roles as userManagementRoles } from '@/routes/user-management';
+import { store as userManagementRolesStore } from '@/routes/user-management/roles';
+
+import { type BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface Permission {
     name: string;
@@ -17,7 +17,7 @@ interface Permission {
 }
 
 interface Props {
-    permissions: Record<string, Permission[]>;
+    permissions: Record<string, Permission[] | Record<string, Permission[]>>;
 }
 
 const props = defineProps<Props>();
@@ -31,11 +31,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'User Management',
-        href: userManagementEmployees().url,
+        href: userManagementUsers().url,
     },
     {
         title: 'Role',
-        href: '/user-management/roles',
+        href: userManagementRoles().url,
     },
     {
         title: 'Add Role',
@@ -66,9 +66,17 @@ const togglePermission = (permissionName: string, checked: boolean) => {
     // The main checkbox state will automatically update via computed properties
 };
 
+const getModulePermissions = (module: string): Permission[] => {
+    const content = props.permissions[module];
+    if (Array.isArray(content)) {
+        return content;
+    }
+    return Object.values(content).flat();
+};
+
 const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
-    const modulePermissions = props.permissions[module] || [];
-    
+    const modulePermissions = getModulePermissions(module);
+
     // If checked is undefined (indeterminate state clicked), check all
     if (checked === undefined || checked === true) {
         // Select all permissions for this module
@@ -89,24 +97,29 @@ const toggleAllPermissions = (module: string, checked: boolean | undefined) => {
 };
 
 const isModuleAllSelected = (module: string) => {
-    const modulePermissions = props.permissions[module] || [];
-    return modulePermissions.length > 0 && modulePermissions.every((p) => form.permissions.includes(p.name));
+    const modulePermissions = getModulePermissions(module);
+    if (modulePermissions.length === 0) return false;
+    return modulePermissions.every((p) => form.permissions.includes(p.name));
 };
 
 const isModulePartiallySelected = (module: string) => {
-    const modulePermissions = props.permissions[module] || [];
-    const selectedCount = modulePermissions.filter((p) => form.permissions.includes(p.name)).length;
+    const modulePermissions = getModulePermissions(module);
+    const selectedCount = modulePermissions.filter((p) =>
+        form.permissions.includes(p.name),
+    ).length;
     return selectedCount > 0 && selectedCount < modulePermissions.length;
 };
 
 const submit = () => {
-    form.post('/user-management/roles', {
+    form.post(userManagementRolesStore().url, {
         preserveScroll: true,
         onSuccess: () => {
             success('Role created successfully');
         },
         onError: () => {
-            showError('Failed to create role. Please check the form for errors.');
+            showError(
+                'Failed to create role. Please check the form for errors.',
+            );
         },
     });
 };
@@ -125,23 +138,33 @@ const permissionModules = computed(() => {
                 <h1 class="text-2xl font-semibold text-foreground">Add Role</h1>
             </div>
 
-            <form @submit.prevent="submit" class="space-y-6 max-w-4xl">
+            <form @submit.prevent="submit" class="max-w-4xl space-y-6">
                 <!-- Basic Info Section -->
-                <div class="space-y-4 rounded-lg border border-border bg-card p-6">
-                    <h2 class="text-lg font-semibold text-foreground">Basic Info</h2>
+                <div
+                    class="space-y-4 rounded-lg border border-border bg-card p-6"
+                >
+                    <h2 class="text-lg font-semibold text-foreground">
+                        Basic Info
+                    </h2>
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="name">
-                                Roll Name <span class="text-destructive">*</span>
+                                Role Name
+                                <span class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
                                 required
-                                :class="{ 'border-destructive': form.errors.name }"
+                                :class="{
+                                    'border-destructive': form.errors.name,
+                                }"
                             />
-                            <p v-if="form.errors.name" class="text-sm text-destructive">
+                            <p
+                                v-if="form.errors.name"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.name }}
                             </p>
                         </div>
@@ -152,10 +175,16 @@ const permissionModules = computed(() => {
                                 id="description"
                                 v-model="form.description"
                                 type="text"
-                                placeholder="Name"
-                                :class="{ 'border-destructive': form.errors.description }"
+                                placeholder="Description"
+                                :class="{
+                                    'border-destructive':
+                                        form.errors.description,
+                                }"
                             />
-                            <p v-if="form.errors.description" class="text-sm text-destructive">
+                            <p
+                                v-if="form.errors.description"
+                                class="text-sm text-destructive"
+                            >
                                 {{ form.errors.description }}
                             </p>
                         </div>
@@ -163,8 +192,12 @@ const permissionModules = computed(() => {
                 </div>
 
                 <!-- Permissions Section -->
-                <div class="space-y-4 rounded-lg border border-border bg-card p-6">
-                    <h2 class="text-lg font-semibold text-foreground">Permissions</h2>
+                <div
+                    class="space-y-4 rounded-lg border border-border bg-card p-6"
+                >
+                    <h2 class="text-lg font-semibold text-foreground">
+                        Permissions
+                    </h2>
                     <div class="space-y-6">
                         <div
                             v-for="module in permissionModules"
@@ -172,38 +205,174 @@ const permissionModules = computed(() => {
                             class="space-y-3"
                         >
                             <div class="flex items-center gap-2">
-                                <Checkbox
+                                <input
+                                    type="checkbox"
                                     :checked="isModuleAllSelected(module)"
-                                    :indeterminate="isModulePartiallySelected(module)"
-                                    @update:checked="(checked) => {
-                                        const shouldCheck = checked !== false;
-                                        toggleAllPermissions(module, shouldCheck);
-                                    }"
+                                    :indeterminate="
+                                        isModulePartiallySelected(module)
+                                    "
+                                    @change="
+                                        (e) =>
+                                            toggleAllPermissions(
+                                                module,
+                                                (e.target as HTMLInputElement)
+                                                    .checked,
+                                            )
+                                    "
+                                    class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
                                 />
-                                <Label class="text-base font-medium cursor-pointer" @click="toggleAllPermissions(module, !isModuleAllSelected(module))">{{ module }}</Label>
+                                <Label
+                                    class="cursor-pointer text-base font-medium"
+                                    @click="
+                                        toggleAllPermissions(
+                                            module,
+                                            !isModuleAllSelected(module),
+                                        )
+                                    "
+                                    >{{ module }}</Label
+                                >
                             </div>
-                            <div class="grid grid-cols-2 gap-3 pl-6 md:grid-cols-4">
+
+                            <!-- Flat Permissions List -->
+                            <div
+                                v-if="Array.isArray(permissions[module])"
+                                class="grid grid-cols-2 gap-3 pl-6 md:grid-cols-4"
+                            >
                                 <div
                                     v-for="permission in permissions[module]"
                                     :key="permission.name"
                                     class="flex items-center gap-2"
                                 >
-                                    <Checkbox
+                                    <input
+                                        type="checkbox"
                                         :id="permission.name"
-                                        :checked="form.permissions.includes(permission.name)"
-                                        @update:checked="(checked) => togglePermission(permission.name, checked)"
+                                        :checked="
+                                            form.permissions.includes(
+                                                permission.name,
+                                            )
+                                        "
+                                        @change="
+                                            (e) =>
+                                                togglePermission(
+                                                    permission.name,
+                                                    (
+                                                        e.target as HTMLInputElement
+                                                    ).checked,
+                                                )
+                                        "
+                                        class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
                                     />
                                     <Label
                                         :for="permission.name"
                                         class="cursor-pointer text-sm font-normal"
                                     >
-                                        {{ module }} {{ permission.action }}
+                                        {{
+                                            permission.action.includes(module)
+                                                ? permission.action
+                                                : module +
+                                                  ' ' +
+                                                  permission.action
+                                        }}
                                     </Label>
+                                </div>
+                            </div>
+
+                            <!-- Nested Submodules List -->
+                            <div v-else class="space-y-4 pl-6">
+                                <div
+                                    v-for="(
+                                        subPermissions, subModule
+                                    ) in permissions[module]"
+                                    :key="subModule"
+                                    class="space-y-2"
+                                >
+                                    <!-- Single Permission Submodule (Flattened) -->
+                                    <div
+                                        v-if="subPermissions.length === 1"
+                                        class="flex items-center gap-2 pl-4"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            :id="subPermissions[0].name"
+                                            :checked="
+                                                form.permissions.includes(
+                                                    subPermissions[0].name,
+                                                )
+                                            "
+                                            @change="
+                                                (e) =>
+                                                    togglePermission(
+                                                        subPermissions[0].name,
+                                                        (
+                                                            e.target as HTMLInputElement
+                                                        ).checked,
+                                                    )
+                                            "
+                                            class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <Label
+                                            :for="subPermissions[0].name"
+                                            class="cursor-pointer text-sm font-normal"
+                                        >
+                                            {{ subModule }}
+                                        </Label>
+                                    </div>
+
+                                    <!-- Multiple Permissions Submodule (Grouped) -->
+                                    <div v-else class="space-y-2">
+                                        <div
+                                            class="mb-2 flex items-center gap-2"
+                                        >
+                                            <span
+                                                class="text-sm font-medium text-muted-foreground"
+                                            >
+                                                {{ subModule }}
+                                            </span>
+                                        </div>
+                                        <div
+                                            class="grid grid-cols-2 gap-3 pl-4 md:grid-cols-4"
+                                        >
+                                            <div
+                                                v-for="permission in subPermissions"
+                                                :key="permission.name"
+                                                class="flex items-center gap-2"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    :id="permission.name"
+                                                    :checked="
+                                                        form.permissions.includes(
+                                                            permission.name,
+                                                        )
+                                                    "
+                                                    @change="
+                                                        (e) =>
+                                                            togglePermission(
+                                                                permission.name,
+                                                                (
+                                                                    e.target as HTMLInputElement
+                                                                ).checked,
+                                                            )
+                                                    "
+                                                    class="size-4 cursor-pointer rounded border-border text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <Label
+                                                    :for="permission.name"
+                                                    class="cursor-pointer text-sm font-normal"
+                                                >
+                                                    {{ permission.action }}
+                                                </Label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <p v-if="form.errors.permissions" class="text-sm text-destructive">
+                    <p
+                        v-if="form.errors.permissions"
+                        class="text-sm text-destructive"
+                    >
                         {{ form.errors.permissions }}
                     </p>
                 </div>
@@ -215,7 +384,7 @@ const permissionModules = computed(() => {
                     <Button
                         type="button"
                         variant="outline"
-                        @click="router.visit('/user-management/roles')"
+                        @click="router.visit(userManagementRoles().url)"
                     >
                         Cancel
                     </Button>
@@ -224,4 +393,3 @@ const permissionModules = computed(() => {
         </div>
     </AppLayout>
 </template>
-

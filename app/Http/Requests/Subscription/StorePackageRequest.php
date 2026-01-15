@@ -36,6 +36,7 @@ class StorePackageRequest extends FormRequest
             'display_sequence' => ['nullable', 'integer', 'min:0'],
             'features_display_limit' => ['nullable', 'integer', 'min:0'],
             'is_most_popular' => ['nullable', 'boolean'],
+            'is_enquiry' => ['nullable', 'boolean'],
         ];
     }
 

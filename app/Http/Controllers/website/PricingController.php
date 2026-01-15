@@ -99,6 +99,7 @@ class PricingController extends Controller
                     'monthly_enabled' => $package->monthly_enabled,
                     'annual_enabled' => $package->annual_enabled,
                     'trial_days' => $package->trial_days,
+                    'is_enquiry' => $package->is_enquiry,
                     'features' => $features,
                 ];
             });

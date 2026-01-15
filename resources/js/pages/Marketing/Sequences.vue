@@ -1,16 +1,29 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { campaigns, workflows, tracking } from '@/routes/marketing';
-import marketingRoutes from '@/routes/marketing';
-const { systemTemplates } = marketingRoutes;
-import { create as sequencesCreate, edit as sequencesEdit } from '@/routes/marketing/sequences';
-import { type BreadcrumbItem } from '@/types';
-import { Head, Link, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Filter, Edit, Trash2, Mail, Clock, ChevronLeft, ChevronRight, X, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { dashboard } from '@/routes';
+import marketingRoutes, { campaigns } from '@/routes/marketing';
+import {
+    create as sequencesCreate,
+    edit as sequencesEdit,
+} from '@/routes/marketing/sequences';
+import { type BreadcrumbItem } from '@/types';
+import { Head, Link, router } from '@inertiajs/vue3';
+import {
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronUp,
+    Edit,
+    Filter,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+const { systemTemplates } = marketingRoutes;
 
 interface Sequence {
     id: string;
@@ -78,9 +91,13 @@ const statusSearchInputRef = ref<HTMLInputElement | null>(null);
 const statusOptions = ['active', 'paused'];
 
 // Update sequences list when props change
-watch(() => props.sequences, (newSequences) => {
-    sequencesList.value = newSequences;
-}, { immediate: true, deep: true });
+watch(
+    () => props.sequences,
+    (newSequences) => {
+        sequencesList.value = newSequences;
+    },
+    { immediate: true, deep: true },
+);
 
 const filteredSequences = computed(() => {
     let result = sequencesList.value;
@@ -91,24 +108,28 @@ const filteredSequences = computed(() => {
         result = result.filter(
             (sequence) =>
                 sequence.name.toLowerCase().includes(query) ||
-                sequence.description.toLowerCase().includes(query)
+                sequence.description.toLowerCase().includes(query),
         );
     }
 
     // Apply filters
     if (filterForm.value.name) {
-        result = result.filter(sequence =>
-            sequence.name.toLowerCase().includes(filterForm.value.name.toLowerCase())
+        result = result.filter((sequence) =>
+            sequence.name
+                .toLowerCase()
+                .includes(filterForm.value.name.toLowerCase()),
         );
     }
     if (filterForm.value.description) {
-        result = result.filter(sequence =>
-            sequence.description.toLowerCase().includes(filterForm.value.description.toLowerCase())
+        result = result.filter((sequence) =>
+            sequence.description
+                .toLowerCase()
+                .includes(filterForm.value.description.toLowerCase()),
         );
     }
     if (filterForm.value.status) {
-        result = result.filter(sequence =>
-            sequence.status === filterForm.value.status
+        result = result.filter(
+            (sequence) => sequence.status === filterForm.value.status,
         );
     }
 
@@ -128,7 +149,10 @@ const totalPages = computed(() => {
 
 const paginationInfo = computed(() => {
     const start = (currentPage.value - 1) * perPage.value + 1;
-    const end = Math.min(currentPage.value * perPage.value, filteredSequences.value.length);
+    const end = Math.min(
+        currentPage.value * perPage.value,
+        filteredSequences.value.length,
+    );
     return `${start} - ${end} of ${filteredSequences.value.length}`;
 });
 
@@ -172,7 +196,11 @@ const formatNumber = (num: number): string => {
 };
 
 const deleteSequence = (id: string) => {
-    if (confirm('Are you sure you want to delete this sequence? This action cannot be undone.')) {
+    if (
+        confirm(
+            'Are you sure you want to delete this sequence? This action cannot be undone.',
+        )
+    ) {
         router.delete(`/marketing/sequences/${id}`, {
             preserveScroll: true,
         });
@@ -209,18 +237,18 @@ const openStatusDropdown = () => {
 
 const searchStatus = (query: string) => {
     statusSearch.value = query;
-    
+
     if (!query.trim()) {
         statusSearchResults.value = [];
         statusSearchLoading.value = false;
         return;
     }
-    
+
     statusSearchLoading.value = true;
-    
+
     setTimeout(() => {
-        const filtered = statusOptions.filter(option =>
-            option.toLowerCase().includes(query.toLowerCase())
+        const filtered = statusOptions.filter((option) =>
+            option.toLowerCase().includes(query.toLowerCase()),
         );
         statusSearchResults.value = filtered;
         statusSearchLoading.value = false;
@@ -252,11 +280,11 @@ const saveFilter = () => {
 
 const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    
+
     // Close dropdowns if clicking outside
     if (!target.closest('.dropdown-container')) {
         showStatusDropdown.value = false;
-        
+
         // Reset search states when closing
         if (!showStatusDropdown.value) {
             statusSearch.value = '';
@@ -278,11 +306,15 @@ onUnmounted(() => {
     <Head title="Sequences Notifications" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2">
+        <div
+            class="flex h-full flex-1 flex-col gap-2 overflow-hidden rounded-xl p-2"
+        >
             <!-- Header Section -->
             <div class="flex flex-col gap-2">
                 <div>
-                    <h1 class="text-base font-semibold text-foreground">Sequences Notifications</h1>
+                    <h1 class="text-base font-semibold text-foreground">
+                        Sequences Notifications
+                    </h1>
                 </div>
 
                 <!-- Navigation Tabs -->
@@ -294,17 +326,27 @@ onUnmounted(() => {
                         Campaigns
                     </Link> -->
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'marketing.sequences.read',
+                            )
+                        "
                         :href="'/marketing/sequences'"
                         :class="[
-                            'px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer',
-                            'border-blue-600 text-foreground'
+                            'cursor-pointer border-b-2 px-4 py-2 text-sm font-medium transition-colors',
+                            'border-blue-600 text-foreground',
                         ]"
                     >
                         Sequences Notifications
                     </Link>
                     <Link
+                        v-if="
+                            $page.props.auth.permissions.includes(
+                                'marketing.system_templates.read',
+                            )
+                        "
                         :href="systemTemplates.index().url"
-                        class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        class="cursor-pointer border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
                         System Templates
                     </Link>
@@ -325,17 +367,22 @@ onUnmounted(() => {
                 <!-- Action Bar -->
                 <div class="flex items-center justify-between gap-2">
                     <div class="flex flex-1 items-center gap-2">
-                        <div class="relative flex-1 max-w-xs">
+                        <div class="relative max-w-xs flex-1">
                             <Search
-                                class="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                                class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
                             />
                             <Input
                                 v-model="searchQuery"
                                 placeholder="Search"
-                                class="pl-8 h-8 text-sm"
+                                class="h-8 pl-8 text-sm"
                             />
                         </div>
-                        <Button variant="outline" size="sm" class="h-8 text-xs" @click="openFilters">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-8 text-xs"
+                            @click="openFilters"
+                        >
                             <Filter class="size-3.5" />
                             Filter
                         </Button>
@@ -344,10 +391,12 @@ onUnmounted(() => {
                     <div class="flex items-center gap-3">
                         <!-- Pagination Controls -->
                         <div class="flex items-center gap-2">
-                            <span class="text-xs text-muted-foreground">Per Page</span>
+                            <span class="text-xs text-muted-foreground"
+                                >Per Page</span
+                            >
                             <select
                                 v-model="perPage"
-                                class="h-7 rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                                class="h-7 rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-2 focus:ring-ring focus:outline-none"
                             >
                                 <option :value="10">10</option>
                                 <option :value="25">25</option>
@@ -356,30 +405,48 @@ onUnmounted(() => {
                             </select>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-xs text-muted-foreground">{{ paginationInfo }}</span>
+                            <span class="text-xs text-muted-foreground">{{
+                                paginationInfo
+                            }}</span>
                             <div class="flex items-center gap-1">
                                 <button
                                     @click="goToPage(currentPage - 1)"
                                     :disabled="currentPage === 1"
-                                    class="p-1 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    class="cursor-pointer rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                 >
-                                    <ChevronLeft class="size-4 text-muted-foreground" />
+                                    <ChevronLeft
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                                 <button
                                     @click="goToPage(currentPage + 1)"
                                     :disabled="currentPage === totalPages"
-                                    class="p-1 rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    class="cursor-pointer rounded-md p-1 hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                                     type="button"
                                 >
-                                    <ChevronRight class="size-4 text-muted-foreground" />
+                                    <ChevronRight
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                             </div>
                         </div>
-                        <Link :href="sequencesCreate().url">
-                            <Button class="bg-blue-600 hover:bg-blue-700 text-white h-8 px-3 text-xs">
+                        <Link
+                            v-if="
+                                $page.props.auth.permissions.includes(
+                                    'marketing.sequences.create',
+                                )
+                            "
+                            :href="sequencesCreate().url"
+                        >
+                            <Button
+                                class="h-8 bg-blue-600 px-3 text-xs text-white hover:bg-blue-700"
+                            >
                                 <Plus class="mr-2 size-3.5" />
-                                Create Sequence
+                                <span class="hidden sm:inline"
+                                    >Create Sequence</span
+                                >
+                                <span class="sm:hidden">Create</span>
                             </Button>
                         </Link>
                     </div>
@@ -387,23 +454,43 @@ onUnmounted(() => {
             </div>
 
             <!-- Table Section -->
-            <div class="flex-1 overflow-auto rounded-md border border-border bg-card">
+            <div
+                class="flex-1 overflow-auto rounded-md border border-border bg-card"
+            >
                 <table class="w-full text-sm">
                     <thead class="sticky top-0 z-10 bg-muted/50">
                         <tr>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Sequence Name
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Description
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Status
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Created
                             </th>
-                            <th class="h-10 px-4 text-left align-middle font-medium text-muted-foreground">
+                            <th
+                                v-if="
+                                    $page.props.auth.permissions.includes(
+                                        'marketing.sequences.update',
+                                    ) ||
+                                    $page.props.auth.permissions.includes(
+                                        'marketing.sequences.delete',
+                                    )
+                                "
+                                class="h-10 px-4 text-left align-middle font-medium text-muted-foreground"
+                            >
                                 Actions
                             </th>
                         </tr>
@@ -411,10 +498,18 @@ onUnmounted(() => {
                     <tbody>
                         <tr v-if="filteredSequences.length === 0">
                             <td colspan="5" class="px-4 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <p class="text-sm text-muted-foreground">No sequences found</p>
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2"
+                                >
+                                    <p class="text-sm text-muted-foreground">
+                                        No sequences found
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
-                                        {{ searchQuery ? 'Try adjusting your search criteria' : 'Create your first sequence to get started' }}
+                                        {{
+                                            searchQuery
+                                                ? 'Try adjusting your search criteria'
+                                                : 'Create your first sequence to get started'
+                                        }}
                                     </p>
                                 </div>
                             </td>
@@ -425,10 +520,14 @@ onUnmounted(() => {
                             class="border-b border-border transition-colors hover:bg-muted/50"
                         >
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-foreground">{{ sequence.name }}</span>
+                                <span class="text-foreground">{{
+                                    sequence.name
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-sm text-muted-foreground">{{ sequence.description }}</span>
+                                <span class="text-sm text-muted-foreground">{{
+                                    sequence.description
+                                }}</span>
                             </td>
                             <td class="px-4 py-3 align-middle">
                                 <span
@@ -441,24 +540,52 @@ onUnmounted(() => {
                                 </span>
                             </td>
                             <td class="px-4 py-3 align-middle">
-                                <span class="text-sm text-muted-foreground">{{ sequence.createdAt }}</span>
+                                <span class="text-sm text-muted-foreground">{{
+                                    sequence.createdAt
+                                }}</span>
                             </td>
-                            <td class="px-4 py-3 align-middle">
+                            <td
+                                v-if="
+                                    $page.props.auth.permissions.includes(
+                                        'marketing.sequences.update',
+                                    ) ||
+                                    $page.props.auth.permissions.includes(
+                                        'marketing.sequences.delete',
+                                    )
+                                "
+                                class="px-4 py-3 align-middle"
+                            >
                                 <div class="flex items-center gap-2">
-                                    <Link :href="sequencesEdit(sequence.id).url">
+                                    <Link
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'marketing.sequences.update',
+                                            )
+                                        "
+                                        :href="sequencesEdit(sequence.id).url"
+                                    >
                                         <button
-                                            class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                                            class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                                             title="Edit"
                                         >
-                                            <Edit class="size-4 text-muted-foreground" />
+                                            <Edit
+                                                class="size-4 text-muted-foreground"
+                                            />
                                         </button>
                                     </Link>
                                     <button
+                                        v-if="
+                                            $page.props.auth.permissions.includes(
+                                                'marketing.sequences.delete',
+                                            )
+                                        "
                                         @click="deleteSequence(sequence.id)"
-                                        class="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
+                                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                                         title="Delete"
                                     >
-                                        <Trash2 class="size-4 text-red-600 dark:text-red-400" />
+                                        <Trash2
+                                            class="size-4 text-red-600 dark:text-red-400"
+                                        />
                                     </button>
                                 </div>
                             </td>
@@ -478,14 +605,20 @@ onUnmounted(() => {
             <div class="absolute inset-0 bg-black/50"></div>
 
             <!-- Filters Panel -->
-            <div class="relative h-full w-full max-w-sm bg-white dark:bg-gray-900 shadow-xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
+            <div
+                class="relative h-full w-full max-w-sm transform overflow-y-auto bg-white shadow-xl transition-transform duration-300 ease-in-out dark:bg-gray-900"
+            >
                 <!-- Header -->
-                <div class="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white dark:bg-gray-900 px-6 py-4">
-                    <h2 class="text-lg font-semibold text-foreground">Filters</h2>
+                <div
+                    class="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white px-6 py-4 dark:bg-gray-900"
+                >
+                    <h2 class="text-lg font-semibold text-foreground">
+                        Filters
+                    </h2>
                     <button
                         @click="closeFilters"
                         type="button"
-                        class="p-1.5 hover:bg-muted rounded-md transition-colors cursor-pointer"
+                        class="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-muted"
                         aria-label="Close filters"
                     >
                         <X class="size-5 text-muted-foreground" />
@@ -493,15 +626,19 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Filters Content -->
-                <div class="p-6 space-y-6">
+                <div class="space-y-6 p-6">
                     <!-- Custom Filters Section -->
                     <div>
                         <button
-                            @click="customFiltersExpanded = !customFiltersExpanded"
-                            class="w-full flex items-center justify-between mb-4 cursor-pointer"
+                            @click="
+                                customFiltersExpanded = !customFiltersExpanded
+                            "
+                            class="mb-4 flex w-full cursor-pointer items-center justify-between"
                             type="button"
                         >
-                            <h3 class="text-base font-semibold text-foreground">Custom Filters</h3>
+                            <h3 class="text-base font-semibold text-foreground">
+                                Custom Filters
+                            </h3>
                             <ChevronUp
                                 v-if="customFiltersExpanded"
                                 class="size-4 text-muted-foreground"
@@ -515,7 +652,9 @@ onUnmounted(() => {
                         <div v-if="customFiltersExpanded" class="space-y-4">
                             <!-- Sequence Name Field -->
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Sequence Name
                                 </label>
                                 <Input
@@ -528,7 +667,9 @@ onUnmounted(() => {
 
                             <!-- Description Field -->
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Description
                                 </label>
                                 <Input
@@ -541,79 +682,132 @@ onUnmounted(() => {
 
                             <!-- Status Searchable Dropdown -->
                             <div class="dropdown-container relative">
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Status
                                 </label>
                                 <button
                                     @click.stop="openStatusDropdown"
                                     type="button"
-                                    class="w-full flex items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                    class="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
-                                    <span :class="filterForm.status ? 'text-foreground' : 'text-muted-foreground'" class="flex-1 truncate">
+                                    <span
+                                        :class="
+                                            filterForm.status
+                                                ? 'text-foreground'
+                                                : 'text-muted-foreground'
+                                        "
+                                        class="flex-1 truncate"
+                                    >
                                         {{ filterForm.status || 'Select' }}
                                     </span>
-                                    <div class="flex items-center gap-1 shrink-0">
+                                    <div
+                                        class="flex shrink-0 items-center gap-1"
+                                    >
                                         <button
-                                            v-if="filterForm.status && !showStatusDropdown"
+                                            v-if="
+                                                filterForm.status &&
+                                                !showStatusDropdown
+                                            "
                                             @click.stop="clearStatus"
                                             type="button"
-                                            class="p-0.5 hover:bg-muted rounded transition-colors cursor-pointer"
+                                            class="cursor-pointer rounded p-0.5 transition-colors hover:bg-muted"
                                             aria-label="Clear status"
                                         >
-                                            <X class="size-3.5 text-muted-foreground hover:text-foreground" />
+                                            <X
+                                                class="size-3.5 text-muted-foreground hover:text-foreground"
+                                            />
                                         </button>
-                                        <ChevronDown class="size-4 text-muted-foreground" />
+                                        <ChevronDown
+                                            class="size-4 text-muted-foreground"
+                                        />
                                     </div>
                                 </button>
-                                
+
                                 <!-- Search Popup -->
                                 <div
                                     v-if="showStatusDropdown"
                                     @click.stop
-                                    class="absolute top-full left-0 right-0 z-[9999] mt-1 rounded-md border border-border bg-white dark:bg-gray-800 shadow-lg"
+                                    class="absolute top-full right-0 left-0 z-[9999] mt-1 rounded-md border border-border bg-white shadow-lg dark:bg-gray-800"
                                 >
                                     <div class="relative">
                                         <input
-                                            :ref="el => { if (el) statusSearchInputRef = el as HTMLInputElement }"
+                                            :ref="
+                                                (el) => {
+                                                    if (el)
+                                                        statusSearchInputRef =
+                                                            el as HTMLInputElement;
+                                                }
+                                            "
                                             :value="statusSearch"
-                                            @input="searchStatus(($event.target as HTMLInputElement).value)"
+                                            @input="
+                                                searchStatus(
+                                                    (
+                                                        $event.target as HTMLInputElement
+                                                    ).value,
+                                                )
+                                            "
                                             type="text"
                                             placeholder="Search..."
-                                            class="w-full rounded-t-md bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                                            class="w-full rounded-t-md bg-background px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                         />
-                                        <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <div v-if="statusSearchLoading" class="size-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin"></div>
+                                        <div
+                                            class="absolute top-1/2 right-3 -translate-y-1/2"
+                                        >
+                                            <div
+                                                v-if="statusSearchLoading"
+                                                class="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+                                            ></div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Search Results Dropdown -->
-                                    <div class="max-h-48 overflow-y-auto border-t border-border">
-                                        <div v-if="statusSearchLoading" class="px-3 py-2 text-xs text-muted-foreground">
+                                    <div
+                                        class="max-h-48 overflow-y-auto border-t border-border"
+                                    >
+                                        <div
+                                            v-if="statusSearchLoading"
+                                            class="px-3 py-2 text-xs text-muted-foreground"
+                                        >
                                             Searching...
                                         </div>
-                                        <div v-else-if="statusSearchResults && statusSearchResults.length > 0">
+                                        <div
+                                            v-else-if="
+                                                statusSearchResults &&
+                                                statusSearchResults.length > 0
+                                            "
+                                        >
                                             <button
                                                 v-for="option in statusSearchResults"
                                                 :key="option"
                                                 @click="selectStatus(option)"
                                                 type="button"
-                                                class="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors text-foreground cursor-pointer"
+                                                class="w-full cursor-pointer px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
                                             >
                                                 {{ option }}
                                             </button>
                                         </div>
-                                        <div v-else-if="!statusSearch && statusOptions.length > 0">
+                                        <div
+                                            v-else-if="
+                                                !statusSearch &&
+                                                statusOptions.length > 0
+                                            "
+                                        >
                                             <button
                                                 v-for="option in statusOptions"
                                                 :key="option"
                                                 @click="selectStatus(option)"
                                                 type="button"
-                                                class="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors text-foreground cursor-pointer"
+                                                class="w-full cursor-pointer px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted"
                                             >
                                                 {{ option }}
                                             </button>
                                         </div>
-                                        <div v-else class="px-3 py-2 text-xs text-muted-foreground">
+                                        <div
+                                            v-else
+                                            class="px-3 py-2 text-xs text-muted-foreground"
+                                        >
                                             No result found
                                         </div>
                                     </div>
@@ -622,7 +816,9 @@ onUnmounted(() => {
 
                             <!-- Created At Field -->
                             <div>
-                                <label class="block text-sm font-medium text-foreground mb-2">
+                                <label
+                                    class="mb-2 block text-sm font-medium text-foreground"
+                                >
                                     Created At
                                 </label>
                                 <Input
@@ -637,7 +833,9 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Footer -->
-                <div class="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-white dark:bg-gray-900 px-6 py-4">
+                <div
+                    class="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-white px-6 py-4 dark:bg-gray-900"
+                >
                     <Button
                         variant="outline"
                         size="sm"
@@ -648,7 +846,7 @@ onUnmounted(() => {
                     </Button>
                     <Button
                         size="sm"
-                        class="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        class="cursor-pointer bg-blue-600 text-white hover:bg-blue-700"
                         @click="applyFilters"
                     >
                         Apply Filters
