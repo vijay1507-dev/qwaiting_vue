@@ -823,7 +823,7 @@
 
         <!-- Step 7: Checkout & Payment -->
         <div id="step-7"
-            class="step w-full max-w-6xl mx-auto text-center p-4">
+            class="step w-full max-w-6xl mx-auto text-center p-4 mt-[120px] hidden">
 
             <form id="form-step-7">
                 @csrf
@@ -841,70 +841,121 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2">
                         <!-- Left Side: User Details (6 columns) -->
                         <div class="lg:col-span-1 p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-bold text-slate-900">Billing Information</h3>
+                            @php
+                            $pkgStartDate = \Carbon\Carbon::now();
+                            $pkgTrialDays = $selectedPackage['trial_days'] ?? 0;
+                            if ($pkgTrialDays > 0) {
+                            $pkgEndDate = $pkgStartDate->copy()->addDays($pkgTrialDays);
+                            $dateLabel = "Trial Period ({$pkgTrialDays} Days)";
+                            } else {
+                            $pkgEndDate = $selectedBillingCycle === 'monthly' ? $pkgStartDate->copy()->addMonth() : $pkgStartDate->copy()->addYear();
+                            $dateLabel = "Subscription Period";
+                            }
+                            @endphp
 
-                            </div>
+                            <!-- Customer Information Section -->
+                            <div class="mb-8">
+                                <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Customer Information
+                                </h4>
 
-                            <div class="space-y-3">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Full Name</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm">{{ $lead->name ?? 'N/A' }}</p>
-                                    </div>
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Address</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm truncate" title="{{ $lead->email ?? '' }}">{{ $lead->email ?? 'N/A' }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Phone Number</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm">{{ $lead->country_code ?? '' }} {{ $lead->phone_number ?? 'N/A' }}</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Full Name</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-fullname">{{ $lead->name ?? 'N/A' }}</p>
                                     </div>
                                     @if($lead->company_name)
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Company</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm truncate">{{ $lead->company_name }}</p>
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Company Name</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-company">{{ $lead->company_name }}</p>
+                                    </div>
+                                    @endif
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Email Address</label>
+                                        <p class="font-semibold text-slate-900 text-[15px] break-all" id="summary-email">{{ $lead->email ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Phone Number</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-phone">{{ $lead->country_code ?? '' }} {{ $lead->phone_number ?? 'N/A' }}</p>
+                                    </div>
+                                    @if($lead->domain_name)
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-sm text-slate-500 mb-1">Domain Name</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-domain">{{ $lead->domain_name }}</p>
                                     </div>
                                     @endif
                                 </div>
+                            </div>
 
-                                @if($lead->domain_name)
-                                <div class="group">
-                                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Domain Name</label>
-                                    <div class="flex items-center text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm">
-                                        <svg class="w-4 h-4 text-slate-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                                        </svg>
-                                        <span class="truncate">{{ $lead->domain_name }}</span>
+                            <!-- Business Details Section -->
+                            <div>
+                                <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    Business Details
+                                </h4>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+                                    @if($lead->usage_preference)
+                                    <div class="summary-item" id="container-usage-preference">
+                                        <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-usage-preference">{{ $lead->usage_preference }}</p>
                                     </div>
-                                </div>
-                                @endif
-
-
-
-                                @php
-                                $pkgStartDate = \Carbon\Carbon::now();
-                                $pkgTrialDays = $selectedPackage['trial_days'] ?? 0;
-                                if ($pkgTrialDays > 0) {
-                                $pkgEndDate = $pkgStartDate->copy()->addDays($pkgTrialDays);
-                                $dateLabel = "Trial Period ({$pkgTrialDays} Days)";
-                                } else {
-                                $pkgEndDate = $selectedBillingCycle === 'monthly' ? $pkgStartDate->copy()->addMonth() : $pkgStartDate->copy()->addYear();
-                                $dateLabel = "Subscription Period";
-                                }
-                                @endphp
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-100 mt-2">
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Package Start</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm">{{ $pkgStartDate->format('d M, Y') }}</p>
+                                    @else
+                                    <div class="summary-item hidden" id="container-usage-preference">
+                                        <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-usage-preference"></p>
                                     </div>
-                                    <div class="group">
-                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Package End</label>
-                                        <p class="text-sm font-medium text-slate-900 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 group-hover:border-primary/20 transition-colors text-sm">{{ $pkgEndDate->format('d M, Y') }}</p>
+                                    @endif
+
+                                    @if($lead->industry)
+                                    <div class="summary-item" id="container-industry">
+                                        <label class="block text-sm text-slate-500 mb-1">Industry</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry">{{ $lead->industry }}</p>
+                                    </div>
+                                    @else
+                                    <div class="summary-item hidden" id="container-industry">
+                                        <label class="block text-sm text-slate-500 mb-1">Industry</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry"></p>
+                                    </div>
+                                    @endif
+
+                                    @if($lead->footfall)
+                                    <div class="summary-item" id="container-footfall">
+                                        <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall">{{ $lead->footfall }}</p>
+                                    </div>
+                                    @else
+                                    <div class="summary-item hidden" id="container-footfall">
+                                        <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall"></p>
+                                    </div>
+                                    @endif
+
+                                    @if($lead->current_solution)
+                                    <div class="summary-item" id="container-current-solution">
+                                        <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-current-solution">{{ $lead->current_solution }}</p>
+                                    </div>
+                                    @else
+                                    <div class="summary-item hidden" id="container-current-solution">
+                                        <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-current-solution"></p>
+                                    </div>
+                                    @endif
+
+                                    <!-- Package Dates -->
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Package Start</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]">{{ $pkgStartDate->format('d M, Y') }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-slate-500 mb-1">Package End</label>
+                                        <p class="font-semibold text-slate-900 text-[15px]">{{ $pkgEndDate->format('d M, Y') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1150,7 +1201,8 @@
         };
         const queryStepMap = Object.fromEntries(Object.entries(stepQueryMap).map(([k, v]) => [v, parseInt(k)]));
 
-        // Detect page refresh and clear session - ALWAYS clear on refresh
+        // Detect page refresh and clear session - DISABLED to allow persistence
+        /*
         // Run immediately, before DOM is fully ready
         (function() {
             // Check if page was reloaded using multiple methods for reliability
@@ -1209,6 +1261,7 @@
                 }
             }
         })();
+        */
 
         $(document).ready(function() {
             // Stripe Global Variables
@@ -1498,7 +1551,11 @@
                 history.replaceState(null, '', newUrl);
             }
 
-            goToStep(initialStep, false);
+            if (initialStep === 7) {
+                enterStep7();
+            } else {
+                goToStep(initialStep, false);
+            }
 
             // Check for stored errors from redirect
             const storedErrors = sessionStorage.getItem('signupErrors');
@@ -1572,8 +1629,56 @@
             $(document).on('submit', 'form[id^="form-step-"]', handleFormSubmit);
         });
 
+        // Fetch lead details from DB before rendering Step-7
+        window.leadSummaryData = null;
+
+        function fetchLeadDetails() {
+            return new Promise((resolve) => {
+                // We rely on session now, so we don't strictly need window.leadId check, 
+                // but it helps avoid unnecessary calls if we know we are not initiated.
+                // However, user might have refreshed, so just call it.
+
+                $.get("{{ route('signup.lead-details') }}")
+                    .done((response) => {
+                        if (response.success && response.lead) {
+                            window.leadSummaryData = response.lead;
+                            if (response.lead.id) {
+                                window.leadId = response.lead.id;
+                            }
+                        }
+                        resolve();
+                    }).fail(resolve);
+            });
+        }
+
+
+        // Controlled entry function for Step-7
+        function enterStep7() {
+            console.log('Entering Step 7 via enterStep7');
+
+            $('#step-7').addClass('hidden');
+
+            fetchLeadDetails().then(() => {
+                goToStep(7);
+
+                // Wait for DOM paint
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        $('#step-7').removeClass('hidden');
+                        populateStep7Summary(); // 🔥 NEW
+                        initStripeOnce();
+                    }, 50);
+                });
+            });
+        }
+
+
         // Handle browser back/forward
-        $(window).on('popstate', () => goToStep(queryStepMap[window.location.search.substring(1).split('&')[0]] || 1, false));
+        $(window).on('popstate', () => {
+            const step = queryStepMap[window.location.search.substring(1).split('&')[0]] || 1;
+            if (step === 7) enterStep7();
+            else goToStep(step, false);
+        });
 
         // Select option card
         function selectOption(type, value, element) {
@@ -1645,6 +1750,75 @@
                 setTimeout(initStripeElements, 100);
             }
         }
+
+        function populateStep7Summary() {
+            if (!window.leadSummaryData) return;
+
+            const lead = window.leadSummaryData;
+
+            if (lead.usage_preference) {
+                $('#summary-usage-preference')
+                    .text(lead.usage_preference)
+                    .closest('.summary-item')
+                    .removeClass('hidden');
+            }
+
+            if (lead.industry) {
+                $('#summary-industry')
+                    .text(lead.industry)
+                    .closest('.summary-item')
+                    .removeClass('hidden');
+            }
+
+            if (lead.footfall) {
+                $('#summary-footfall')
+                    .text(lead.footfall)
+                    .closest('.summary-item')
+                    .removeClass('hidden');
+            }
+
+            if (lead.current_solution) {
+                $('#summary-current-solution')
+                    .text(lead.current_solution)
+                    .closest('.summary-item')
+                    .removeClass('hidden');
+            }
+
+            if (lead.name) {
+                $('#summary-fullname').text(lead.name);
+            }
+            if (lead.company_name) {
+                $('#summary-company').text(lead.company_name);
+            }
+            if (lead.email) {
+                $('#summary-email').text(lead.email);
+            }
+            if (lead.phone_number) {
+                // Combined phone check
+                const fullPhone = (lead.country_code ? lead.country_code + ' ' : '') + lead.phone_number;
+                $('#summary-phone').text(fullPhone.trim());
+            } else if (lead.phone) {
+                // Fallback if returned as single string
+                $('#summary-phone').text(lead.phone);
+            }
+
+            if (lead.domain_name) {
+                $('#summary-domain').text(lead.domain_name);
+            }
+
+            console.log('Step 7 summary populated');
+        }
+
+        let stripeInitialized = false;
+
+        function initStripeOnce() {
+            if (stripeInitialized) return;
+
+            stripeInitialized = true;
+            console.log('Initializing Stripe...');
+            initializeStripe(); // your existing code
+        }
+
 
         // Form submission handler
         function handleFormSubmit(e) {
@@ -1718,6 +1892,12 @@
                     }
 
                     if (data.success) {
+                        // Update global leadId if provided
+                        if (data.lead_id) {
+                            window.leadId = data.lead_id;
+                            console.log('Updated window.leadId to:', window.leadId);
+                        }
+
                         // Handle step 1 verification message
                         if (stepNum === 1 && data.verification_sent) {
                             // Hide the form and header
@@ -1764,7 +1944,11 @@
                                 }
                             }
 
-                            goToStep(data.next_step);
+                            if (data.next_step === 7) {
+                                enterStep7();
+                            } else {
+                                goToStep(data.next_step);
+                            }
                         }
                     } else {
                         console.error('Success false in response:', data);
@@ -2111,6 +2295,7 @@
 
         // Global Apply Coupon Function
         window.applyCoupon = function() {
+            const leadId = {{ $lead ? $lead->id : 'null' }};
             const $btn = $('#apply-coupon-btn');
             const code = $('#coupon-code-input').val().trim();
             const packageId = $('#selected_package_id').val();
@@ -2174,6 +2359,72 @@
                     let msg = 'Error applying coupon.';
                     if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
                     $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text(msg);
+                }
+            });
+        };
+
+        window.removeCoupon = function(silent = false) {
+            $.ajax({
+                url: "{{ route('signup.remove-coupon') }}",
+                method: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Reset UI
+                        $('#applied-coupon-container').addClass('hidden');
+                        $('#toggle-coupon-btn').removeClass('hidden');
+                        $('#summary-discount-row').addClass('hidden');
+
+                        // Reset active discount input to 0
+                        $('#active-coupon-discount').val(0);
+                        console.log('removeCoupon: Reset #active-coupon-discount to 0');
+
+                        if (!silent) {
+                            // Manual UI Reset for robustness
+                            const selectedId = $('#selected_package_id').val();
+                            console.log('removeCoupon: Triggering reset for package:', selectedId);
+
+                            const $card = $(`.package-card[data-id="${selectedId}"]`);
+                            let price = 0;
+                            let isAnnual = $('#selected_billing_cycle').val() === 'annual';
+
+                            // Check hidden inputs first (Step 7 context)
+                            const hiddenMonthly = parseFloat($('#selected-pkg-price-monthly').val());
+                            const hiddenAnnual = parseFloat($('#selected-pkg-price-annual').val());
+
+                            if (!isNaN(hiddenMonthly) && !isNaN(hiddenAnnual)) {
+                                price = isAnnual ? hiddenAnnual : hiddenMonthly;
+                                console.log('removeCoupon: Using hidden input prices. isAnnual:', isAnnual, 'Price:', price);
+                            } else if ($card.length) {
+                                // Fallback to card if visible
+                                const toggleBtn = $('#billing-toggle-thumb');
+                                if (toggleBtn.length) {
+                                    isAnnual = toggleBtn.hasClass('translate-x-8');
+                                }
+                                price = isAnnual ? parseFloat($card.data('price-annual')) : parseFloat($card.data('price-monthly'));
+                                console.log('removeCoupon: Using card prices. isAnnual:', isAnnual, 'Price:', price);
+                            } else {
+                                console.error('removeCoupon: Unable to determine original price. Inputs missing and card not found.');
+                            }
+
+                            if (!isNaN(price) && price > 0) {
+                                const formattedPrice = price.toFixed(2);
+                                if ($('#summary-subtotal').length) $('#summary-subtotal').text('$' + formattedPrice);
+                                if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedPrice);
+
+                                // Also update button text
+                                const billingText = isAnnual ? '/yr' : '/mo';
+                                $('#checkout-btn-text').text(`Proceed To Pay ($${formattedPrice}${billingText})`);
+                            }
+
+                            // Trigger package re-selection ONLY if card exists to ensure state consistency
+                            if ($card.length && typeof selectPackage === 'function') {
+                                selectPackage($card[0], true);
+                            }
+                        }
+                    }
                 }
             });
         };
@@ -2341,167 +2592,6 @@
         // Or just check step change
 
         // ... (rest of existing code) ... 
-    </script>
-
-    <script>
-        window.leadId = {{ $lead?->id ?? 'null' }};
-        // Emergency Fallback - Isolated Script
-        window.toggleCouponInput = function() {
-            var container = document.getElementById('coupon-input-container');
-            var input = document.getElementById('coupon-code-input');
-            if (container) {
-                if (container.classList.contains('hidden')) {
-                    container.classList.remove('hidden');
-                    if (input) input.focus();
-                } else {
-                    container.classList.add('hidden');
-                }
-            } else {
-                console.error('Coupon container not found');
-            }
-        };
-
-        window.applyCoupon = function() {
-            const $btn = $('#apply-coupon-btn');
-            const code = $('#coupon-code-input').val().trim();
-            const packageId = $('#selected_package_id').val();
-
-            // Determine billing cycle from toggle state
-            let currentCycle = 'monthly';
-            if ($('#billing-toggle-thumb').hasClass('translate-x-8')) {
-                currentCycle = 'annual';
-            }
-
-            if (!code) {
-                $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text('Please enter a coupon code.');
-                return;
-            }
-
-            $btn.prop('disabled', true).text('Applying...');
-            $('#coupon-message').addClass('hidden');
-
-            $.ajax({
-                url: "{{ route('signup.apply-coupon') }}",
-                method: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    coupon_code: code,
-                    package_id: packageId,
-                    billing_cycle: currentCycle,
-                    lead_id: leadId
-                },
-                success: function(response) {
-                    $btn.prop('disabled', false).text('Apply');
-                    if (response.success) {
-                        // Success Logic
-                        $('#coupon-input-container').addClass('hidden');
-                        $('#toggle-coupon-btn').addClass('hidden');
-
-                        $('#applied-coupon-container').removeClass('hidden');
-                        $('#applied-coupon-code-display').text(response.coupon.code);
-
-                        // Update Breakdown
-                        $('#summary-discount-row').removeClass('hidden');
-                        $('#summary-discount-amount').text('- $' + parseFloat(response.coupon.discount_amount).toFixed(2));
-
-                        // Update Total
-                        $('#total-due-today').text('$' + parseFloat(response.coupon.final_price).toFixed(2));
-
-                        // Update hidden input for active coupon in case of subsequent re-selection
-                        $('#active-coupon-discount').val(response.coupon.discount_amount);
-
-                        // Trigger package re-selection to correctly format everything
-                        const selectedId = $('#selected_package_id').val();
-                        if (selectedId) {
-                            const $card = $(`.package-card[data-id="${selectedId}"]`);
-                            if ($card.length) {
-                                // Call selection logic again to ensure consistency (it will now use the hidden val)
-                                // We avoid a loop because selectPackage doesn't call applyCoupon
-                                // But perform manual update to button text to be safe
-                                const finalPrice = parseFloat(response.coupon.final_price);
-                                const billingText = currentCycle === 'annual' ? '/yr' : '/mo';
-                                $('#checkout-btn-text').text(`Proceed To Pay ($${finalPrice.toFixed(2)}${billingText})`);
-                            }
-                        }
-
-                    } else {
-                        $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text(response.message);
-                    }
-                },
-                error: function(xhr) {
-                    $btn.prop('disabled', false).text('Apply');
-                    let msg = 'Error applying coupon.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
-                    $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text(msg);
-                }
-            });
-        };
-
-        window.removeCoupon = function(silent = false) {
-            $.ajax({
-                url: "{{ route('signup.remove-coupon') }}",
-                method: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Reset UI
-                        $('#applied-coupon-container').addClass('hidden');
-                        $('#toggle-coupon-btn').removeClass('hidden');
-                        $('#summary-discount-row').addClass('hidden');
-
-                        // Reset active discount input to 0
-                        $('#active-coupon-discount').val(0);
-                        console.log('removeCoupon: Reset #active-coupon-discount to 0');
-
-                        if (!silent) {
-                            // Manual UI Reset for robustness
-                            const selectedId = $('#selected_package_id').val();
-                            console.log('removeCoupon: Triggering reset for package:', selectedId);
-
-                            const $card = $(`.package-card[data-id="${selectedId}"]`);
-                            let price = 0;
-                            let isAnnual = $('#selected_billing_cycle').val() === 'annual';
-
-                            // Check hidden inputs first (Step 7 context)
-                            const hiddenMonthly = parseFloat($('#selected-pkg-price-monthly').val());
-                            const hiddenAnnual = parseFloat($('#selected-pkg-price-annual').val());
-
-                            if (!isNaN(hiddenMonthly) && !isNaN(hiddenAnnual)) {
-                                price = isAnnual ? hiddenAnnual : hiddenMonthly;
-                                console.log('removeCoupon: Using hidden input prices. isAnnual:', isAnnual, 'Price:', price);
-                            } else if ($card.length) {
-                                // Fallback to card if visible
-                                const toggleBtn = $('#billing-toggle-thumb');
-                                if (toggleBtn.length) {
-                                    isAnnual = toggleBtn.hasClass('translate-x-8');
-                                }
-                                price = isAnnual ? parseFloat($card.data('price-annual')) : parseFloat($card.data('price-monthly'));
-                                console.log('removeCoupon: Using card prices. isAnnual:', isAnnual, 'Price:', price);
-                            } else {
-                                console.error('removeCoupon: Unable to determine original price. Inputs missing and card not found.');
-                            }
-
-                            if (!isNaN(price) && price > 0) {
-                                const formattedPrice = price.toFixed(2);
-                                if ($('#summary-subtotal').length) $('#summary-subtotal').text('$' + formattedPrice);
-                                if ($('#total-due-today').length) $('#total-due-today').text('$' + formattedPrice);
-
-                                // Also update button text
-                                const billingText = isAnnual ? '/yr' : '/mo';
-                                $('#checkout-btn-text').text(`Proceed To Pay ($${formattedPrice}${billingText})`);
-                            }
-
-                            // Trigger package re-selection ONLY if card exists to ensure state consistency
-                            if ($card.length && typeof selectPackage === 'function') {
-                                selectPackage($card[0], true);
-                            }
-                        }
-                    }
-                }
-            });
-        };
     </script>
 
     <!-- Trial Success Modal -->

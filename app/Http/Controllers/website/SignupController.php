@@ -350,7 +350,7 @@ class SignupController extends Controller
             'coupon_code' => 'required|string',
             'package_id' => 'required|integer',
             'billing_cycle' => 'required|string|in:monthly,annual',
-            'currency' => 'nullable|string', 
+            'currency' => 'nullable|string',
             'lead_id'       => 'required|integer'
         ]);
 
@@ -360,16 +360,16 @@ class SignupController extends Controller
         $currency = $request->input('currency', 'USD');
 
         // FORCE CHECK: Use Database Billing Cycle if available
-       $lead = SignupLead::find($request->lead_id);
+        $lead = SignupLead::find($request->lead_id);
 
-            if (! $lead || ! $lead->billing_cycle) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unable to determine billing cycle.'
-                ]);
-            }
+        if (! $lead || ! $lead->billing_cycle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to determine billing cycle.'
+            ]);
+        }
 
-            $billingCycle = $lead->billing_cycle;
+        $billingCycle = $lead->billing_cycle;
 
 
 
@@ -1922,6 +1922,66 @@ class SignupController extends Controller
                     // Continue execution, this is not a hard failure
                 }
 
+                // Update Stripe details in external database domains table
+                if ($lead->stripe_customer_id) {
+                    try {
+                        $paymentData = $lead->payment_response ? json_decode($lead->payment_response, true) : [];
+                        $pmType = null;
+                        $pmLastFour = null;
+
+                        // Try to extract card details from payment response
+                        if (!empty($paymentData)) {
+                            // Check for PaymentIntent structure (charges array)
+                            if (isset($paymentData['charges']['data'][0]['payment_method_details']['card'])) {
+                                $card = $paymentData['charges']['data'][0]['payment_method_details']['card'];
+                                $pmType = $card['brand'] ?? null;
+                                $pmLastFour = $card['last4'] ?? null;
+                            }
+                            // Check for Checkout Session structure (if method details expanded)
+                            elseif (isset($paymentData['payment_method_details']['card'])) {
+                                $card = $paymentData['payment_method_details']['card'];
+                                $pmType = $card['brand'] ?? null;
+                                $pmLastFour = $card['last4'] ?? null;
+                            }
+                        }
+
+                        // Update domains table
+                        // We check for domain variations similar to how we search for redirection
+                        $domainUpdated = DB::connection('mysql_external')
+                            ->table('domains')
+                            ->where(function ($query) use ($lead) {
+                                $query->where('domain', $lead->domain_name)
+                                    ->orWhere('domain', $lead->domain_name . '.qwaiting.com')
+                                    ->orWhere('domain', $lead->domain_name . '.localhost');
+                            })
+                            ->update([
+                                'stripe_id' => $lead->stripe_customer_id,
+                                'stripe_email' => $lead->email,
+                                'pm_type' => $pmType,
+                                'pm_last_four' => $pmLastFour
+                            ]);
+
+                        if ($domainUpdated) {
+                            Log::info('Updated Stripe details in external domains table', [
+                                'lead_id' => $lead->id,
+                                'domain' => $lead->domain_name,
+                                'stripe_id' => $lead->stripe_customer_id
+                            ]);
+                        } else {
+                            Log::warning('Domain not found for Stripe details update', [
+                                'lead_id' => $lead->id,
+                                'domain' => $lead->domain_name
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Failed to update Stripe details in external domains table', [
+                            'lead_id' => $lead->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                    }
+                }
+
                 // Send registration complete email
                 try {
                     $sequenceService = new SequenceEmailService;
@@ -2026,5 +2086,44 @@ class SignupController extends Controller
 
         // Increment coupon usage count - REMOVED (calculated dynamically via usages relationship)
         // $coupon->increment('times_used');
+    }
+
+    public function leadDetails(Request $request)
+    {
+        // Get lead ID from session as preferred source of truth
+        $leadId = Session::get('signup_lead_id');
+
+        if (!$leadId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active signup session found.'
+            ]);
+        }
+
+        $lead = SignupLead::find($leadId);
+
+        if (!$lead) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lead not found.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'lead' => [
+                'id' => $lead->id,
+                'name' => $lead->name,
+                'email' => $lead->email,
+                'company_name' => $lead->company_name,
+                'phone_number' => $lead->phone_number,
+                'country_code' => $lead->country_code,
+                'domain_name' => $lead->domain_name,
+                'usage_preference' => $lead->usage_preference,
+                'industry' => $lead->industry,
+                'footfall' => $lead->footfall,
+                'current_solution' => $lead->current_solution,
+            ]
+        ]);
     }
 }

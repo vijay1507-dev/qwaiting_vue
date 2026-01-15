@@ -47,7 +47,9 @@
                     <strong>Name:</strong> {{ $enquiry->full_name }}<br>
                     <strong>Company:</strong> {{ $enquiry->company_name }}<br>
                     <strong>Email:</strong> {{ $enquiry->email }}<br>
-                    <strong>Mobile:</strong> {{ $enquiry->mobile_number }}
+                    <strong>Mobile:</strong> {{ $enquiry->mobile_number }}<br>
+                    <strong>Contact Method:</strong> {{ $enquiry->contact_method }}<br>
+                    <strong>Best Time to Contact:</strong> {{ $enquiry->best_time_to_contact ?? 'N/A' }}
                   </td>
                 </tr>
               </table>
@@ -64,12 +66,32 @@
                   <td style="padding-top:10px; font-size:14px;">
                     <ul style="padding-left:18px; margin:0;">
                       <li><strong>Interested Package:</strong> {{ $enquiry->interested_package }}</li>
-                      <li><strong>Billing Cycle:</strong> {{ $enquiry->billing_cycle }}</li> 
+                      <li><strong>Number of Users/Branches:</strong> {{ $enquiry->num_users_branches }}</li>
+                      <li><strong>Billing Cycle:</strong> {{ $enquiry->billing_cycle }}</li>
+                      <li><strong>Expected Start Date:</strong> {{ $enquiry->expected_start_date ? $enquiry->expected_start_date->format('d M, Y') : 'N/A' }}</li>
+                      <li><strong>Status:</strong> {{ $enquiry->status }}</li>
+                      <li><strong>Submission Date:</strong> {{ $enquiry->created_at->format('d M, Y H:i A') }}</li>
                     </ul>
                   </td>
                 </tr>
               </table>
 
+
+              @if(!empty($enquiry->features_required))
+              <h3 style="font-size:16px; font-weight:bold; color:#000; margin-top:20px;">Features Required:</h3>
+              <ul style="padding-left:18px;">
+                @foreach($enquiry->features_required as $feature)
+                <li>{{ $feature }}</li>
+                @endforeach
+              </ul>
+              @endif
+
+              @if($enquiry->custom_notes)
+              <h3 style="font-size:16px; font-weight:bold; color:#000; margin-top:20px;">Custom Notes:</h3>
+              <div style="background:#f9f9f9; padding:15px; border-radius:5px; font-size:14px; color:#555;">
+                {{ $enquiry->custom_notes }}
+              </div>
+              @endif
 
               <!-- CTA -->
               <a href="https://betaqwaiting.thevistiq.com/package-enquiries" target="_blank"
@@ -94,4 +116,5 @@
   </table>
 
 </body>
+
 </html>
