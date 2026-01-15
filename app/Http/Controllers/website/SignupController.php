@@ -51,7 +51,7 @@ class SignupController extends Controller
         }
 
         // Always clear session on refresh, unless it's from verification redirect
-        if ($isRefresh && ! $isFromVerification) {
+        if ($isRefresh && !$isFromVerification) {
             Session::forget('signup_form_data');
             Session::forget('selected_coupon'); // Clear coupon on refresh
             // Don't clear signup_lead_id on refresh if email is verified
@@ -60,7 +60,7 @@ class SignupController extends Controller
             if ($leadId) {
                 $lead = SignupLead::find($leadId);
                 // If lead doesn't exist or email is not verified, clear the session
-                if (! $lead || ! $lead->hasVerifiedEmail()) {
+                if (!$lead || !$lead->hasVerifiedEmail()) {
                     Session::forget('signup_lead_id');
                     Session::forget('completed_steps');
                 } else {
@@ -153,7 +153,7 @@ class SignupController extends Controller
                 $dbSignupStep = $lead->signup_step ?? 0;
 
                 // Step 1 is always completed if email is verified (email verification is part of step 1)
-                if (! in_array(1, $completedSteps)) {
+                if (!in_array(1, $completedSteps)) {
                     $completedSteps[] = 1;
                 }
 
@@ -166,7 +166,7 @@ class SignupController extends Controller
                 if ($dbSignupStep >= 1) {
                     // Step 1 is already added above, now add steps 2-6 if they exist
                     for ($step = 2; $step <= $dbSignupStep && $step <= 6; $step++) {
-                        if (! in_array($step, $completedSteps)) {
+                        if (!in_array($step, $completedSteps)) {
                             $completedSteps[] = $step;
                         }
                     }
@@ -351,7 +351,7 @@ class SignupController extends Controller
             'package_id' => 'required|integer',
             'billing_cycle' => 'required|string|in:monthly,annual',
             'currency' => 'nullable|string',
-            'lead_id'       => 'required|integer'
+            'lead_id' => 'required|integer'
         ]);
 
         $code = $request->coupon_code;
@@ -362,7 +362,7 @@ class SignupController extends Controller
         // FORCE CHECK: Use Database Billing Cycle if available
         $lead = SignupLead::find($request->lead_id);
 
-        if (! $lead || ! $lead->billing_cycle) {
+        if (!$lead || !$lead->billing_cycle) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to determine billing cycle.'
@@ -497,7 +497,7 @@ class SignupController extends Controller
 
             // Check if all previous steps are completed
             for ($i = 1; $i < $step; $i++) {
-                if (! in_array($i, $completedSteps)) {
+                if (!in_array($i, $completedSteps)) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please complete previous steps first.',
@@ -509,7 +509,7 @@ class SignupController extends Controller
             // Special check for step 2: email must be verified
             if ($step === 2) {
                 $leadId = Session::get('signup_lead_id');
-                if (! $leadId) {
+                if (!$leadId) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please complete step 1 and verify your email first.',
@@ -518,7 +518,7 @@ class SignupController extends Controller
                 }
 
                 $lead = SignupLead::find($leadId);
-                if (! $lead || ! $lead->hasVerifiedEmail()) {
+                if (!$lead || !$lead->hasVerifiedEmail()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please verify your email first.',
@@ -548,7 +548,7 @@ class SignupController extends Controller
             }
 
             // Scenario 2: User signed up but didn't verify email
-            if ($existingLead && ! $existingLead->hasVerifiedEmail()) {
+            if ($existingLead && !$existingLead->hasVerifiedEmail()) {
                 // Resend verification email
                 try {
                     $packageId = Session::get('selected_package_id');
@@ -676,7 +676,7 @@ class SignupController extends Controller
             $verificationSent = false;
             // Send verification email if not already verified
             $verificationSent = false;
-            if (! $lead->hasVerifiedEmail()) {
+            if (!$lead->hasVerifiedEmail()) {
                 try {
                     $packageId = Session::get('selected_package_id');
                     $lead->notify(new SignupLeadVerifyEmail($packageId));
@@ -732,7 +732,7 @@ class SignupController extends Controller
 
         $lead = SignupLead::find(Session::get('signup_lead_id'));
 
-        if (! $lead) {
+        if (!$lead) {
             return response()->json([
                 'success' => false,
                 'message' => 'Session expired. Please start over.',
@@ -821,7 +821,7 @@ class SignupController extends Controller
 
                 // Mark step 6 as completed
                 $completedSteps = Session::get('completed_steps', []);
-                if (! in_array(6, $completedSteps)) {
+                if (!in_array(6, $completedSteps)) {
                     $completedSteps[] = 6;
                     Session::put('completed_steps', $completedSteps);
                 }
@@ -956,7 +956,7 @@ class SignupController extends Controller
                 $phone = isset($phoneParts[1]) ? trim($phoneParts[1]) : '';
 
                 // Fallback: if no space found, try to extract code from start
-                if (empty($phone) && ! empty($phoneNumber)) {
+                if (empty($phone) && !empty($phoneNumber)) {
                     // Try to match country code pattern (e.g., +1, +44, etc.)
                     if (preg_match('/^(\+\d{1,4})\s*(.+)$/', $phoneNumber, $matches)) {
                         $phoneCode = $matches[1];
@@ -1028,7 +1028,7 @@ class SignupController extends Controller
 
                             Log::info('Sending registration complete email', [
                                 'lead_id' => $lead->id,
-                                'has_temp_password' => ! empty($lead->temp_password),
+                                'has_temp_password' => !empty($lead->temp_password),
                                 'temp_password_length' => strlen($lead->temp_password ?? ''),
                             ]);
 
@@ -1106,7 +1106,7 @@ class SignupController extends Controller
 
         // Mark step as completed
         $completedSteps = Session::get('completed_steps', []);
-        if (! in_array($step, $completedSteps)) {
+        if (!in_array($step, $completedSteps)) {
             $completedSteps[] = $step;
             Session::put('completed_steps', $completedSteps);
         }
@@ -1125,7 +1125,7 @@ class SignupController extends Controller
         $phoneNumber = $request->input('phone_number');
         $countryCode = $request->input('country_code');
 
-        if (! $email) {
+        if (!$email) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email is required.',
@@ -1149,7 +1149,7 @@ class SignupController extends Controller
         }
 
         // Create or get lead record only for email verification (minimal data)
-        if (! $lead || $lead->email !== $email) {
+        if (!$lead || $lead->email !== $email) {
             // Check if email already exists
             $existingLead = SignupLead::where('email', $email)->first();
 
@@ -1231,7 +1231,7 @@ class SignupController extends Controller
 
             // Mark step 1 as completed
             $completedSteps = Session::get('completed_steps', []);
-            if (! in_array(1, $completedSteps)) {
+            if (!in_array(1, $completedSteps)) {
                 $completedSteps[] = 1;
                 Session::put('completed_steps', $completedSteps);
             }
@@ -1271,7 +1271,7 @@ class SignupController extends Controller
 
         // Mark step 1 as completed (email verification is part of step 1 completion)
         $completedSteps = Session::get('completed_steps', []);
-        if (! in_array(1, $completedSteps)) {
+        if (!in_array(1, $completedSteps)) {
             $completedSteps[] = 1;
             Session::put('completed_steps', $completedSteps);
         }
@@ -1310,7 +1310,7 @@ class SignupController extends Controller
         $email = request()->input('email');
         $leadId = request()->input('lead_id');
 
-        if (! $email && ! $leadId) {
+        if (!$email && !$leadId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email or lead ID is required.',
@@ -1324,7 +1324,7 @@ class SignupController extends Controller
             $lead = SignupLead::where('email', $email)->first();
         }
 
-        if (! $lead) {
+        if (!$lead) {
             return response()->json([
                 'success' => false,
                 'message' => 'Lead not found.',
@@ -1367,7 +1367,7 @@ class SignupController extends Controller
         $leadId = Session::get('signup_lead_id');
         $lead = SignupLead::find($leadId);
 
-        if (! $lead) {
+        if (!$lead) {
             return response()->json([
                 'success' => false,
                 'message' => 'Session expired. Please start over.',
@@ -1379,11 +1379,13 @@ class SignupController extends Controller
         $billingCycle = $request->input('billing_cycle') ?? Session::get('selected_billing_cycle', 'annual');
         $currency = $request->input('currency', 'USD');
 
-        $package = SubscriptionPackage::with(['pricings' => function ($query) use ($currency, $billingCycle) {
-            $query->where('currency', $currency)->where('billing_cycle', $billingCycle);
-        }])->find($packageId);
+        $package = SubscriptionPackage::with([
+            'pricings' => function ($query) use ($currency, $billingCycle) {
+                $query->where('currency', $currency)->where('billing_cycle', $billingCycle);
+            }
+        ])->find($packageId);
 
-        if (! $package) {
+        if (!$package) {
             return response()->json(['success' => false, 'message' => 'Invalid package selected.'], 400);
         }
 
@@ -1393,7 +1395,7 @@ class SignupController extends Controller
         }
 
         $pricing = $package->pricings->first();
-        if (! $pricing) {
+        if (!$pricing) {
             return response()->json(['success' => false, 'message' => 'Price not found for the selected options.'], 400);
         }
 
@@ -1485,17 +1487,19 @@ class SignupController extends Controller
         try {
             $checkoutSession = StripeSession::create([
                 'payment_method_types' => ['card'],
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => $currency,
-                        'product_data' => [
-                            'name' => $package->name,
-                            'description' => $package->description,
+                'line_items' => [
+                    [
+                        'price_data' => [
+                            'currency' => $currency,
+                            'product_data' => [
+                                'name' => $package->name,
+                                'description' => $package->description,
+                            ],
+                            'unit_amount' => (int) round($finalAmount * 100), // Amount in cents
                         ],
-                        'unit_amount' => (int) round($finalAmount * 100), // Amount in cents
-                    ],
-                    'quantity' => 1,
-                ]],
+                        'quantity' => 1,
+                    ]
+                ],
                 'mode' => 'payment',
                 'success_url' => route('signup.payment.success') . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => route('signup.payment.cancel'),
@@ -1654,12 +1658,14 @@ class SignupController extends Controller
         $billingCycle = $lead->billing_cycle ?? $request->input('billing_cycle', 'annual');
         $package = SubscriptionPackage::with('pricings')->find($packageId);
 
-        if (!$package) return response()->json(['success' => false, 'message' => 'Invalid package.'], 400);
+        if (!$package)
+            return response()->json(['success' => false, 'message' => 'Invalid package.'], 400);
 
         // Calculate amount
         $currency = $request->input('currency', 'USD');
         $pricing = $package->pricings->where('currency', $currency)->where('billing_cycle', $billingCycle)->first();
-        if (!$pricing) return response()->json(['success' => false, 'message' => 'Pricing not found.'], 400);
+        if (!$pricing)
+            return response()->json(['success' => false, 'message' => 'Pricing not found.'], 400);
 
         $amount = $pricing->price;
         $couponCode = $request->input('coupon_code');
@@ -2214,7 +2220,7 @@ class SignupController extends Controller
                 $productName = $package->name . ' ' . ucfirst($interval);
                 $product = \Stripe\Product::create(['name' => $productName]);
                 $plan = \Stripe\Plan::create([
-                    'amount' => (int)($price * 100),
+                    'amount' => (int) ($price * 100),
                     'interval' => $interval,
                     'currency' => strtolower($currency),
                     'product' => $product->id,
@@ -2297,31 +2303,31 @@ class SignupController extends Controller
 
             // Insert into queue_panel_upgrades
             DB::connection('mysql_external')->table('queue_panel_upgrade')->insert([
-                'team_id'        => $teamId,
-                'inv_num'        => $invoiceNumber,
-                'package_id'     => $lead->package_id,
-                'price'          => $amountPaid,
-                'unit'           => $interval, // Stores 'year' or 'month'
-                'type'           => 'QUEUE',
-                'date'           => now(),
+                'team_id' => $teamId,
+                'inv_num' => $invoiceNumber,
+                'package_id' => $lead->package_id,
+                'price' => $amountPaid,
+                'unit' => $interval, // Stores 'year' or 'month'
+                'type' => 'QUEUE',
+                'date' => now(),
                 'subcription_id' => $subscriptionId,
-                'status'         => $dbStatus,
-                'created_at'     => now(),
-                'updated_at'     => now(),
+                'status' => $dbStatus,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             // Insert into subscriptions
             $dbSubId = DB::connection('mysql_external')->table('subscriptions')->insertGetId([
-                'domain_id'       => $domainId,
-                'type'            => 'QUEUE',
-                'stripe_id'       => $subscriptionId,
-                'stripe_status'   => $stripeStatus,
-                'stripe_price'    => $stripePriceId, // Plan ID
-                'quantity'        => 1,
-                'trial_ends_at'   => Carbon::createFromTimestamp($trialEnd),
-                'ends_at'         => Carbon::createFromTimestamp($trialEnd), // Next billing matches end
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'domain_id' => $domainId,
+                'type' => 'QUEUE',
+                'stripe_id' => $subscriptionId,
+                'stripe_status' => $stripeStatus,
+                'stripe_price' => $stripePriceId, // Plan ID
+                'quantity' => 1,
+                'trial_ends_at' => Carbon::createFromTimestamp($trialEnd),
+                'ends_at' => Carbon::createFromTimestamp($trialEnd), // Next billing matches end
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             // Insert Subscription Item
@@ -2330,12 +2336,12 @@ class SignupController extends Controller
 
             DB::connection('mysql_external')->table('subscription_items')->insert([
                 'subscription_id' => $dbSubId,
-                'stripe_id'       => $stripeItemId,
-                'stripe_product'  => $productId, // Product ID
-                'stripe_price'    => $stripePriceId, // Plan ID
-                'quantity'        => 1,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'stripe_id' => $stripeItemId,
+                'stripe_product' => $productId, // Product ID
+                'stripe_price' => $price, // Actual Price
+                'quantity' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             Log::info('Stored subscription details in external DB', ['team_id' => $teamId, 'domain_id' => $domainId]);

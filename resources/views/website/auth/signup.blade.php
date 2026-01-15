@@ -233,36 +233,36 @@
                     class="step active bg-white p-12 rounded-3xl shadow-xl shadow-slate-200/50 w-full max-w-md backdrop-blur-sm">
                     <div id="step-1-header">
                         @php
-                        $headerTitle = 'Create 14 days free account';
-                        $showSubheading = true;
-                        if(isset($packages) && isset($preselected_package_id)) {
-                        $selectedPkg = collect($packages)->firstWhere('id', $preselected_package_id);
-                        if($selectedPkg) {
-                        $pkgName = strtolower($selectedPkg['name']);
-                        if(str_contains($pkgName, 'business') || str_contains($pkgName, 'enterprise')) {
-                        $headerTitle = 'Create your account to get started';
-                        $showSubheading = false;
-                        }
-                        }
-                        }
+                            $headerTitle = 'Create 14 days free account';
+                            $showSubheading = true;
+                            if (isset($packages) && isset($preselected_package_id)) {
+                                $selectedPkg = collect($packages)->firstWhere('id', $preselected_package_id);
+                                if ($selectedPkg) {
+                                    $pkgName = strtolower($selectedPkg['name']);
+                                    if (str_contains($pkgName, 'business') || str_contains($pkgName, 'enterprise')) {
+                                        $headerTitle = 'Create your account to get started';
+                                        $showSubheading = false;
+                                    }
+                                }
+                            }
                         @endphp
                         <h2 class="text-3xl font-bold mb-3 text-slate-900">{{ $headerTitle }}</h2>
                         @if($showSubheading)
-                        <p class="text-slate-500 mb-8">Get started with your free trial today</p>
+                            <p class="text-slate-500 mb-8">Get started with your free trial today</p>
                         @endif
                     </div>
 
                     @if(session('verified'))
-                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm"
-                        id="verification-success-message">
-                        {{ session('verified') }}
-                    </div>
+                        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm"
+                            id="verification-success-message">
+                            {{ session('verified') }}
+                        </div>
                     @endif
 
                     @if(session('error'))
-                    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                        {{ session('error') }}
-                    </div>
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                            {{ session('error') }}
+                        </div>
                     @endif
 
                     <!-- Email Verification Message (shown after form submission) -->
@@ -822,347 +822,413 @@
         </div>
 
         <!-- Step 7: Checkout & Payment -->
-        <div id="step-7"
-            class="step w-full max-w-6xl mx-auto text-center p-4 mt-[120px] hidden">
+        <div id="step-7" class="step w-full max-w-6xl mx-auto text-center p-4 mt-[120px] hidden">
 
-            <form id="form-step-7">
+            <form id="form-step-7" autocomplete="off">
                 @csrf
                 <input type="hidden" name="package_id" id="selected_package_id" value="{{ $preselected_package_id }}">
-                <input type="hidden" name="billing_cycle" id="selected_billing_cycle" value="{{ $selectedBillingCycle }}">
+                <input type="hidden" name="billing_cycle" id="selected_billing_cycle"
+                    value="{{ $selectedBillingCycle }}">
                 @if(isset($selectedPackage))
-                <input type="hidden" id="selected-pkg-price-monthly" value="{{ $selectedPackage['monthly_price'] ?? 0 }}">
-                <input type="hidden" id="selected-pkg-price-annual" value="{{ $selectedPackage['annual_price'] ?? 0 }}">
+                    <input type="hidden" id="selected-pkg-price-monthly"
+                        value="{{ $selectedPackage['monthly_price'] ?? 0 }}">
+                    <input type="hidden" id="selected-pkg-price-annual" value="{{ $selectedPackage['annual_price'] ?? 0 }}">
                 @endif
 
                 @if($hasSelectedPackage && $selectedPackage && $lead)
-                <!-- Checkout Summary Card -->
-                <!-- Professional Checkout Summary Card -->
-                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 mb-0">
-                    <div class="grid grid-cols-1 lg:grid-cols-2">
-                        <!-- Left Side: User Details (6 columns) -->
-                        <div class="lg:col-span-1 p-6">
-                            @php
-                            $pkgStartDate = \Carbon\Carbon::now();
-                            $pkgTrialDays = $selectedPackage['trial_days'] ?? 0;
-                            if ($pkgTrialDays > 0) {
-                            $pkgEndDate = $pkgStartDate->copy()->addDays($pkgTrialDays);
-                            $dateLabel = "Trial Period ({$pkgTrialDays} Days)";
-                            } else {
-                            $pkgEndDate = $selectedBillingCycle === 'monthly' ? $pkgStartDate->copy()->addMonth() : $pkgStartDate->copy()->addYear();
-                            $dateLabel = "Subscription Period";
-                            }
-                            @endphp
+                    <!-- Checkout Summary Card -->
+                    <!-- Professional Checkout Summary Card -->
+                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 mb-0">
+                        <div class="grid grid-cols-1 lg:grid-cols-2">
+                            <!-- Left Side: User Details (6 columns) -->
+                            <div class="lg:col-span-1 p-6">
+                                @php
+                                    $pkgStartDate = \Carbon\Carbon::now();
+                                    $pkgTrialDays = $selectedPackage['trial_days'] ?? 0;
+                                    if ($pkgTrialDays > 0) {
+                                        $pkgEndDate = $pkgStartDate->copy()->addDays($pkgTrialDays);
+                                        $dateLabel = "Trial Period ({$pkgTrialDays} Days)";
+                                    } else {
+                                        $pkgEndDate = $selectedBillingCycle === 'monthly' ? $pkgStartDate->copy()->addMonth() : $pkgStartDate->copy()->addYear();
+                                        $dateLabel = "Subscription Period";
+                                    }
+                                @endphp
 
-                            <!-- Customer Information Section -->
-                            <div class="mb-8">
-                                <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
-                                    <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                    Customer Information
-                                </h4>
+                                <!-- Customer Information Section -->
+                                <div class="mb-8">
+                                    <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        Customer Information
+                                    </h4>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Full Name</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-fullname">{{ $lead->name ?? 'N/A' }}</p>
-                                    </div>
-                                    @if($lead->company_name)
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Company Name</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-company">{{ $lead->company_name }}</p>
-                                    </div>
-                                    @endif
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Email Address</label>
-                                        <p class="font-semibold text-slate-900 text-[15px] break-all" id="summary-email">{{ $lead->email ?? 'N/A' }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Phone Number</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-phone">{{ $lead->country_code ?? '' }} {{ $lead->phone_number ?? 'N/A' }}</p>
-                                    </div>
-                                    @if($lead->domain_name)
-                                    <div class="sm:col-span-2">
-                                        <label class="block text-sm text-slate-500 mb-1">Domain Name</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-domain">{{ $lead->domain_name }}</p>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- Business Details Section -->
-                            <div>
-                                <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
-                                    <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
-                                    Business Details
-                                </h4>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
-                                    @if($lead->usage_preference)
-                                    <div class="summary-item" id="container-usage-preference">
-                                        <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-usage-preference">{{ $lead->usage_preference }}</p>
-                                    </div>
-                                    @else
-                                    <div class="summary-item hidden" id="container-usage-preference">
-                                        <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-usage-preference"></p>
-                                    </div>
-                                    @endif
-
-                                    @if($lead->industry)
-                                    <div class="summary-item" id="container-industry">
-                                        <label class="block text-sm text-slate-500 mb-1">Industry</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry">{{ $lead->industry }}</p>
-                                    </div>
-                                    @else
-                                    <div class="summary-item hidden" id="container-industry">
-                                        <label class="block text-sm text-slate-500 mb-1">Industry</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry"></p>
-                                    </div>
-                                    @endif
-
-                                    @if($lead->footfall)
-                                    <div class="summary-item" id="container-footfall">
-                                        <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall">{{ $lead->footfall }}</p>
-                                    </div>
-                                    @else
-                                    <div class="summary-item hidden" id="container-footfall">
-                                        <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall"></p>
-                                    </div>
-                                    @endif
-
-                                    @if($lead->current_solution)
-                                    <div class="summary-item" id="container-current-solution">
-                                        <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-current-solution">{{ $lead->current_solution }}</p>
-                                    </div>
-                                    @else
-                                    <div class="summary-item hidden" id="container-current-solution">
-                                        <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]" id="summary-current-solution"></p>
-                                    </div>
-                                    @endif
-
-                                    <!-- Package Dates -->
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Package Start</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]">{{ $pkgStartDate->format('d M, Y') }}</p>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm text-slate-500 mb-1">Package End</label>
-                                        <p class="font-semibold text-slate-900 text-[15px]">{{ $pkgEndDate->format('d M, Y') }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Side: Order Summary (6 columns) -->
-                        <div class="lg:col-span-1 bg-slate-50 p-6 border-l border-slate-100 flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                    Order Summary
-                                </h3>
-
-                                <!-- Selected Package Card -->
-                                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-4">
-                                    <div class="flex justify-between items-start mb-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
                                         <div>
-                                            <h4 class="text-base font-bold text-slate-900">{{ $selectedPackage['name'] }}</h4>
-                                            @if($selectedPackage['subtitle'])
-                                            <p class="text-xs text-slate-500">{{ $selectedPackage['subtitle'] }}</p>
-                                            @endif
+                                            <label class="block text-sm text-slate-500 mb-1">Full Name</label>
+                                            <p class="font-semibold text-slate-900 text-[15px]" id="summary-fullname">
+                                                {{ $lead->name ?? 'N/A' }}
+                                            </p>
                                         </div>
-                                        <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Selected</span>
+                                        @if($lead->company_name)
+                                            <div>
+                                                <label class="block text-sm text-slate-500 mb-1">Company Name</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-company">
+                                                    {{ $lead->company_name }}
+                                                </p>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <label class="block text-sm text-slate-500 mb-1">Email Address</label>
+                                            <p class="font-semibold text-slate-900 text-[15px] break-all"
+                                                id="summary-email">{{ $lead->email ?? 'N/A' }}</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-slate-500 mb-1">Phone Number</label>
+                                            <p class="font-semibold text-slate-900 text-[15px]" id="summary-phone">
+                                                {{ $lead->country_code ?? '' }} {{ $lead->phone_number ?? 'N/A' }}
+                                            </p>
+                                        </div>
+                                        @if($lead->domain_name)
+                                            <div class="sm:col-span-2">
+                                                <label class="block text-sm text-slate-500 mb-1">Domain Name</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-domain">
+                                                    {{ $lead->domain_name }}
+                                                </p>
+                                            </div>
+                                        @endif
                                     </div>
+                                </div>
+
+                                <!-- Business Details Section -->
+                                <div>
+                                    <h4 class="flex items-center gap-2 font-bold text-slate-900 mb-6">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                        Business Details
+                                    </h4>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+                                        @if($lead->usage_preference)
+                                            <div class="summary-item" id="container-usage-preference">
+                                                <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]"
+                                                    id="summary-usage-preference">{{ $lead->usage_preference }}</p>
+                                            </div>
+                                        @else
+                                            <div class="summary-item hidden" id="container-usage-preference">
+                                                <label class="block text-sm text-slate-500 mb-1">Usage Preference</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]"
+                                                    id="summary-usage-preference"></p>
+                                            </div>
+                                        @endif
+
+                                        @if($lead->industry)
+                                            <div class="summary-item" id="container-industry">
+                                                <label class="block text-sm text-slate-500 mb-1">Industry</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry">
+                                                    {{ $lead->industry }}
+                                                </p>
+                                            </div>
+                                        @else
+                                            <div class="summary-item hidden" id="container-industry">
+                                                <label class="block text-sm text-slate-500 mb-1">Industry</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-industry"></p>
+                                            </div>
+                                        @endif
+
+                                        @if($lead->footfall)
+                                            <div class="summary-item" id="container-footfall">
+                                                <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall">
+                                                    {{ $lead->footfall }}
+                                                </p>
+                                            </div>
+                                        @else
+                                            <div class="summary-item hidden" id="container-footfall">
+                                                <label class="block text-sm text-slate-500 mb-1">Daily Footfall</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]" id="summary-footfall"></p>
+                                            </div>
+                                        @endif
+
+                                        @if($lead->current_solution)
+                                            <div class="summary-item" id="container-current-solution">
+                                                <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]"
+                                                    id="summary-current-solution">{{ $lead->current_solution }}</p>
+                                            </div>
+                                        @else
+                                            <div class="summary-item hidden" id="container-current-solution">
+                                                <label class="block text-sm text-slate-500 mb-1">Current Solution</label>
+                                                <p class="font-semibold text-slate-900 text-[15px]"
+                                                    id="summary-current-solution"></p>
+                                            </div>
+                                        @endif
+
+                                        <!-- Package Dates -->
+                                        <div>
+                                            <label class="block text-sm text-slate-500 mb-1">Package Start</label>
+                                            <p class="font-semibold text-slate-900 text-[15px]">
+                                                {{ $pkgStartDate->format('d M, Y') }}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm text-slate-500 mb-1">Package End</label>
+                                            <p class="font-semibold text-slate-900 text-[15px]">
+                                                {{ $pkgEndDate->format('d M, Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side: Order Summary (6 columns) -->
+                            <div
+                                class="lg:col-span-1 bg-slate-50 p-6 border-l border-slate-100 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                        <svg class="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                        Order Summary
+                                    </h3>
+
+                                    <!-- Selected Package Card -->
+                                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-4">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 class="text-base font-bold text-slate-900">
+                                                    {{ $selectedPackage['name'] }}
+                                                </h4>
+                                                @if($selectedPackage['subtitle'])
+                                                    <p class="text-xs text-slate-500">{{ $selectedPackage['subtitle'] }}</p>
+                                                @endif
+                                            </div>
+                                            <span
+                                                class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide">Selected</span>
+                                        </div>
+
+                                        @php
+                                            $displayPrice = $selectedBillingCycle === 'monthly'
+                                                ? $selectedPackage['monthly_price']
+                                                : $selectedPackage['annual_price'];
+                                            $billingLabel = $selectedBillingCycle === 'monthly' ? 'Monthly Plan' : 'Annual Plan';
+                                            $billingPeriod = $selectedBillingCycle === 'monthly' ? '/mo' : '/yr';
+                                        @endphp
+
+                                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
+                                            <span class="text-sm font-medium text-slate-600">{{ $billingLabel }}</span>
+                                            <div class="text-right flex gap-1">
+                                                <span class="block text-base font-bold text-slate-900">
+                                                    @if($displayPrice)
+                                                        ${{ number_format($displayPrice, 2) }}
+                                                    @else
+                                                        Free
+                                                    @endif
+                                                </span>
+                                                <span class="text-lg text-slate-400">{{ $billingPeriod }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Detailed Breakdown -->
+                                    @php
+                                        $sessionCoupon = session('selected_coupon');
+                                        $hasCoupon = !empty($sessionCoupon);
+                                        $discountAmount = $hasCoupon ? $sessionCoupon['discount_amount'] : 0;
+                                        $finalPrice = $hasCoupon ? max(0, ($displayPrice - $discountAmount)) : $displayPrice;
+                                    @endphp
+                                    <div class="space-y-3 mb-2">
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-500">Subtotal</span>
+                                            <span class="font-medium text-slate-900"
+                                                id="summary-subtotal">${{ number_format($displayPrice ?? 0, 2) }}</span>
+                                        </div>
+
+                                        @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
+                                            <div
+                                                class="flex justify-between items-center text-sm py-2 px-3 bg-green-50 rounded-lg border border-green-100">
+                                                <span class="flex items-center gap-2 text-green-700 font-medium">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    {{ $selectedPackage['trial_days'] }} Day Free Trial
+                                                </span>
+                                                <span class="font-bold text-green-700">-
+                                                    ₹{{ number_format($displayPrice ?? 0, 2) }}</span>
+                                            </div>
+                                        @endif
+
+                                        <!-- Discount Row (Hidden if no coupon) -->
+                                        <div id="summary-discount-row"
+                                            class="flex justify-between items-center text-sm {{ $hasCoupon ? '' : 'hidden' }}">
+                                            <span class="text-green-600 font-medium">Coupon Discount</span>
+                                            <span class="font-bold text-green-600" id="summary-discount-amount">-
+                                                ${{ number_format($discountAmount ?? 0, 2) }}</span>
+                                        </div>
+                                        <input type="hidden" id="active-coupon-discount" value="{{ $discountAmount ?? 0 }}">
+
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-slate-500">Taxes</span>
+                                            <span class="text-xs text-slate-400 italic">Calculated at payment</span>
+                                        </div>
+
+                                        <div class="pt-4 border-t border-slate-100 mt-2">
+                                            <div id="coupon-section">
+
+                                                <button type="button" id="toggle-coupon-btn" onclick="toggleCouponInput()"
+                                                    class="text-sm text-primary font-medium hover:underline flex items-center gap-1 focus:outline-none {{ $hasCoupon ? 'hidden' : '' }}">
+                                                    Have a coupon code?
+                                                </button>
+
+                                                <div id="coupon-input-container" class="mt-3 hidden">
+                                                    <div class="flex gap-2">
+                                                        <input type="text" id="coupon-code-input"
+                                                            class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#7C69EF] uppercase"
+                                                            placeholder="Enter code">
+                                                        <button type="button" id="apply-coupon-btn" onclick="applyCoupon()"
+                                                            class="bg-[#7C69EF] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#6050dc] transition-colors whitespace-nowrap">
+                                                            Apply
+                                                        </button>
+                                                    </div>
+                                                    <p id="coupon-message" class="text-xs mt-2 font-medium hidden"></p>
+                                                </div>
+
+                                                <div id="applied-coupon-container"
+                                                    class="mt-3 {{ $hasCoupon ? '' : 'hidden' }} bg-green-50 border border-green-100 rounded-lg p-3 flex justify-between items-center">
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="text-sm text-green-700 font-bold flex items-center gap-1">
+                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                                stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            <span
+                                                                id="applied-coupon-code-display">{{ $hasCoupon ? $sessionCoupon['code'] : '' }}</span>
+                                                        </span>
+                                                        <span class="text-xs text-green-600">Coupon applied
+                                                            successfully</span>
+                                                    </div>
+                                                    <button type="button" onclick="removeCoupon()"
+                                                        class="text-xs text-red-500 hover:text-red-700 font-bold uppercase transition-colors focus:outline-none">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Total Section -->
+                                <div class="border-t-2 border-dashed border-slate-200 pt-4 mt-2">
+                                    <div class="flex justify-between items-end mb-1">
+                                        <span class="text-base font-bold text-slate-700">Total Due Today</span>
+                                        <span class="text-xl font-bold text-slate-900 leading-none" id="total-due-today">
+                                            @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
+                                                $0.00
+                                            @else
+                                                ${{ number_format($finalPrice ?? $displayPrice ?? 0, 2) }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
+                                        <p class="text-xs text-slate-500 text-right mt-1">
+                                            First payment of ${{ number_format($displayPrice ?? 0, 2) }} due after trial
+                                        </p>
+                                    @endif
+
+
 
                                     @php
-                                    $displayPrice = $selectedBillingCycle === 'monthly'
-                                    ? $selectedPackage['monthly_price']
-                                    : $selectedPackage['annual_price'];
-                                    $billingLabel = $selectedBillingCycle === 'monthly' ? 'Monthly Plan' : 'Annual Plan';
-                                    $billingPeriod = $selectedBillingCycle === 'monthly' ? '/mo' : '/yr';
+                                        $showPaymentSection = $hasSelectedPackage && $selectedPackage && ($selectedPackage['credit_card_required'] ?? false);
                                     @endphp
 
-                                    <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-                                        <span class="text-sm font-medium text-slate-600">{{ $billingLabel }}</span>
-                                        <div class="text-right flex gap-1">
-                                            <span class="block text-base font-bold text-slate-900">
-                                                @if($displayPrice)
-                                                ${{ number_format($displayPrice, 2) }}
-                                                @else
-                                                Free
-                                                @endif
-                                            </span>
-                                            <span class="text-lg text-slate-400">{{ $billingPeriod }}</span>
+                                    <div id="payment-details-section"
+                                        class="{{ $showPaymentSection ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
+
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                            </svg>
+                                            <h3 class="font-bold text-slate-900">Secure Payment</h3>
+                                        </div>
+
+                                        <!-- Payment fields -->
+                                        <div class="space-y-4">
+                                            <div id="stripe-fields-container">
+                                                <div>
+                                                    <label
+                                                        class="block text-xs font-semibold mb-1 text-slate-700 text-left">Name
+                                                        on Card</label>
+                                                    <input type="text" autocomplete="off"
+                                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary transition-all text-sm"
+                                                        placeholder="John Doe">
+                                                </div>
+                                                <div class="mt-4">
+                                                    <label
+                                                        class="block text-xs font-semibold mb-1 text-slate-700 text-left">Card
+                                                        Details</label>
+                                                    <div id="card-element"
+                                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary transition-all text-sm">
+                                                        <!-- A Stripe Element will be inserted here. -->
+                                                    </div>
+                                                    <div id="card-errors" role="alert" class="mt-1 text-xs text-red-600">
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Detailed Breakdown -->
-                                @php
-                                $sessionCoupon = session('selected_coupon');
-                                $hasCoupon = !empty($sessionCoupon);
-                                $discountAmount = $hasCoupon ? $sessionCoupon['discount_amount'] : 0;
-                                $finalPrice = $hasCoupon ? max(0, ($displayPrice - $discountAmount)) : $displayPrice;
-                                @endphp
-                                <div class="space-y-3 mb-2">
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-slate-500">Subtotal</span>
-                                        <span class="font-medium text-slate-900" id="summary-subtotal">${{ number_format($displayPrice ?? 0, 2) }}</span>
-                                    </div>
-
-                                    @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
-                                    <div class="flex justify-between items-center text-sm py-2 px-3 bg-green-50 rounded-lg border border-green-100">
-                                        <span class="flex items-center gap-2 text-green-700 font-medium">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            {{ $selectedPackage['trial_days'] }} Day Free Trial
-                                        </span>
-                                        <span class="font-bold text-green-700">- ₹{{ number_format($displayPrice ?? 0, 2) }}</span>
-                                    </div>
-                                    @endif
-
-                                    <!-- Discount Row (Hidden if no coupon) -->
-                                    <div id="summary-discount-row" class="flex justify-between items-center text-sm {{ $hasCoupon ? '' : 'hidden' }}">
-                                        <span class="text-green-600 font-medium">Coupon Discount</span>
-                                        <span class="font-bold text-green-600" id="summary-discount-amount">- ${{ number_format($discountAmount ?? 0, 2) }}</span>
-                                    </div>
-                                    <input type="hidden" id="active-coupon-discount" value="{{ $discountAmount ?? 0 }}">
-
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-slate-500">Taxes</span>
-                                        <span class="text-xs text-slate-400 italic">Calculated at payment</span>
-                                    </div>
-
-                                    <div class="pt-4 border-t border-slate-100 mt-2">
-                                        <div id="coupon-section">
-
-                                            <button type="button" id="toggle-coupon-btn" onclick="toggleCouponInput()"
-                                                class="text-sm text-primary font-medium hover:underline flex items-center gap-1 focus:outline-none {{ $hasCoupon ? 'hidden' : '' }}">
-                                                Have a coupon code?
+                                    <div id="checkout-actions-container" class="mt-8">
+                                        <div class="flex flex-col items-center gap-4 pb-8 max-w-md mx-auto">
+                                            <button type="submit" id="checkout-btn"
+                                                class="w-full bg-[#7C69EF] hover:bg-[#6352D1] text-white font-bold text-lg py-3 rounded-2xl shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1 flex items-center justify-center group relative overflow-hidden">
+                                                <span
+                                                    class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden spinner"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                        stroke-width="4">
+                                                    </circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
+                                                </svg>
+                                                <span id="checkout-btn-text" class="relative z-10 flex items-center gap-2">
+                                                    {{ $hasSelectedPackage ? 'Proceed to Pay' : 'Select a Plan First' }}
+                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                    </svg>
+                                                </span>
                                             </button>
 
-                                            <div id="coupon-input-container" class="mt-3 hidden">
-                                                <div class="flex gap-2">
-                                                    <input type="text" id="coupon-code-input" class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-[#7C69EF] uppercase" placeholder="Enter code">
-                                                    <button type="button" id="apply-coupon-btn" onclick="applyCoupon()" class="bg-[#7C69EF] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#6050dc] transition-colors whitespace-nowrap">
-                                                        Apply
-                                                    </button>
-                                                </div>
-                                                <p id="coupon-message" class="text-xs mt-2 font-medium hidden"></p>
-                                            </div>
-
-                                            <div id="applied-coupon-container" class="mt-3 {{ $hasCoupon ? '' : 'hidden' }} bg-green-50 border border-green-100 rounded-lg p-3 flex justify-between items-center">
-                                                <div class="flex flex-col">
-                                                    <span class="text-sm text-green-700 font-bold flex items-center gap-1">
-                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        <span id="applied-coupon-code-display">{{ $hasCoupon ? $sessionCoupon['code'] : '' }}</span>
-                                                    </span>
-                                                    <span class="text-xs text-green-600">Coupon applied successfully</span>
-                                                </div>
-                                                <button type="button" onclick="removeCoupon()" class="text-xs text-red-500 hover:text-red-700 font-bold uppercase transition-colors focus:outline-none">Remove</button>
-                                            </div>
+                                            <p class="text-xs text-slate-400">
+                                                By confirming, you agree to our <a href="#"
+                                                    class="text-primary hover:underline">Terms of Service</a> and <a
+                                                    href="#" class="text-primary hover:underline">Privacy Policy</a>
+                                            </p>
                                         </div>
                                     </div>
+
                                 </div>
-                            </div>
-
-                            <!-- Total Section -->
-                            <div class="border-t-2 border-dashed border-slate-200 pt-4 mt-2">
-                                <div class="flex justify-between items-end mb-1">
-                                    <span class="text-base font-bold text-slate-700">Total Due Today</span>
-                                    <span class="text-xl font-bold text-slate-900 leading-none" id="total-due-today">
-                                        @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
-                                        $0.00
-                                        @else
-                                        ${{ number_format($finalPrice ?? $displayPrice ?? 0, 2) }}
-                                        @endif
-                                    </span>
-                                </div>
-                                @if($selectedPackage['trial_days'] && $selectedPackage['trial_days'] > 0)
-                                <p class="text-xs text-slate-500 text-right mt-1">
-                                    First payment of ${{ number_format($displayPrice ?? 0, 2) }} due after trial
-                                </p>
-                                @endif
-
-
-
-                                @php
-                                $showPaymentSection = $hasSelectedPackage && $selectedPackage && ($selectedPackage['credit_card_required'] ?? false);
-                                @endphp
-
-                                <div id="payment-details-section" class="{{ $showPaymentSection ? '' : 'hidden' }} mt-4 pt-4 border-t border-slate-200">
-
-                                    <div class="flex items-center gap-2 mb-3">
-                                        <svg class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                        </svg>
-                                        <h3 class="font-bold text-slate-900">Secure Payment</h3>
-                                    </div>
-
-                                    <!-- Payment fields -->
-                                    <div class="space-y-4">
-                                        <div id="stripe-fields-container">
-                                            <div>
-                                                <label class="block text-xs font-semibold mb-1 text-slate-700 text-left">Name on Card</label>
-                                                <input type="text" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary transition-all text-sm" placeholder="John Doe">
-                                            </div>
-                                            <div class="mt-4">
-                                                <label class="block text-xs font-semibold mb-1 text-slate-700 text-left">Card Details</label>
-                                                <div id="card-element" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-primary transition-all text-sm">
-                                                    <!-- A Stripe Element will be inserted here. -->
-                                                </div>
-                                                <div id="card-errors" role="alert" class="mt-1 text-xs text-red-600"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div id="checkout-actions-container" class="mt-8">
-                                    <div class="flex flex-col items-center gap-4 pb-8 max-w-md mx-auto">
-                                        <button type="submit" id="checkout-btn"
-                                            class="w-full bg-[#7C69EF] hover:bg-[#6352D1] text-white font-bold text-lg py-3 rounded-2xl shadow-lg shadow-indigo-200 transition-all hover:-translate-y-1 flex items-center justify-center group relative overflow-hidden">
-                                            <span class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden spinner"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                                                </circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                            <span id="checkout-btn-text" class="relative z-10 flex items-center gap-2">
-                                                {{ $hasSelectedPackage ? 'Proceed to Pay' : 'Select a Plan First' }}
-                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                </svg>
-                                            </span>
-                                        </button>
-
-                                        <p class="text-xs text-slate-400">
-                                            By confirming, you agree to our <a href="#" class="text-primary hover:underline">Terms of Service</a> and <a href="#" class="text-primary hover:underline">Privacy Policy</a>
-                                        </p>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
                     </div>
-                </div>
                 @endif
 
                 @php
-                $showPaymentSection = $hasSelectedPackage && $selectedPackage && ($selectedPackage['credit_card_required'] ?? false);
+                    $showPaymentSection = $hasSelectedPackage && $selectedPackage && ($selectedPackage['credit_card_required'] ?? false);
                 @endphp
 
 
@@ -1172,7 +1238,7 @@
 
     <script>
         // Set a flag to identify this as the signup page tab
-        if (typeof(Storage) !== "undefined") {
+        if (typeof (Storage) !== "undefined") {
             localStorage.setItem('signupPageOpen', 'true');
             localStorage.setItem('signupPageUrl', window.location.href);
         }
@@ -1180,9 +1246,9 @@
         // Note: Cross-tab communication removed - only the tab where verification link is clicked will redirect
 
         // Clean up on page unload
-        window.addEventListener('beforeunload', function() {
+        window.addEventListener('beforeunload', function () {
             // Don't clear immediately, wait a bit in case it's just a navigation
-            setTimeout(function() {
+            setTimeout(function () {
                 if (document.visibilityState === 'hidden') {
                     localStorage.removeItem('signupPageOpen');
                 }
@@ -1263,7 +1329,7 @@
         })();
         */
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Stripe Global Variables
             let stripe = null;
             let elements = null;
@@ -1276,7 +1342,7 @@
                 console.error('Stripe initialization failed:', e);
             }
 
-            window.initStripeElements = function() {
+            window.initStripeElements = function () {
                 if (!elements && stripe) {
                     elements = stripe.elements();
                     const style = {
@@ -1301,7 +1367,7 @@
                         });
                         cardElement.mount('#card-element');
 
-                        cardElement.on('change', function(event) {
+                        cardElement.on('change', function (event) {
                             const displayError = document.getElementById('card-errors');
                             if (event.error) {
                                 displayError.textContent = event.error.message;
@@ -1361,7 +1427,7 @@
                         console.log('intlTelInput initialized successfully');
 
                         // Ensure the dropdown is properly initialized and has correct width
-                        setTimeout(function() {
+                        setTimeout(function () {
                             const itiWrapper = phoneInputElement.closest('.iti');
                             if (itiWrapper) {
                                 const flagContainer = itiWrapper.querySelector('.iti__flag-container');
@@ -1382,8 +1448,8 @@
                                     document.documentElement.style.setProperty('--iti-dropdown-width', inputWidth + 'px');
 
                                     // Function to update dropdown width
-                                    const updateDropdownWidth = function() {
-                                        setTimeout(function() {
+                                    const updateDropdownWidth = function () {
+                                        setTimeout(function () {
                                             const dropdown = document.querySelector('.iti__country-list');
                                             if (dropdown) {
                                                 dropdown.style.width = inputWidth + 'px';
@@ -1398,10 +1464,10 @@
                                     phoneInputElement.addEventListener('click', updateDropdownWidth);
 
                                     // Also use MutationObserver to catch when dropdown is added to DOM
-                                    const observer = new MutationObserver(function(mutations) {
-                                        mutations.forEach(function(mutation) {
+                                    const observer = new MutationObserver(function (mutations) {
+                                        mutations.forEach(function (mutation) {
                                             if (mutation.addedNodes.length) {
-                                                mutation.addedNodes.forEach(function(node) {
+                                                mutation.addedNodes.forEach(function (node) {
                                                     if (node.classList && node.classList.contains('iti__country-list')) {
                                                         updateDropdownWidth();
                                                     }
@@ -1429,7 +1495,7 @@
 
                 // Clear phone input if page was refreshed
                 if (window.signupPageRefreshed) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         if (typeof iti !== 'undefined' && iti) {
                             iti.setNumber('');
                         }
@@ -1438,7 +1504,7 @@
 
                 // Pre-fill phone number if saved data exists AND page was not refreshed
                 if (savedCountryCode && savedPhoneNumber && !window.signupPageRefreshed) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         // Set country code first
                         const dialCode = savedCountryCode.replace('+', '');
                         const countryData = iti.getCountryData().find(c => c.dialCode === dialCode);
@@ -1450,7 +1516,7 @@
                     }, 200);
                 } else {
                     // Clear any auto-filled value after initialization (browsers sometimes fill after init)
-                    setTimeout(function() {
+                    setTimeout(function () {
                         const currentValue = $phoneInput.val();
                         // Check if the value looks like an email (contains @)
                         if (currentValue && currentValue.includes('@')) {
@@ -1463,7 +1529,7 @@
                 }
 
                 // Also clear on focus if it contains @
-                $phoneInput.on('focus', function() {
+                $phoneInput.on('focus', function () {
                     const val = $(this).val();
                     if (val && val.includes('@')) {
                         $(this).val('');
@@ -1474,7 +1540,7 @@
                 });
 
                 // Prevent non-numeric keypress
-                $phoneInput.on('keypress', function(e) {
+                $phoneInput.on('keypress', function (e) {
                     // Allow: backspace, delete, tab, escape, enter, and special keys
                     if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
                         // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
@@ -1493,7 +1559,7 @@
                 });
 
                 // Prevent non-numeric input (only allow digits) - backup validation
-                $phoneInput.on('input', function(e) {
+                $phoneInput.on('input', function (e) {
                     const input = this;
                     const originalValue = input.value;
                     // Remove any non-digit characters
@@ -1517,7 +1583,7 @@
                 });
 
                 // Prevent paste of non-numeric content
-                $phoneInput.on('paste', function(e) {
+                $phoneInput.on('paste', function (e) {
                     e.preventDefault();
                     const pastedText = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
                     const numericText = pastedText.replace(/\D/g, '');
@@ -1593,7 +1659,7 @@
             }
 
             // Auto-sync domain name with company name
-            $('#company_name').on('input', function() {
+            $('#company_name').on('input', function () {
                 $('#domain_name').val($(this).val().toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, ''));
             });
 
@@ -1601,23 +1667,23 @@
             const $passwordInput = $('#signup_password');
             const $passwordRequirements = $('#password-requirements');
 
-            $passwordInput.on('focus', function() {
+            $passwordInput.on('focus', function () {
                 $passwordRequirements.removeClass('hidden');
             });
 
-            $passwordInput.on('blur', function() {
+            $passwordInput.on('blur', function () {
                 // Always hide when focus leaves password field
                 $passwordRequirements.addClass('hidden');
             });
 
             // Real-time validation on input (only when field is focused)
-            $passwordInput.on('input', function() {
+            $passwordInput.on('input', function () {
                 const val = $(this).val();
                 $.each({
                     min: val.length >= 8,
                     upper: /[A-Z]/.test(val),
                     lower: /[a-z]/.test(val)
-                }, function(key, isValid) {
+                }, function (key, isValid) {
                     const $item = $(`.requirement-item[data-requirement="${key}"]`);
                     $item.toggleClass('text-green-500', isValid).toggleClass('text-slate-500', !isValid);
                     $item.find('svg').toggleClass('hidden', !isValid);
@@ -1690,7 +1756,7 @@
             }
 
             // Remove selected state from all cards in the container
-            $container.find('.option-card, .list-option-card').each(function() {
+            $container.find('.option-card, .list-option-card').each(function () {
                 const $card = $(this);
                 // Remove purple border and background, restore default border
                 $card.removeClass('border-[#7C69EF] bg-[#7C69EF]/5 bg-[rgba(124,105,239,0.05)]');
@@ -1876,7 +1942,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                     'Accept': 'application/json'
                 },
-                success: function(data) {
+                success: function (data) {
                     console.log('Step ' + stepNum + ' response:', data);
 
                     if (stepNum === 7) {
@@ -1955,7 +2021,7 @@
                         // Swal.fire('Error', data.message || 'Something went wrong', 'error');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     console.error('AJAX error:', xhr.status, xhr.responseJSON);
                     const errorData = xhr.responseJSON || {};
                     if (xhr.status === 422) {
@@ -1986,11 +2052,11 @@
                             window.location.href = errorData.redirect;
                         } else {
                             Swal.fire({
-                                    title: 'Access Denied',
-                                    text: errorData.message || 'Please complete previous steps first.',
-                                    icon: 'warning',
-                                    confirmButtonText: 'OK'
-                                })
+                                title: 'Access Denied',
+                                text: errorData.message || 'Please complete previous steps first.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK'
+                            })
                                 .then(() => window.location.href = '{{ route("signup") }}?basic_info');
                         }
                     } else {
@@ -2004,7 +2070,7 @@
                                 if (errorData.errors) {
                                     $.each(errorData.errors || {}, (field, messages) => {
                                         // Find the form that contains this field
-                                        const formWithField = $('form').filter(function() {
+                                        const formWithField = $('form').filter(function () {
                                             return $(this).find('[name="' + field + '"], [data-error="' + field + '"]').length > 0;
                                         });
                                         if (formWithField.length > 0) {
@@ -2072,7 +2138,7 @@
             }
         }
 
-        $(document).on('click', '#billing-toggle-btn', function(e) {
+        $(document).on('click', '#billing-toggle-btn', function (e) {
             e.preventDefault();
             e.stopPropagation();
             isAnnual = !isAnnual;
@@ -2092,10 +2158,10 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                     'Accept': 'application/json'
                 },
-                success: function(data) {
+                success: function (data) {
                     console.log('Billing cycle saved to session and localStorage:', billingCycle);
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     console.error('Failed to save billing cycle:', xhr.responseJSON);
                 }
             });
@@ -2105,14 +2171,14 @@
         updateBillingUI();
 
         // Update selectPackage to handle button clicks inside card
-        $(document).on('click', '.select-plan-btn', function(e) {
+        $(document).on('click', '.select-plan-btn', function (e) {
             e.stopPropagation();
             const card = $(this).closest('.package-card')[0];
             selectPackage(card);
         });
 
         // Package Selection Logic
-        window.selectPackage = function(element, ignoreCoupon = false) {
+        window.selectPackage = function (element, ignoreCoupon = false) {
             // Remove active state from all cards
             $('.package-card').removeClass('border-[#7C69EF] ring-2 ring-[#7C69EF]/20').addClass('border-slate-200');
             $('.package-card .package-radio div').addClass('opacity-0');
@@ -2239,7 +2305,7 @@
         // Email verification now happens automatically when "Start Free Trial" is clicked
 
         // Resend verification email handler
-        $(document).on('click', '#resend-email-btn', function() {
+        $(document).on('click', '#resend-email-btn', function () {
             const $btn = $(this);
             const $statusMsg = $('#verification-status-message');
             const email = $('#verification-email-display').text();
@@ -2260,7 +2326,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                     'Accept': 'application/json'
                 },
-                success: function(data) {
+                success: function (data) {
                     if (data.success) {
                         $statusMsg.removeClass('hidden bg-red-50 border-red-200 text-red-700')
                             .addClass('bg-green-50 border border-green-200 text-green-700')
@@ -2271,13 +2337,13 @@
                             .html('<div class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span>' + (data.message || 'Failed to send verification email. Please try again.') + '</span></div>');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     const errorData = xhr.responseJSON || {};
                     $statusMsg.removeClass('hidden bg-green-50 border-green-200 text-green-700')
                         .addClass('bg-red-50 border border-red-200 text-red-700')
                         .html('<div class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span>' + (errorData.message || 'Failed to send verification email. Please try again.') + '</span></div>');
                 },
-                complete: function() {
+                complete: function () {
                     $btn.prop('disabled', false);
                     $btn.find('span').html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Resend Verification Email');
                 }
@@ -2286,7 +2352,7 @@
         });
 
         // Global Toggle Function for Inline Click
-        window.toggleCouponInput = function() {
+        window.toggleCouponInput = function () {
             $('#coupon-input-container').toggleClass('hidden');
             if (!$('#coupon-input-container').hasClass('hidden')) {
                 $('#coupon-code-input').focus();
@@ -2294,7 +2360,7 @@
         };
 
         // Global Apply Coupon Function
-        window.applyCoupon = function() {
+        window.applyCoupon = function () {
             const leadId = {{ $lead ? $lead->id : 'null' }};
             const $btn = $('#apply-coupon-btn');
             const code = $('#coupon-code-input').val().trim();
@@ -2326,7 +2392,7 @@
                     currency: 'USD',
                     lead_id: leadId
                 },
-                success: function(response) {
+                success: function (response) {
                     $btn.prop('disabled', false).text('Apply');
                     if (response.success) {
                         // Success Logic
@@ -2354,7 +2420,7 @@
                         $('#coupon-message').removeClass('hidden text-green-600').addClass('text-red-500').text(response.message);
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $btn.prop('disabled', false).text('Apply');
                     let msg = 'Error applying coupon.';
                     if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
@@ -2363,14 +2429,14 @@
             });
         };
 
-        window.removeCoupon = function(silent = false) {
+        window.removeCoupon = function (silent = false) {
             $.ajax({
                 url: "{{ route('signup.remove-coupon') }}",
                 method: "POST",
                 data: {
                     _token: "{{ csrf_token() }}"
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         // Reset UI
                         $('#applied-coupon-container').addClass('hidden');
@@ -2494,12 +2560,12 @@
                     currency: 'USD',
                     coupon_code: currentCouponCode
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         window.location.href = response.redirect_url;
                     } else if (response.requires_action) {
                         stripe.handleCardAction(response.payment_intent_client_secret)
-                            .then(function(result) {
+                            .then(function (result) {
                                 if (result.error) {
                                     $('#card-errors').text(result.error.message);
                                     resetButtonStep7();
@@ -2512,7 +2578,7 @@
                         resetButtonStep7();
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $('#card-errors').text(xhr.responseJSON?.message || 'Payment processing failed.');
                     resetButtonStep7();
                 }
@@ -2526,12 +2592,12 @@
         }
 
         // COUPON LOGIC
-        $(function() {
+        $(function () {
             // Apply Coupon logic moved to global window.applyCoupon
 
             // Remove Coupon Logic
             // Auto-remove coupon when changing package or billing cycle
-            $('.package-card, #billing-toggle-btn').on('click', function() {
+            $('.package-card, #billing-toggle-btn').on('click', function () {
                 if (!$('#applied-coupon-container').hasClass('hidden')) {
                     if (typeof window.removeCoupon === 'function') {
                         window.removeCoupon(true); // Silent remove from backend
@@ -2569,7 +2635,7 @@
                 });
                 cardElement.mount('#card-element');
 
-                cardElement.on('change', function(event) {
+                cardElement.on('change', function (event) {
                     const displayError = document.getElementById('card-errors');
                     if (event.error) {
                         displayError.textContent = event.error.message;
@@ -2595,14 +2661,16 @@
     </script>
 
     <!-- Trial Success Modal -->
-    <div id="trial-success-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="trial-success-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background overlay -->
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
             <!-- Modal panel -->
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full p-6">
+            <div
+                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full p-6">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
                     <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -2611,7 +2679,8 @@
                 <div class="text-center">
                     <h3 class="text-2xl font-bold text-gray-900 mb-2" id="modal-title">Success!</h3>
                     <p class="text-gray-500 mb-4">Your trial account is successfully activated.</p>
-                    <p class="text-sm text-gray-400 mb-8">You will be redirected to dashboard in <span id="countdown-value" class="font-bold text-gray-600">5</span> seconds.</p>
+                    <p class="text-sm text-gray-400 mb-8">You will be redirected to dashboard in <span
+                            id="countdown-value" class="font-bold text-gray-600">5</span> seconds.</p>
                 </div>
             </div>
         </div>
