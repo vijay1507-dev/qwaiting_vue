@@ -103,7 +103,35 @@ class SendSequenceEmailsCommand extends Command
                         $verifiedStatus = is_null($user['email_verified_at']) ? 'Not Verified' : 'Verified';
                         $this->line("  │  Email Status: {$verifiedStatus}");
                     }
+
+                    // Timezone info
+                    $userTimezone = $user['timezone'] ?? 'UTC';
+                    if (empty($userTimezone)) {
+                        $userTimezone = 'UTC';
+                    }
+
+                    $userLocalTime = now()->setTimezone($userTimezone);
+                    $this->line("  │  Timezone: {$userTimezone} (Local Time: {$userLocalTime->format('Y-m-d H:i:s')})");
+
                     $this->line('  │');
+                }
+
+                // Timezone Check Logic (Strict 8 PM Rule)
+                $userTimezone = $user['timezone'] ?? 'UTC';
+                if (empty($userTimezone)) {
+                    $userTimezone = 'UTC';
+                }
+
+                $userLocalTime = now()->setTimezone($userTimezone);
+
+                // Only send if it's 8 PM (20:00 to 20:59) in user's timezone
+                if ($userLocalTime->hour !== 20) {
+                    if ($isPreview) {
+                        $this->line("  │  SKIPPING: Current local time is {$userLocalTime->format('H:i')}. Sequence emails are only sent at 8:00 PM (20:00).");
+                        $this->line('  └─');
+                        $this->newLine();
+                    }
+                    continue;
                 }
 
                 $userEmailCount = 0;
@@ -327,7 +355,7 @@ class SendSequenceEmailsCommand extends Command
             ->table('users')
             ->whereIn('team_id', $teamIds)
             ->whereNull('deleted_at')
-            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'timezone')
             ->get();
 
         // Fetch tenant data to get company names
@@ -361,6 +389,7 @@ class SendSequenceEmailsCommand extends Command
                 'plan_expiry' => $domain->trial_ends_at ?? '',
                 'days_until_expiry' => $domain->days_left ?? '',
                 'trial_ends_at' => $domain->trial_ends_at ?? null,
+                'timezone' => $user->timezone ?? 'UTC',
             ];
         });
     }
@@ -374,7 +403,7 @@ class SendSequenceEmailsCommand extends Command
         $users = DB::connection('mysql_external')
             ->table('users')
             ->whereNull('deleted_at')
-            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'timezone')
             ->get();
 
         if ($users->isEmpty()) {
@@ -425,6 +454,7 @@ class SendSequenceEmailsCommand extends Command
                 'plan_expiry' => $domain->trial_ends_at ?? '',
                 'days_until_expiry' => $domain->days_left ?? '',
                 'trial_ends_at' => $domain->trial_ends_at ?? null,
+                'timezone' => $user->timezone ?? 'UTC',
             ];
         });
     }
@@ -453,7 +483,7 @@ class SendSequenceEmailsCommand extends Command
             ->table('users')
             ->whereIn('team_id', $teamIds)
             ->whereNull('deleted_at')
-            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'timezone')
             ->get();
 
         // Fetch tenant data to get company names
@@ -487,6 +517,7 @@ class SendSequenceEmailsCommand extends Command
                 'plan_expiry' => $domain->trial_ends_at ?? '',
                 'days_until_expiry' => $domain->days_left ?? '',
                 'trial_ends_at' => $domain->trial_ends_at ?? null,
+                'timezone' => $user->timezone ?? 'UTC',
             ];
         });
     }
@@ -512,7 +543,7 @@ class SendSequenceEmailsCommand extends Command
             ->whereIn('team_id', $teamIds)
             ->whereNull('deleted_at')
             ->where('created_at', '>=', now()->subDays($daysWindow))
-            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+            ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'timezone')
             ->get();
 
         // Fetch tenant data to get company names
@@ -546,6 +577,7 @@ class SendSequenceEmailsCommand extends Command
                 'plan_expiry' => $domain->trial_ends_at ?? '',
                 'days_until_expiry' => $domain->days_left ?? '',
                 'trial_ends_at' => $domain->trial_ends_at ?? null,
+                'timezone' => $user->timezone ?? 'UTC',
             ];
         });
     }
@@ -580,7 +612,9 @@ class SendSequenceEmailsCommand extends Command
                 'trial_ends_at' => null,
                 'signup_step' => $lead->signup_step ?? 0,
                 'email_verified_at' => $lead->email_verified_at,
+                'email_verified_at' => $lead->email_verified_at,
                 'source' => 'signup_leads', // Track source
+                'timezone' => 'UTC', // Default to UTC for signup leads as they don't have timezone column
             ];
         });
 
@@ -592,7 +626,7 @@ class SendSequenceEmailsCommand extends Command
                 ->table('users')
                 ->whereNull('email_verified_at')
                 ->whereNull('deleted_at')
-                ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at')
+                ->select('id', 'name', 'email', 'phone', 'team_id', 'is_active', 'created_at', 'timezone')
                 ->get();
 
             // Get tenant/domain information for external users
@@ -643,7 +677,9 @@ class SendSequenceEmailsCommand extends Command
                     'trial_ends_at' => null,
                     'signup_step' => null, // External users don't have signup_step
                     'email_verified_at' => null, // They're unverified (that's why we selected them)
+                    'email_verified_at' => null, // They're unverified (that's why we selected them)
                     'source' => 'external_db', // Track source
+                    'timezone' => $user->timezone ?? 'UTC',
                 ];
             });
 

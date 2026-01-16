@@ -37,8 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping();
         // Schedule sequence emails to run daily at 9:00 AM
         $schedule->command('sequences:send-emails')
-            ->daily()
-            ->at('15:30')
+            ->hourly()
             ->withoutOverlapping()
             ->runInBackground();
 

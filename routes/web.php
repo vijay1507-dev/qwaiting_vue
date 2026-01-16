@@ -663,7 +663,6 @@ Route::prefix('industries')->group(function () {
     });
 });
 
-Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');
 
 
 Route::get('/signup/lead-details', [SignupController::class, 'leadDetails'])
