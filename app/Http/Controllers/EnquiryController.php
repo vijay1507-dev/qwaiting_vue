@@ -112,7 +112,7 @@ class EnquiryController extends Controller
 
     public function index()
     {
-        $enquiries = PackageEnquiry::latest()->paginate(10);
+        $enquiries = PackageEnquiry::latest()->get();
         return Inertia::render('PackageEnquiries/Index', [
             'enquiries' => $enquiries
         ]);
