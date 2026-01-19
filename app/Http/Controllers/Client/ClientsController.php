@@ -25,7 +25,7 @@ class ClientsController extends Controller
             // Fetch domains from external database, ordered by created_at descending
             $domains = DB::connection('mysql_external')
                 ->table('domains')
-                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'expired', 'created_at')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -125,7 +125,7 @@ class ClientsController extends Controller
                     'ownerAddress' => $address,
                     'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
                     'created_at_timestamp' => $domain->created_at ? strtotime($domain->created_at) : 0,
-                    'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                    'expires' => $domain->expired ? date('Y-m-d', strtotime($domain->expired)) : '',
                     'status' => $user->is_active ? 'active' : 'inactive',
                     'plan' => $plan,
                 ];
@@ -174,7 +174,7 @@ class ClientsController extends Controller
             $domain = DB::connection('mysql_external')
                 ->table('domains')
                 ->where('team_id', (string) $user->team_id)
-                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'expired', 'created_at')
                 ->first();
 
             // Determine plan based on trial_ends_at
@@ -191,9 +191,10 @@ class ClientsController extends Controller
                 $plan = 'Paid'; // No trial, must be paid
             }
 
+            // Finding Signup Lead to get more details
             // Find signup lead by email first (most reliable)
             // Include soft-deleted records to ensure we find the lead if it exists
-            $signupLead = SignupLead::withTrashed()->where('email', $user->email)->first();
+            $signupLead = SignupLead::withTrashed()->with('package')->where('email', $user->email)->first();
 
             // If not found by email, try to find by domain name
             // Domain in external DB might be "test-user-emill.localhost"
@@ -204,12 +205,12 @@ class ClientsController extends Controller
                 $subdomain = $domainParts[0] ?? '';
 
                 if ($subdomain) {
-                    $signupLead = SignupLead::withTrashed()->where('domain_name', $subdomain)->first();
+                    $signupLead = SignupLead::withTrashed()->with('package')->where('domain_name', $subdomain)->first();
                 }
 
                 // If still not found, try exact match
                 if (! $signupLead) {
-                    $signupLead = SignupLead::withTrashed()->where('domain_name', $domain->domain)->first();
+                    $signupLead = SignupLead::withTrashed()->with('package')->where('domain_name', $domain->domain)->first();
                 }
             }
 
@@ -241,9 +242,10 @@ class ClientsController extends Controller
                 'ownerPhone' => $user->phone ?? '',
                 'ownerAddress' => $user->address ?? '',
                 'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
-                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : ($domain->expired ? date('Y-m-d', strtotime($domain->expired)) : ''),
                 'status' => $user->is_active ? 'active' : 'inactive',
                 'plan' => $plan,
+                'packageName' => ($signupLead && $signupLead->package) ? $signupLead->package->name : $plan,
                 'additionalInfo' => $signupLead ? [
                     'website' => $signupLead->website,
                     'role' => $signupLead->role,
@@ -259,9 +261,7 @@ class ClientsController extends Controller
                     'footfall' => null,
                     'current_solution' => null,
                 ],
-            ];
-
-            // Fetch email logs for this client's email with filters
+            ]; // Fetch email logs for this client's email with filters
             $perPage = (int) $request->get('per_page', 20);
             $query = EmailNotificationLog::forRecipient($user->email);
 
@@ -355,7 +355,7 @@ class ClientsController extends Controller
             $domain = DB::connection('mysql_external')
                 ->table('domains')
                 ->where('team_id', (string) $user->team_id)
-                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'expired', 'created_at')
                 ->first();
 
             // Determine plan based on trial_ends_at
@@ -380,7 +380,7 @@ class ClientsController extends Controller
                 'ownerPhone' => $user->phone ?? '',
                 'ownerAddress' => $user->address ?? '',
                 'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
-                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : ($domain->expired ? date('Y-m-d', strtotime($domain->expired)) : ''),
                 'status' => $user->is_active ? 'active' : 'inactive',
                 'plan' => $plan,
             ];
@@ -479,7 +479,7 @@ class ClientsController extends Controller
             $domain = DB::connection('mysql_external')
                 ->table('domains')
                 ->where('team_id', (string) $user->team_id)
-                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'expired', 'created_at')
                 ->first();
 
             // Determine plan based on trial_ends_at
@@ -504,7 +504,7 @@ class ClientsController extends Controller
                 'ownerPhone' => $user->phone ?? '',
                 'ownerAddress' => $user->address ?? '',
                 'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
-                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : ($domain->expired ? date('Y-m-d', strtotime($domain->expired)) : ''),
                 'status' => $user->is_active ? 'active' : 'inactive',
                 'plan' => $plan,
             ];
@@ -589,7 +589,7 @@ class ClientsController extends Controller
             $domain = DB::connection('mysql_external')
                 ->table('domains')
                 ->where('team_id', (string) $user->team_id)
-                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'created_at')
+                ->select('id', 'domain', 'team_id', 'trial_ends_at', 'expired', 'created_at')
                 ->first();
 
             // Determine plan based on trial_ends_at
@@ -614,7 +614,7 @@ class ClientsController extends Controller
                 'ownerPhone' => $user->phone ?? '',
                 'ownerAddress' => $user->address ?? '',
                 'created' => $domain->created_at ? date('Y-m-d', strtotime($domain->created_at)) : '',
-                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : '',
+                'expires' => $domain->trial_ends_at ? date('Y-m-d', strtotime($domain->trial_ends_at)) : ($domain->expired ? date('Y-m-d', strtotime($domain->expired)) : ''),
                 'status' => $user->is_active ? 'active' : 'inactive',
                 'plan' => $plan,
             ];

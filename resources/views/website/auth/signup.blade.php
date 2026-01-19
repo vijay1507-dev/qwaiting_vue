@@ -252,18 +252,6 @@
                         @endif
                     </div>
 
-                    @if(session('verified'))
-                        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm"
-                            id="verification-success-message">
-                            {{ session('verified') }}
-                        </div>
-                    @endif
-
-                    @if(session('error'))
-                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                            {{ session('error') }}
-                        </div>
-                    @endif
 
                     <!-- Email Verification Message (shown after form submission) -->
                     <div id="email-verification-section" class="hidden text-center">
@@ -822,7 +810,7 @@
         </div>
 
         <!-- Step 7: Checkout & Payment -->
-        <div id="step-7" class="step w-full max-w-6xl mx-auto text-center p-4 mt-[120px] hidden">
+        <div id="step-7" class="step w-full max-w-6xl mx-auto text-center p-4 mt-[200px] hidden">
 
             <form id="form-step-7" autocomplete="off">
                 @csrf

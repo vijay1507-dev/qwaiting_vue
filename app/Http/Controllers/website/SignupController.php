@@ -1939,6 +1939,7 @@ class SignupController extends Controller
 
                         // Try to extract card details from payment response
                         // Try to extract card details from payment response
+                        // Try to extract card details from payment response
                         if (!empty($paymentData)) {
                             // 1. Direct extraction from expanded object in response
                             if (isset($paymentData['charges']['data'][0]['payment_method_details']['card'])) {
@@ -1950,15 +1951,17 @@ class SignupController extends Controller
                                 $pmType = $card['brand'] ?? null;
                                 $pmLastFour = $card['last4'] ?? null;
                             }
+                        }
 
-                            // 2. If extraction failed, try fetching via Stripe API
-                            if (!$pmType || !$pmLastFour) {
-                                try {
-                                    \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+                        // 2. If extraction failed or no payment data, try fetching via Stripe API
+                        if ((!$pmType || !$pmLastFour) && $lead->stripe_customer_id) {
+                            try {
+                                \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
 
-                                    $paymentMethodId = null;
+                                $paymentMethodId = null;
 
-                                    // Identify Payment Method ID from response
+                                // Identify Payment Method ID from response if available
+                                if (!empty($paymentData)) {
                                     if (isset($paymentData['payment_method']) && is_string($paymentData['payment_method'])) {
                                         $paymentMethodId = $paymentData['payment_method'];
                                     } elseif (isset($paymentData['payment_intent']) && is_string($paymentData['payment_intent'])) {
@@ -1974,30 +1977,30 @@ class SignupController extends Controller
                                             $paymentMethodId = $pi->payment_method;
                                         }
                                     }
+                                }
 
-                                    // Fetch PaymentMethod details
-                                    if ($paymentMethodId) {
-                                        $pm = \Stripe\PaymentMethod::retrieve($paymentMethodId);
-                                        if ($pm && $pm->card) {
-                                            $pmType = $pm->card->brand;
-                                            $pmLastFour = $pm->card->last4;
-                                        }
-                                    } else {
-                                        // Fallback: Check Customer's default payment method
-                                        if ($lead->stripe_customer_id) {
-                                            $customer = \Stripe\Customer::retrieve($lead->stripe_customer_id);
-                                            if ($customer->invoice_settings->default_payment_method) {
-                                                $pm = \Stripe\PaymentMethod::retrieve($customer->invoice_settings->default_payment_method);
-                                                if ($pm && $pm->card) {
-                                                    $pmType = $pm->card->brand;
-                                                    $pmLastFour = $pm->card->last4;
-                                                }
+                                // Fetch PaymentMethod details
+                                if ($paymentMethodId) {
+                                    $pm = \Stripe\PaymentMethod::retrieve($paymentMethodId);
+                                    if ($pm && $pm->card) {
+                                        $pmType = $pm->card->brand;
+                                        $pmLastFour = $pm->card->last4;
+                                    }
+                                } else {
+                                    // Fallback: Check Customer's default payment method (Common for Trials)
+                                    if ($lead->stripe_customer_id) {
+                                        $customer = \Stripe\Customer::retrieve($lead->stripe_customer_id);
+                                        if ($customer && $customer->invoice_settings->default_payment_method) {
+                                            $pm = \Stripe\PaymentMethod::retrieve($customer->invoice_settings->default_payment_method);
+                                            if ($pm && $pm->card) {
+                                                $pmType = $pm->card->brand;
+                                                $pmLastFour = $pm->card->last4;
                                             }
                                         }
                                     }
-                                } catch (\Exception $e) {
-                                    Log::warning('Failed to fetch PaymentMethod from Stripe API', ['error' => $e->getMessage()]);
                                 }
+                            } catch (\Exception $e) {
+                                Log::warning('Failed to fetch PaymentMethod from Stripe API', ['error' => $e->getMessage()]);
                             }
                         }
 
@@ -2014,7 +2017,8 @@ class SignupController extends Controller
                                 'stripe_id' => $lead->stripe_customer_id,
                                 'stripe_email' => $lead->email,
                                 'pm_type' => $pmType,
-                                'pm_last_four' => $pmLastFour
+                                'pm_last_four' => $pmLastFour,
+                                'trial_ends_at' => $lead->is_paid ? null : DB::raw('trial_ends_at')
                             ]);
 
                         if ($domainUpdated) {
