@@ -1886,6 +1886,7 @@ class SignupController extends Controller
             // Prepare API payload
             $apiData = [
                 'domain' => $lead->domain_name,
+                'expired' => $lead->package_end_date ? \Carbon\Carbon::parse($lead->package_end_date)->format('Y-m-d H:i:s') : null,
                 'fullname' => $lead->name,
                 'company_name' => $lead->company_name,
                 'email' => $lead->email,
