@@ -79,7 +79,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Marketing Automation',
-        href: campaigns().url,
+        href: sequences().url,
     },
     {
         title: 'Sequences Notifications',

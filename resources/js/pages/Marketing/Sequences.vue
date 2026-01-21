@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { dashboard } from '@/routes';
-import marketingRoutes, { campaigns } from '@/routes/marketing';
+import marketingRoutes, { campaigns, sequences } from '@/routes/marketing';
 import {
     create as sequencesCreate,
     edit as sequencesEdit,
@@ -55,7 +55,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Marketing Automation',
-        href: campaigns().url,
+        href: sequences().url,
     },
     {
         title: 'Sequences Notifications',
